@@ -4,3 +4,4 @@ target/
 build/
 deploy/
 dist/
+bin/pkg
