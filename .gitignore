@@ -1,0 +1,6 @@
+.hermit
+.DS_Store
+target/
+build/
+deploy/
+dist/
