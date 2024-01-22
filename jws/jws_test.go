@@ -18,7 +18,7 @@ func TestSign(t *testing.T) {
 	}
 
 	payload := map[string]interface{}{"hello": "world"}
-	compactJWS, err := jws.Sign(payload, did.DID)
+	compactJWS, err := jws.Sign(payload, did)
 	if err != nil {
 		t.Errorf("failed to sign: %v", err.Error())
 	}
@@ -72,7 +72,7 @@ func TestVerify_ok(t *testing.T) {
 	}
 
 	payloadJson := map[string]interface{}{"hello": "world"}
-	compactJWS, err := jws.Sign(payloadJson, did.DID)
+	compactJWS, err := jws.Sign(payloadJson, did)
 
 	if err != nil {
 		t.Errorf("failed to sign: %v", err.Error())

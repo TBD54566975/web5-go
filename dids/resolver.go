@@ -2,23 +2,23 @@ package dids
 
 import "sync"
 
-type DIDMethodResolver func(didURI string) ResolutionResult
+type MethodResolver func(did string) ResolutionResult
 
 type didResolver struct {
-	resolvers map[string]DIDMethodResolver
+	resolvers map[string]MethodResolver
 }
 
-func (r *didResolver) RegisterDIDMethodResolver(method string, resolver DIDMethodResolver) {
+func (r *didResolver) RegisterMethodResolver(method string, resolver MethodResolver) {
 	r.resolvers[method] = resolver
 }
 
 func (r *didResolver) Resolve(uri string) ResolutionResult {
-	didURI, err := ParseURI(uri)
+	did, err := ParseURI(uri)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid")
 	}
 
-	resolver := r.resolvers[didURI.Method]
+	resolver := r.resolvers[did.Method]
 	if resolver == nil {
 		return ResolutionResultWithError("methodNotSupported")
 	}
@@ -31,8 +31,8 @@ var once sync.Once
 
 func GetDefaultResolver() *didResolver {
 	once.Do(func() {
-		instance = &didResolver{resolvers: make(map[string]DIDMethodResolver)}
-		instance.RegisterDIDMethodResolver("jwk", ResolveDIDJWK)
+		instance = &didResolver{resolvers: make(map[string]MethodResolver)}
+		instance.RegisterMethodResolver("jwk", ResolveDIDJWK)
 	})
 
 	return instance

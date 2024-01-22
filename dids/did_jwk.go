@@ -29,11 +29,7 @@ func AlgorithmID(id string) Option {
 	}
 }
 
-type DIDJWK struct {
-	DID
-}
-
-func NewDIDJWK(opts ...Option) (DIDJWK, error) {
+func NewDIDJWK(opts ...Option) (BearerDID, error) {
 	o := &options{
 		keyManager:  crypto.NewInMemoryKeyManager(),
 		algorithmID: dsa.AlgorithmID.ED25519,
@@ -47,18 +43,18 @@ func NewDIDJWK(opts ...Option) (DIDJWK, error) {
 
 	keyID, err := keyMgr.GeneratePrivateKey(o.algorithmID)
 	if err != nil {
-		return DIDJWK{}, fmt.Errorf("failed to generate private key: %w", err)
+		return BearerDID{}, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	publicJWK, _ := keyMgr.GetPublicKey(keyID)
 	bytes, err := json.Marshal(publicJWK)
 	if err != nil {
-		return DIDJWK{}, fmt.Errorf("failed to marshal public key: %w", err)
+		return BearerDID{}, fmt.Errorf("failed to marshal public key: %w", err)
 	}
 
 	id := common.Base64UrlEncodeNoPadding(bytes)
-	did := DID{
-		DIDURI: DIDURI{
+	did := BearerDID{
+		DID: DID{
 			Method: "jwk",
 			URI:    "did:jwk:" + id,
 			ID:     id,
@@ -66,20 +62,20 @@ func NewDIDJWK(opts ...Option) (DIDJWK, error) {
 		KeyManager: keyMgr,
 	}
 
-	return DIDJWK{did}, nil
+	return did, nil
 }
 
 func ResolveDIDJWK(uri string) ResolutionResult {
-	didURI, err := ParseURI(uri)
+	did, err := ParseURI(uri)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid")
 	}
 
-	if didURI.Method != "jwk" {
+	if did.Method != "jwk" {
 		return ResolutionResultWithError("invalidDid")
 	}
 
-	decodedID, err := common.Base64UrlDecodeNoPadding(didURI.ID)
+	decodedID, err := common.Base64UrlDecodeNoPadding(did.ID)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid")
 	}
