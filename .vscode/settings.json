@@ -3,5 +3,4 @@
   "go.lintFlags": [
     "--fast"
   ],
-  "go.gopath": "${workspaceFolder}/bin",
 }
