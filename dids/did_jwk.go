@@ -31,7 +31,7 @@ func AlgorithmID(id string) Option {
 
 func NewDIDJWK(opts ...Option) (BearerDID, error) {
 	o := &options{
-		keyManager:  crypto.NewInMemoryKeyManager(),
+		keyManager:  crypto.NewLocalKeyManager(),
 		algorithmID: dsa.AlgorithmID.ED25519,
 	}
 

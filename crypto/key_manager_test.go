@@ -8,7 +8,7 @@ import (
 )
 
 func TestGeneratePrivateKey(t *testing.T) {
-	keyManager := crypto.NewInMemoryKeyManager()
+	keyManager := crypto.NewLocalKeyManager()
 
 	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
 	if err != nil {
@@ -21,7 +21,7 @@ func TestGeneratePrivateKey(t *testing.T) {
 }
 
 func TestGetPublicKey(t *testing.T) {
-	keyManager := crypto.NewInMemoryKeyManager()
+	keyManager := crypto.NewLocalKeyManager()
 
 	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
 	if err != nil {
@@ -44,7 +44,7 @@ func TestGetPublicKey(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	keyManager := crypto.NewInMemoryKeyManager()
+	keyManager := crypto.NewLocalKeyManager()
 
 	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
 	if err != nil {
