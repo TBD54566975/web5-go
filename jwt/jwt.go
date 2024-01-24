@@ -65,15 +65,6 @@ type Claims struct {
 // cpy is a copy of Claims that is used to marshal/unmarshal the claims without infinitely looping
 type cpy Claims
 
-func (c Claims) Base64UrlEncode() string {
-	bytes, err := json.Marshal(c)
-	if err != nil {
-		fmt.Errorf("error marshaling claims: %v", err)
-	}
-
-	return common.Base64UrlEncodeNoPadding(bytes)
-}
-
 func (c Claims) MarshalJSON() ([]byte, error) {
 	copied := cpy(c)
 

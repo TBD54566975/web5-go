@@ -2,9 +2,11 @@ package jwt_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/jws"
 	"github.com/tbd54566975/web5-go/jwt"
 )
 
@@ -110,4 +112,21 @@ func TestClaims_Verify(t *testing.T) {
 	if !verified {
 		t.Errorf("expected jwt to be verified")
 	}
+}
+
+func TestVerify_BadClaims(t *testing.T) {
+	okHeader := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
+	input := fmt.Sprintf("%s.%s.%s", okHeader, "hehe", "hehe")
+
+	verified, err := jwt.Verify(input)
+	if err == nil {
+		t.Errorf("expected error")
+	}
+
+	if verified {
+		t.Errorf("expected !verified")
+	}
+
+	fmt.Printf("err: %v\n", err.Error())
+
 }
