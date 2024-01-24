@@ -30,7 +30,7 @@ type Header struct {
 	KID string `json:"kid,omitempty"`
 }
 
-type JWSPayload map[string]interface{}
+type JWSPayload any
 
 // Base64UrlEncode returns the base64url encoded header.
 func (j Header) Base64UrlEncode() string {
@@ -92,7 +92,7 @@ func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, err
 		opt(&o)
 	}
 
-	resolutionResult := dids.GetDefaultResolver().Resolve(did.URI)
+	resolutionResult := didResolver.Resolve(did.URI)
 	if resolutionResult.GetError() != "" {
 		return "", fmt.Errorf("DID resolution error: %s", resolutionResult.GetError())
 	}

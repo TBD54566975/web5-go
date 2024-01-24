@@ -1,6 +1,13 @@
 package jwt
 
 import (
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/tbd54566975/web5-go/common"
+	"github.com/tbd54566975/web5-go/dids"
 	"github.com/tbd54566975/web5-go/jws"
 )
 
@@ -52,5 +59,103 @@ type Claims struct {
 	// Spec: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7
 	JTI string `json:"jti,omitempty"`
 
-	Private map[string]interface{} `json:"-"`
+	Misc map[string]interface{} `json:"-"`
+}
+
+// cpy is a copy of Claims that is used to marshal/unmarshal the claims without infinitely looping
+type cpy Claims
+
+func (c Claims) Base64UrlEncode() string {
+	bytes, err := json.Marshal(c)
+	if err != nil {
+		fmt.Errorf("error marshaling claims: %v", err)
+	}
+
+	return common.Base64UrlEncodeNoPadding(bytes)
+}
+
+func (c Claims) MarshalJSON() ([]byte, error) {
+	copied := cpy(c)
+
+	bytes, err := json.Marshal(copied)
+	if err != nil {
+		return nil, err
+	}
+
+	var combined map[string]interface{}
+	json.Unmarshal(bytes, &combined)
+
+	// Add private claims to the map
+	for key, value := range c.Misc {
+		combined[key] = value
+	}
+
+	return json.Marshal(combined)
+}
+
+func (c *Claims) UnmarshalJSON(b []byte) error {
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+
+	registeredClaims := map[string]bool{
+		"iss": true, "sub": true, "aud": true,
+		"exp": true, "nbf": true, "iat": true,
+		"jti": true,
+	}
+
+	private := make(map[string]interface{})
+	for key, value := range m {
+		if _, ok := registeredClaims[key]; !ok {
+			private[key] = value
+		}
+	}
+
+	claims := cpy{}
+	if err := json.Unmarshal(b, &claims); err != nil {
+		return err
+	}
+
+	claims.Misc = private
+	*c = Claims(claims)
+
+	return nil
+}
+
+type signOpts struct{ purpose string }
+
+type SignOpt func(opts *signOpts)
+
+func Sign(claims Claims, did dids.BearerDID, opts ...SignOpt) (string, error) {
+	o := signOpts{purpose: "assertionMethod"}
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	return jws.Sign(claims, did, jws.Purpose(o.purpose))
+}
+
+func Verify(jwt string) (bool, error) {
+	parts := strings.Split(jwt, ".")
+	if len(parts) != 3 {
+		return false, fmt.Errorf("malformed JWT. Expected 3 parts, got %d", len(parts))
+	}
+
+	b64urlClaims := parts[1]
+	claimsBytes, err := common.Base64UrlDecodeNoPadding(b64urlClaims)
+	if err != nil {
+		return false, fmt.Errorf("malformed JWT claims. %w", err)
+	}
+
+	var claims Claims
+	if err := json.Unmarshal(claimsBytes, &claims); err != nil {
+		return false, fmt.Errorf("malformed JWT claims. %w", err)
+	}
+
+	if claims.Expiration != 0 && time.Now().Unix() > int64(claims.Expiration) {
+		return false, fmt.Errorf("JWT has expired")
+	}
+
+	return jws.Verify(jwt)
 }
