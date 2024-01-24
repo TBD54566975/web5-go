@@ -65,6 +65,8 @@ type Claims struct {
 // cpy is a copy of Claims that is used to marshal/unmarshal the claims without infinitely looping
 type cpy Claims
 
+// MarshalJSON overrides default json.Marshal behavior to include private claims as flattened
+// properties of the top-level object
 func (c Claims) MarshalJSON() ([]byte, error) {
 	copied := cpy(c)
 
@@ -74,7 +76,10 @@ func (c Claims) MarshalJSON() ([]byte, error) {
 	}
 
 	var combined map[string]interface{}
-	json.Unmarshal(bytes, &combined)
+	err = json.Unmarshal(bytes, &combined)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal jwt claims: %w", err)
+	}
 
 	// Add private claims to the map
 	for key, value := range c.Misc {
@@ -127,6 +132,7 @@ func Sign(claims Claims, did dids.BearerDID, opts ...SignOpt) (string, error) {
 	return jws.Sign(claims, did, jws.Purpose(o.purpose))
 }
 
+// Verify verifies a JWT (JSON Web Token)
 func Verify(jwt string) (bool, error) {
 	parts := strings.Split(jwt, ".")
 	if len(parts) != 3 {

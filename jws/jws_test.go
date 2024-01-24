@@ -37,8 +37,8 @@ func TestVerify_bad(t *testing.T) {
 	badHeader := common.Base64UrlEncodeNoPadding([]byte("hehe"))
 	okHeader := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
 
-	okPayloadJson := map[string]interface{}{"hello": "world"}
-	okPayloadBytes, _ := json.Marshal(okPayloadJson)
+	okPayloadJSON := map[string]interface{}{"hello": "world"}
+	okPayloadBytes, _ := json.Marshal(okPayloadJSON)
 	okPayload := common.Base64UrlEncodeNoPadding(okPayloadBytes)
 
 	badSignature := common.Base64UrlEncodeNoPadding([]byte("hehe"))
@@ -71,8 +71,8 @@ func TestVerify_ok(t *testing.T) {
 		t.Errorf("failed to create did: %v", err.Error())
 	}
 
-	payloadJson := map[string]interface{}{"hello": "world"}
-	compactJWS, err := jws.Sign(payloadJson, did)
+	payloadJSON := map[string]interface{}{"hello": "world"}
+	compactJWS, err := jws.Sign(payloadJSON, did)
 
 	if err != nil {
 		t.Errorf("failed to sign: %v", err.Error())
