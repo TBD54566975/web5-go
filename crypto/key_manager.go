@@ -20,6 +20,14 @@ type KeyManager interface {
 	Sign(keyID string, payload []byte) ([]byte, error)
 }
 
+type KeyExporter interface {
+	ExportKey(keyID string) (jwk.JWK, error)
+}
+
+type KeyImporter interface {
+	ImportKey(key jwk.JWK) (string, error)
+}
+
 // LocalKeyManager is an implementation of KeyManager that stores keys in memory
 type LocalKeyManager struct {
 	keys map[string]jwk.JWK
@@ -82,4 +90,24 @@ func (k *LocalKeyManager) getPrivateJWK(keyID string) (jwk.JWK, error) {
 	}
 
 	return key, nil
+}
+
+func (k *LocalKeyManager) ExportKey(keyID string) (jwk.JWK, error) {
+	key, err := k.getPrivateJWK(keyID)
+	if err != nil {
+		return jwk.JWK{}, err
+	}
+
+	return key, nil
+}
+
+func (k *LocalKeyManager) ImportKey(key jwk.JWK) (string, error) {
+	keyAlias, err := key.ComputeThumbprint()
+	if err != nil {
+		return "", fmt.Errorf("failed to compute key alias: %w", err)
+	}
+
+	k.keys[keyAlias] = key
+
+	return keyAlias, nil
 }
