@@ -65,7 +65,7 @@ type Claims struct {
 // cpy is a copy of Claims that is used to marshal/unmarshal the claims without infinitely looping
 type cpy Claims
 
-// MarshalJSON overrides default json.Marshal behavior to include private claims as flattened
+// MarshalJSON overrides default json.Marshal behavior to include misc claims as flattened
 // properties of the top-level object
 func (c Claims) MarshalJSON() ([]byte, error) {
 	copied := cpy(c)
@@ -89,6 +89,8 @@ func (c Claims) MarshalJSON() ([]byte, error) {
 	return json.Marshal(combined)
 }
 
+// UnmarshalJSON overrides default json.Unmarshal behavior to place flattened Misc
+// claims into Misc
 func (c *Claims) UnmarshalJSON(b []byte) error {
 	var m map[string]interface{}
 	if err := json.Unmarshal(b, &m); err != nil {
