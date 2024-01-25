@@ -121,8 +121,21 @@ func (c *Claims) UnmarshalJSON(b []byte) error {
 
 type signOpts struct{ purpose string }
 
+// SignOpt is a type returned by all individual Sign Options.
 type SignOpt func(opts *signOpts)
 
+// Purpose is an option that can be provided to Sign to specify that a key from
+// a given DID Document Verification Relationship should be used (e.g. authentication)
+func Purpose(purpose string) SignOpt {
+	return func(opt *signOpts) {
+		opt.purpose = purpose
+	}
+}
+
+// Sign signs the provided JWT Claims with the provided BearerDID.
+// The Purpose option can be provided to specify that a key from a given
+// DID Document Verification Relationship should be used (e.g. authentication).
+// defaults to using assertionMethod
 func Sign(claims Claims, did dids.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{purpose: "assertionMethod"}
 	for _, opt := range opts {
