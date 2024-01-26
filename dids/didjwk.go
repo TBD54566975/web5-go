@@ -1,42 +1,51 @@
 package dids
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
-	"github.com/tbd54566975/web5-go/common"
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
-type options struct {
+type newDIDJWKOptions struct {
 	keyManager  crypto.KeyManager
 	algorithmID string
 }
 
-type Option func(o *options)
+type newDIDJWKOption func(o *newDIDJWKOptions)
 
-func KeyManager(k crypto.KeyManager) Option {
-	return func(o *options) {
+// KeyManager is an option that can be passed to NewDIDJWK to provide a KeyManager
+func KeyManager(k crypto.KeyManager) newDIDJWKOption {
+	return func(o *newDIDJWKOptions) {
 		o.keyManager = k
 	}
 }
 
-func AlgorithmID(id string) Option {
-	return func(o *options) {
+// AlgorithmID is an option that can be passed to NewDIDJWK to specify a specific
+// cryptographic algorithm to use to generate the private key
+func AlgorithmID(id string) newDIDJWKOption {
+	return func(o *newDIDJWKOptions) {
 		o.algorithmID = id
 	}
 }
 
-func NewDIDJWK(opts ...Option) (BearerDID, error) {
-	o := &options{
+// NewDIDJWK can be used to generate a new `did:jwk`. `did:jwk` is useful in scenarios where:
+//   - Offline resolution is preferred
+//   - Key rotation is not required
+//   - Service endpoints are not necessary
+//
+// Spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
+func NewDIDJWK(opts ...newDIDJWKOption) (BearerDID, error) {
+	o := newDIDJWKOptions{
 		keyManager:  crypto.NewLocalKeyManager(),
 		algorithmID: dsa.AlgorithmID.ED25519,
 	}
 
 	for _, opt := range opts {
-		opt(o)
+		opt(&o)
 	}
 
 	keyMgr := o.keyManager
@@ -52,7 +61,7 @@ func NewDIDJWK(opts ...Option) (BearerDID, error) {
 		return BearerDID{}, fmt.Errorf("failed to marshal public key: %w", err)
 	}
 
-	id := common.Base64UrlEncodeNoPadding(bytes)
+	id := base64.RawURLEncoding.EncodeToString(bytes)
 	did := BearerDID{
 		DID: DID{
 			Method: "jwk",
@@ -65,6 +74,7 @@ func NewDIDJWK(opts ...Option) (BearerDID, error) {
 	return did, nil
 }
 
+// Resolves the provided DID URI
 func ResolveDIDJWK(uri string) ResolutionResult {
 	did, err := ParseURI(uri)
 	if err != nil {
@@ -75,7 +85,7 @@ func ResolveDIDJWK(uri string) ResolutionResult {
 		return ResolutionResultWithError("invalidDid")
 	}
 
-	decodedID, err := common.Base64UrlDecodeNoPadding(did.ID)
+	decodedID, err := base64.RawURLEncoding.DecodeString(did.ID)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid")
 	}

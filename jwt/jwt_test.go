@@ -63,7 +63,7 @@ func TestClaims_UnmarshalJSON(t *testing.T) {
 	}
 }
 
-func TestClaims_Sign(t *testing.T) {
+func TestSign(t *testing.T) {
 	did, err := dids.NewDIDJWK()
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func TestClaims_Sign(t *testing.T) {
 	}
 }
 
-func TestClaims_Verify(t *testing.T) {
+func TestVerify(t *testing.T) {
 	did, err := dids.NewDIDJWK()
 	if err != nil {
 		t.Fatal(err)

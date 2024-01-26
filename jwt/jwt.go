@@ -1,12 +1,12 @@
 package jwt
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/tbd54566975/web5-go/common"
 	"github.com/tbd54566975/web5-go/dids"
 	"github.com/tbd54566975/web5-go/jws"
 )
@@ -155,7 +155,7 @@ func Verify(jwt string) (bool, error) {
 	}
 
 	b64urlClaims := parts[1]
-	claimsBytes, err := common.Base64UrlDecodeNoPadding(b64urlClaims)
+	claimsBytes, err := base64.RawURLEncoding.DecodeString(b64urlClaims)
 	if err != nil {
 		return false, fmt.Errorf("malformed JWT claims. %w", err)
 	}

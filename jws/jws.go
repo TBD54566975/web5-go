@@ -1,16 +1,14 @@
 package jws
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/tbd54566975/web5-go/common"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids"
 )
-
-var didResolver = dids.GetDefaultResolver()
 
 // Header represents a JWS (JSON Web Signature) header. See [Specification] for more details.
 // [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#section-4
@@ -37,12 +35,12 @@ func (j Header) Base64UrlEncode() string {
 	jsonHeader := map[string]string{"alg": j.ALG, "kid": j.KID}
 	bytes, _ := json.Marshal(jsonHeader)
 
-	return common.Base64UrlEncodeNoPadding(bytes)
+	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 
 // DecodeJWSHeader decodes the base64url encoded JWS header.
 func DecodeJWSHeader(base64UrlEncodedHeader string) (Header, error) {
-	bytes, err := common.Base64UrlDecodeNoPadding(base64UrlEncodedHeader)
+	bytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedHeader)
 	if err != nil {
 		return Header{}, err
 	}
@@ -92,7 +90,7 @@ func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, err
 		opt(&o)
 	}
 
-	resolutionResult := didResolver.Resolve(did.URI)
+	resolutionResult := dids.Resolve(did.URI)
 	if resolutionResult.GetError() != "" {
 		return "", fmt.Errorf("DID resolution error: %s", resolutionResult.GetError())
 	}
@@ -147,7 +145,7 @@ func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, err
 		return "", fmt.Errorf("failed to marshal payload: %s", err.Error())
 	}
 
-	base64UrlEncodedPayload := common.Base64UrlEncodeNoPadding(payloadBytes)
+	base64UrlEncodedPayload := base64.RawURLEncoding.EncodeToString(payloadBytes)
 
 	toSign := base64UrlEncodedHeader + "." + base64UrlEncodedPayload
 	toSignBytes := []byte(toSign)
@@ -157,7 +155,7 @@ func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, err
 		return "", fmt.Errorf("failed to compute signature: %s", err.Error())
 	}
 
-	base64UrlEncodedSignature := common.Base64UrlEncodeNoPadding(signature)
+	base64UrlEncodedSignature := base64.RawURLEncoding.EncodeToString(signature)
 
 	var compactJWS string
 	if o.detached {
@@ -192,7 +190,7 @@ func Verify(compactJWS string) (bool, error) {
 	}
 
 	base64UrlEncodedPayload := parts[1]
-	payloadBytes, err := common.Base64UrlDecodeNoPadding(base64UrlEncodedPayload)
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedPayload)
 	if err != nil {
 		return false, fmt.Errorf("malformed JWS. Failed to decode payload: %s", err.Error())
 	}
@@ -204,7 +202,7 @@ func Verify(compactJWS string) (bool, error) {
 	}
 
 	base64UrlEncodedSignature := parts[2]
-	signature, err := common.Base64UrlDecodeNoPadding(base64UrlEncodedSignature)
+	signature, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedSignature)
 	if err != nil {
 		return false, fmt.Errorf("malformed JWS. Failed to decode signature: %s", err.Error())
 	}
@@ -214,7 +212,7 @@ func Verify(compactJWS string) (bool, error) {
 
 	var didURI = verificationMethodIDParts[0]
 
-	resolutionResult := didResolver.Resolve(didURI)
+	resolutionResult := dids.Resolve(didURI)
 	if resolutionResult.GetError() != "" {
 		return false, fmt.Errorf("failed to resolve DID. error: %s", resolutionResult.GetError())
 	}

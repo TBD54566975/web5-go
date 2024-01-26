@@ -3,9 +3,8 @@ package jwk
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
-
-	"github.com/tbd54566975/web5-go/common"
 )
 
 // JWK represents a JSON Web Key as per RFC7517 (https://tools.ietf.org/html/rfc7517)
@@ -38,7 +37,7 @@ func (j JWK) ComputeThumbprint() (string, error) {
 	}
 
 	digest := sha256.Sum256(bytes)
-	thumbprint := common.Base64UrlEncodeNoPadding(digest[:])
+	thumbprint := base64.RawURLEncoding.EncodeToString(digest[:])
 
 	return thumbprint, nil
 }

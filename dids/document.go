@@ -1,5 +1,7 @@
 package dids
 
+import "github.com/tbd54566975/web5-go/jwk"
+
 // Document represents a set of data describing the DID subject including mechanisms such as:
 //   - cryptographic public keys - used to authenticate itself and prove
 //     association with the DID
@@ -93,4 +95,92 @@ func (d *Document) AddVerificationMethod(method VerificationMethod, opts ...AddV
 			d.CapabilityInvocation = append(d.CapabilityInvocation, method.ID)
 		}
 	}
+}
+
+// DocumentMetadata contains metadata about the DID Document
+// This metadata typically does not change between invocations of
+// the resolve and resolveRepresentation functions unless the DID document
+// changes, as it represents metadata about the DID document.
+//
+// Spec: https://www.w3.org/TR/did-core/#dfn-diddocumentmetadata
+type DocumentMetadata struct {
+	// timestamp of the Create operation. The value of the property MUST be a
+	// string formatted as an XML Datetime normalized to UTC 00:00:00 and
+	// without sub-second decimal precision. For example: 2020-12-20T19:17:47Z.
+	Created string `json:"created,omitempty"`
+	// timestamp of the last Update operation for the document version which was
+	// resolved. The value of the property MUST follow the same formatting rules
+	// as the created property. The updated property is omitted if an Update
+	// operation has never been performed on the DID document. If an updated
+	// property exists, it can be the same value as the created property
+	// when the difference between the two timestamps is less than one second.
+	Updated string `json:"updated,omitempty"`
+	// If a DID has been deactivated, DID document metadata MUST include this
+	// property with the boolean value true. If a DID has not been deactivated,
+	// this property is OPTIONAL, but if included, MUST have the boolean value
+	// false.
+	Deactivated bool `json:"deactivated,omitempty"`
+	// indicates the version of the last Update operation for the document version
+	// which was resolved.
+	VersionID string `json:"versionId,omitempty"`
+	// indicates the timestamp of the next Update operation. The value of the
+	// property MUST follow the same formatting rules as the created property.
+	NextUpdate string `json:"nextUpdate,omitempty"`
+	// if the resolved document version is not the latest version of the document.
+	// It indicates the timestamp of the next Update operation. The value of the
+	// property MUST follow the same formatting rules as the created property.
+	NextVersionID string `json:"nextVersionId,omitempty"`
+	// A DID method can define different forms of a DID that are logically
+	// equivalent. An example is when a DID takes one form prior to registration
+	// in a verifiable data registry and another form after such registration.
+	// In this case, the DID method specification might need to express one or
+	// more DIDs that are logically equivalent to the resolved DID as a property
+	// of the DID document. This is the purpose of the equivalentId property.
+	EquivalentID string `json:"equivalentId,omitempty"`
+	// The canonicalId property is identical to the equivalentId property except:
+	//   * it is associated with a single value rather than a set
+	//   * the DID is defined to be the canonical ID for the DID subject within
+	//     the scope of the containing DID document.
+	CanonicalID string `json:"canonicalId,omitempty"`
+}
+
+// Service is used in DID documents to express ways of communicating with
+// the DID subject or associated entities.
+// A service can be any type of service the DID subject wants to advertise.
+//
+// Specification Reference: https://www.w3.org/TR/did-core/#services
+type Service struct {
+	// Id is the value of the id property and MUST be a URI conforming to RFC3986.
+	// A conforming producer MUST NOT produce multiple service entries with
+	// the same id. A conforming consumer MUST produce an error if it detects
+	// multiple service entries with the same id.
+	ID string `json:"id"`
+
+	// Type is an example of registered types which can be found
+	// here: https://www.w3.org/TR/did-spec-registries/#service-types
+	Type string `json:"type"`
+
+	// ServiceEndpoint is a network address, such as an HTTP URL, at which services
+	// operate on behalf of a DID subject.
+	ServiceEndpoint string `json:"serviceEndpoint"`
+}
+
+// VerificationMethod expresses verification methods, such as cryptographic
+// public keys, which can be used to authenticate or authorize interactions
+// with the DID subject or associated parties. For example,
+// a cryptographic public key can be used as a verification method with
+// respect to a digital signature; in such usage, it verifies that the
+// signer could use the associated cryptographic private key.
+//
+// Specification Reference: https://www.w3.org/TR/did-core/#verification-methods
+type VerificationMethod struct {
+	ID string `json:"id"`
+	// references exactly one verification method type. In order to maximize global
+	// interoperability, the verification method type SHOULD be registered in the
+	// DID Specification Registries: https://www.w3.org/TR/did-spec-registries/
+	Type string `json:"type"`
+	// a value that conforms to the rules in DID Syntax: https://www.w3.org/TR/did-core/#did-syntax
+	Controller string `json:"controller"`
+	// specification reference: https://www.w3.org/TR/did-core/#dfn-publickeyjwk
+	PublicKeyJwk jwk.JWK `json:"publicKeyJwk,omitempty"`
 }

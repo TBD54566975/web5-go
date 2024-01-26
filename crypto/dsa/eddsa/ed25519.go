@@ -3,9 +3,9 @@ package eddsa
 import (
 	_ed25519 "crypto/ed25519"
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 
-	"github.com/tbd54566975/web5-go/common"
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
@@ -23,15 +23,15 @@ func ED25519GeneratePrivateKey() (jwk.JWK, error) {
 	privKeyJwk := jwk.JWK{
 		KTY: KeyType,
 		CRV: ED25519JWACurve,
-		D:   common.Base64UrlEncodeNoPadding(privateKey),
-		X:   common.Base64UrlEncodeNoPadding(publicKey),
+		D:   base64.RawURLEncoding.EncodeToString(privateKey),
+		X:   base64.RawURLEncoding.EncodeToString(publicKey),
 	}
 
 	return privKeyJwk, nil
 }
 
 func ED25519Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
-	privateKeyBytes, err := common.Base64UrlDecodeNoPadding(privateKey.D)
+	privateKeyBytes, err := base64.RawURLEncoding.DecodeString(privateKey.D)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode d %w", err)
 	}
@@ -41,7 +41,7 @@ func ED25519Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 }
 
 func ED25519Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
-	publicKeyBytes, err := common.Base64UrlDecodeNoPadding(publicKey.X)
+	publicKeyBytes, err := base64.RawURLEncoding.DecodeString(publicKey.X)
 	if err != nil {
 		return false, err
 	}

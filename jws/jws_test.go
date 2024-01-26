@@ -1,12 +1,12 @@
 package jws_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/tbd54566975/web5-go/common"
 	"github.com/tbd54566975/web5-go/dids"
 	"github.com/tbd54566975/web5-go/jws"
 )
@@ -34,14 +34,14 @@ func TestSign(t *testing.T) {
 }
 
 func TestVerify_bad(t *testing.T) {
-	badHeader := common.Base64UrlEncodeNoPadding([]byte("hehe"))
+	badHeader := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
 	okHeader := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
 
 	okPayloadJSON := map[string]interface{}{"hello": "world"}
 	okPayloadBytes, _ := json.Marshal(okPayloadJSON)
-	okPayload := common.Base64UrlEncodeNoPadding(okPayloadBytes)
+	okPayload := base64.RawURLEncoding.EncodeToString(okPayloadBytes)
 
-	badSignature := common.Base64UrlEncodeNoPadding([]byte("hehe"))
+	badSignature := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
 
 	vectors := []string{
 		"",

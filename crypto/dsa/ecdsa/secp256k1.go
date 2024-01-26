@@ -2,11 +2,11 @@ package ecdsa
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 
 	_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
-	"github.com/tbd54566975/web5-go/common"
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
@@ -30,16 +30,16 @@ func SECP256K1GeneratePrivateKey() (jwk.JWK, error) {
 	privateKey := jwk.JWK{
 		KTY: KeyType,
 		CRV: SECP256K1JWACurve,
-		D:   common.Base64UrlEncodeNoPadding(dBytes[:]),
-		X:   common.Base64UrlEncodeNoPadding(xBytes),
-		Y:   common.Base64UrlEncodeNoPadding(yBytes),
+		D:   base64.RawURLEncoding.EncodeToString(dBytes[:]),
+		X:   base64.RawURLEncoding.EncodeToString(xBytes),
+		Y:   base64.RawURLEncoding.EncodeToString(yBytes),
 	}
 
 	return privateKey, nil
 }
 
 func SECP256K1Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
-	privateKeyBytes, err := common.Base64UrlDecodeNoPadding(privateKey.D)
+	privateKeyBytes, err := base64.RawURLEncoding.DecodeString(privateKey.D)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode d %w", err)
 	}
@@ -59,8 +59,8 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 
 	hash := sha256.Sum256(payload)
 
-	x, _ := common.Base64UrlDecodeNoPadding(publicKey.X)
-	y, _ := common.Base64UrlDecodeNoPadding(publicKey.Y)
+	x, _ := base64.RawURLEncoding.DecodeString(publicKey.X)
+	y, _ := base64.RawURLEncoding.DecodeString(publicKey.Y)
 
 	keyBytes := []byte{0x04}
 	keyBytes = append(keyBytes, x...)

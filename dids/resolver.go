@@ -2,17 +2,31 @@ package dids
 
 import "sync"
 
-type MethodResolver func(did string) ResolutionResult
+// Resolve resolves the provided DID URI. This function is capable of resolving
+// the DID methods implemented in web5-go
+func Resolve(uri string) ResolutionResult {
+	return getDefaultResolver().resolve(uri)
+}
+
+type methodResolver func(did string) ResolutionResult
+
+var instance *didResolver
+var once sync.Once
+
+func getDefaultResolver() *didResolver {
+	once.Do(func() {
+		instance = &didResolver{resolvers: make(map[string]methodResolver)}
+		instance.resolvers["jwk"] = ResolveDIDJWK
+	})
+
+	return instance
+}
 
 type didResolver struct {
-	resolvers map[string]MethodResolver
+	resolvers map[string]methodResolver
 }
 
-func (r *didResolver) RegisterMethodResolver(method string, resolver MethodResolver) {
-	r.resolvers[method] = resolver
-}
-
-func (r *didResolver) Resolve(uri string) ResolutionResult {
+func (r *didResolver) resolve(uri string) ResolutionResult {
 	did, err := ParseURI(uri)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid")
@@ -24,16 +38,4 @@ func (r *didResolver) Resolve(uri string) ResolutionResult {
 	}
 
 	return resolver(uri)
-}
-
-var instance *didResolver
-var once sync.Once
-
-func GetDefaultResolver() *didResolver {
-	once.Do(func() {
-		instance = &didResolver{resolvers: make(map[string]MethodResolver)}
-		instance.RegisterMethodResolver("jwk", ResolveDIDJWK)
-	})
-
-	return instance
 }
