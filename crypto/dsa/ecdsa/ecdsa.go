@@ -10,7 +10,7 @@ const (
 	KeyType = "EC"
 )
 
-var AlgorithmIDs = map[string]bool{
+var algorithmIDs = map[string]bool{
 	SECP256K1AlgorithmID: true,
 }
 
@@ -79,5 +79,5 @@ func GetJWA(jwk jwk.JWK) (string, error) {
 }
 
 func SupportsAlgorithmID(id string) bool {
-	return AlgorithmIDs[id]
+	return algorithmIDs[id]
 }
