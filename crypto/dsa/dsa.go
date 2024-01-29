@@ -16,6 +16,7 @@ var AlgorithmID = struct {
 	ED25519:   eddsa.ED25519AlgorithmID,
 }
 
+// GeneratePrivateKey generates a private key using the algorithm specified by algorithmID.
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 	if ecdsa.SupportsAlgorithmID(algorithmID) {
 		return ecdsa.GeneratePrivateKey(algorithmID)
@@ -26,6 +27,7 @@ func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 	}
 }
 
+// GetPublicKey returns the public key corresponding to the given private key.
 func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 	switch privateKey.KTY {
 	case ecdsa.KeyType:
@@ -37,6 +39,7 @@ func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 	}
 }
 
+// Sign signs the payload using the given private key.
 func Sign(payload []byte, jwk jwk.JWK) ([]byte, error) {
 	switch jwk.KTY {
 	case ecdsa.KeyType:
@@ -48,6 +51,7 @@ func Sign(payload []byte, jwk jwk.JWK) ([]byte, error) {
 	}
 }
 
+// Verify verifies the signature of the payload using the given public key.
 func Verify(payload []byte, signature []byte, jwk jwk.JWK) (bool, error) {
 	switch jwk.KTY {
 	case ecdsa.KeyType:
@@ -59,6 +63,7 @@ func Verify(payload []byte, signature []byte, jwk jwk.JWK) (bool, error) {
 	}
 }
 
+// GetJWA returns the JWA (JSON Web Algorithm) algorithm corresponding to the given key.
 func GetJWA(jwk jwk.JWK) (string, error) {
 	switch jwk.KTY {
 	case ecdsa.KeyType:
