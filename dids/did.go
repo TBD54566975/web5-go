@@ -42,6 +42,7 @@ type DID struct {
 	Fragment string
 }
 
+// relevant ABNF rules: https://www.w3.org/TR/did-core/#did-syntax
 var (
 	pctEncodedPattern = `(?:%[0-9a-fA-F]{2})`
 	idCharPattern     = `(?:[a-zA-Z0-9._-]|` + pctEncodedPattern + `)`
