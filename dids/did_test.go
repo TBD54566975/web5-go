@@ -80,7 +80,7 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, v := range vectors {
-		did, err := dids.ParseURI(v.input)
+		did, err := dids.Parse(v.input)
 
 		if v.error && err == nil {
 			t.Errorf("expected error, got nil")

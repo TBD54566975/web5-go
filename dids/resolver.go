@@ -27,7 +27,7 @@ type didResolver struct {
 }
 
 func (r *didResolver) resolve(uri string) ResolutionResult {
-	did, err := ParseURI(uri)
+	did, err := Parse(uri)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid")
 	}

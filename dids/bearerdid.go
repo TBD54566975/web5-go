@@ -56,7 +56,7 @@ func (d *BearerDID) ToKeys() (PortableDID, error) {
 // FromKeys imports a BearerDID from a portable format that contains the DID's URI in addition to
 // every private key associated with a verification method.
 func BearerDIDFromKeys(portableDID PortableDID) (BearerDID, error) {
-	didURI, err := ParseURI(portableDID.URI)
+	didURI, err := Parse(portableDID.URI)
 	if err != nil {
 		return BearerDID{}, err
 	}

@@ -13,6 +13,10 @@ type DID struct {
 	// Spec: https://www.w3.org/TR/did-core/#did-syntax
 	URI string
 
+	// URL represents the DID URI + A network location identifier for a specific resource
+	// Spec: https://www.w3.org/TR/did-core/#did-url-syntax
+	URL string
+
 	// Method specifies the DID method in the URI, which indicates the underlying
 	// method-specific identifier scheme (e.g., jwk, dht, key, etc.).
 	// Spec: https://www.w3.org/TR/did-core/#method-schemes
@@ -42,6 +46,23 @@ type DID struct {
 	Fragment string
 }
 
+func (d DID) String() string {
+	return d.URL
+}
+
+func (d DID) MarshalText() (text []byte, err error) {
+	return []byte(d.String()), nil
+}
+
+func (d *DID) UnmarshalText(text []byte) error {
+	did, err := Parse(string(text))
+	if err != nil {
+		return err
+	}
+	*d = did
+	return nil
+}
+
 // relevant ABNF rules: https://www.w3.org/TR/did-core/#did-syntax
 var (
 	pctEncodedPattern = `(?:%[0-9a-fA-F]{2})`
@@ -57,18 +78,19 @@ var (
 	didURIPattern     = regexp.MustCompile(`^did:` + methodPattern + `:` + methodIDPattern + paramsPattern + pathPattern + queryPattern + fragmentPattern + `$`)
 )
 
-// ParseURI parses a DID URI in accordance to the ABNF rules specified in the
+// Parse parses a DID URI in accordance to the ABNF rules specified in the
 // specification here: https://www.w3.org/TR/did-core/#did-syntax. Returns
 // a DIDURI instance if parsing is successful. Otherwise, returns an error.
-func ParseURI(input string) (DID, error) {
+func Parse(input string) (DID, error) {
 	match := didURIPattern.FindStringSubmatch(input)
 
 	if match == nil {
 		return DID{}, fmt.Errorf("invalid DID URI")
 	}
 
-	didURI := DID{
+	did := DID{
 		URI:    "did:" + match[1] + ":" + match[2],
+		URL:    input,
 		Method: match[1],
 		ID:     match[2],
 	}
@@ -80,18 +102,18 @@ func ParseURI(input string) (DID, error) {
 			kv := strings.Split(p, "=")
 			parsedParams[kv[0]] = kv[1]
 		}
-		didURI.Params = parsedParams
+		did.Params = parsedParams
 	}
 
 	if match[6] != "" {
-		didURI.Path = match[6]
+		did.Path = match[6]
 	}
 	if match[7] != "" {
-		didURI.Query = match[7][1:]
+		did.Query = match[7][1:]
 	}
 	if match[8] != "" {
-		didURI.Fragment = match[8][1:]
+		did.Fragment = match[8][1:]
 	}
 
-	return didURI, nil
+	return did, nil
 }

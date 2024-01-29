@@ -76,7 +76,7 @@ func NewDIDJWK(opts ...newDIDJWKOption) (BearerDID, error) {
 
 // Resolves the provided DID URI
 func ResolveDIDJWK(uri string) ResolutionResult {
-	did, err := ParseURI(uri)
+	did, err := Parse(uri)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid")
 	}
