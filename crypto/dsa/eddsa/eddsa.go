@@ -14,7 +14,7 @@ const (
 	KeyType string = "OKP"
 )
 
-var AlgorithmIDs = map[string]bool{
+var algorithmIDs = map[string]bool{
 	ED25519AlgorithmID: true,
 }
 
@@ -62,5 +62,5 @@ func GetJWA(jwk jwk.JWK) (string, error) {
 }
 
 func SupportsAlgorithmID(id string) bool {
-	return AlgorithmIDs[id]
+	return algorithmIDs[id]
 }
