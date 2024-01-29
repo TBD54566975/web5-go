@@ -17,19 +17,13 @@ var AlgorithmID = struct {
 }
 
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
-
-	var privateKey jwk.JWK
-	var err error
-
 	if ecdsa.SupportsAlgorithmID(algorithmID) {
-		privateKey, err = ecdsa.GeneratePrivateKey(algorithmID)
+		return ecdsa.GeneratePrivateKey(algorithmID)
 	} else if eddsa.SupportsAlgorithmID(algorithmID) {
-		privateKey, err = eddsa.GeneratePrivateKey(algorithmID)
+		return eddsa.GeneratePrivateKey(algorithmID)
 	} else {
-		err = fmt.Errorf("unsupported algorithm: %s", algorithmID)
+		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 	}
-
-	return privateKey, err
 }
 
 func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
@@ -44,35 +38,25 @@ func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 }
 
 func Sign(payload []byte, jwk jwk.JWK) ([]byte, error) {
-	var err error
-	var signature []byte
-
 	switch jwk.KTY {
 	case ecdsa.KeyType:
-		signature, err = ecdsa.Sign(payload, jwk)
+		return ecdsa.Sign(payload, jwk)
 	case eddsa.KeyType:
-		signature, err = eddsa.Sign(payload, jwk)
+		return eddsa.Sign(payload, jwk)
 	default:
-		err = fmt.Errorf("unsupported key type: %s", jwk.KTY)
+		return nil, fmt.Errorf("unsupported key type: %s", jwk.KTY)
 	}
-
-	return signature, err
 }
 
 func Verify(payload []byte, signature []byte, jwk jwk.JWK) (bool, error) {
-	var err error
-	var valid bool
-
 	switch jwk.KTY {
 	case ecdsa.KeyType:
-		valid, err = ecdsa.Verify(payload, signature, jwk)
+		return ecdsa.Verify(payload, signature, jwk)
 	case eddsa.KeyType:
-		valid, err = eddsa.Verify(payload, signature, jwk)
+		return eddsa.Verify(payload, signature, jwk)
 	default:
-		err = fmt.Errorf("unsupported key type: %s", jwk.KTY)
+		return false, fmt.Errorf("unsupported key type: %s", jwk.KTY)
 	}
-
-	return valid, err
 }
 
 func GetJWA(jwk jwk.JWK) (string, error) {
