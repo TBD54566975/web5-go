@@ -15,17 +15,12 @@ var algorithmIDs = map[string]bool{
 }
 
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
-	var privateKey jwk.JWK
-	var err error
-
 	switch algorithmID {
 	case SECP256K1AlgorithmID:
-		privateKey, err = SECP256K1GeneratePrivateKey()
+		return SECP256K1GeneratePrivateKey()
 	default:
-		err = fmt.Errorf("unsupported algorithm: %s", algorithmID)
+		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 	}
-
-	return privateKey, err
 }
 
 func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
@@ -42,31 +37,21 @@ func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 		return nil, fmt.Errorf("d must be set")
 	}
 
-	var signature []byte
-	var err error
-
 	switch privateKey.CRV {
 	case SECP256K1JWACurve:
-		signature, err = SECP256K1Sign(payload, privateKey)
+		return SECP256K1Sign(payload, privateKey)
 	default:
-		err = fmt.Errorf("unsupported curve: %s", privateKey.CRV)
+		return nil, fmt.Errorf("unsupported curve: %s", privateKey.CRV)
 	}
-
-	return signature, err
 }
 
 func Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
-	var valid bool
-	var err error
-
 	switch publicKey.CRV {
 	case SECP256K1JWACurve:
-		valid, err = SECP256K1Verify(payload, signature, publicKey)
+		return SECP256K1Verify(payload, signature, publicKey)
 	default:
-		err = fmt.Errorf("unsupported curve: %s", publicKey.CRV)
+		return false, fmt.Errorf("unsupported curve: %s", publicKey.CRV)
 	}
-
-	return valid, err
 }
 
 func GetJWA(jwk jwk.JWK) (string, error) {

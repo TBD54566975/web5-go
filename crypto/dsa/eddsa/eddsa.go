@@ -19,17 +19,12 @@ var AlgorithmIDs = map[string]bool{
 }
 
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
-	var privateKey jwk.JWK
-	var err error
-
 	switch algorithmID {
 	case ED25519AlgorithmID:
-		privateKey, err = ED25519GeneratePrivateKey()
+		return ED25519GeneratePrivateKey()
 	default:
-		err = fmt.Errorf("unsupported algorithm: %s", algorithmID)
+		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 	}
-
-	return privateKey, err
 }
 
 func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
@@ -54,17 +49,12 @@ func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 }
 
 func Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
-	var valid bool
-	var err error
-
 	switch publicKey.CRV {
 	case ED25519JWACurve:
-		valid, err = ED25519Verify(payload, signature, publicKey)
+		return ED25519Verify(payload, signature, publicKey)
 	default:
-		err = fmt.Errorf("unsupported curve: %s", publicKey.CRV)
+		return false, fmt.Errorf("unsupported curve: %s", publicKey.CRV)
 	}
-
-	return valid, err
 }
 
 func GetJWA(jwk jwk.JWK) (string, error) {
