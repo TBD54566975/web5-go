@@ -15,10 +15,10 @@ type newDIDJWKOptions struct {
 	algorithmID string
 }
 
-type newDIDJWKOption func(o *newDIDJWKOptions)
+type NewDIDJWKOption func(o *newDIDJWKOptions)
 
 // KeyManager is an option that can be passed to NewDIDJWK to provide a KeyManager
-func KeyManager(k crypto.KeyManager) newDIDJWKOption {
+func KeyManager(k crypto.KeyManager) NewDIDJWKOption {
 	return func(o *newDIDJWKOptions) {
 		o.keyManager = k
 	}
@@ -26,7 +26,7 @@ func KeyManager(k crypto.KeyManager) newDIDJWKOption {
 
 // AlgorithmID is an option that can be passed to NewDIDJWK to specify a specific
 // cryptographic algorithm to use to generate the private key
-func AlgorithmID(id string) newDIDJWKOption {
+func AlgorithmID(id string) NewDIDJWKOption {
 	return func(o *newDIDJWKOptions) {
 		o.algorithmID = id
 	}
@@ -38,7 +38,7 @@ func AlgorithmID(id string) newDIDJWKOption {
 //   - Service endpoints are not necessary
 //
 // Spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
-func NewDIDJWK(opts ...newDIDJWKOption) (BearerDID, error) {
+func NewDIDJWK(opts ...NewDIDJWKOption) (BearerDID, error) {
 	o := newDIDJWKOptions{
 		keyManager:  crypto.NewLocalKeyManager(),
 		algorithmID: dsa.AlgorithmID.ED25519,
