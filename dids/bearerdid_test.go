@@ -3,6 +3,7 @@ package dids_test
 import (
 	"testing"
 
+	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/dids"
 	"github.com/tbd54566975/web5-go/jwk"
 	"github.com/tbd54566975/web5-go/jws"
@@ -10,59 +11,35 @@ import (
 
 func Test_ToKeys(t *testing.T) {
 	did, err := dids.NewDIDJWK()
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	portableDID, err := did.ToKeys()
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
-	if portableDID.URI != did.URI {
-		t.Errorf("expected uri %s, got %s", did.URI, portableDID.URI)
-	}
+	assert.Equal[string](t, did.URI, portableDID.URI)
+	assert.True(t, len(portableDID.VerificationMethod) == 1, "expected 1 key")
 
-	if len(portableDID.VerificationMethod) != 1 {
-		t.Errorf("expected 1 key, got %d", len(portableDID.VerificationMethod))
-	}
+	vm := portableDID.VerificationMethod[0]
 
-	if (portableDID.VerificationMethod[0].PublicKeyJWK == jwk.JWK{}) {
-		t.Errorf("expected publicKeyJwk to not be empty")
-	}
-
-	if (portableDID.VerificationMethod[0].PrivateKeyJWK == jwk.JWK{}) {
-		t.Errorf("expected publicKeyJwk to not be empty")
-	}
+	assert.NotEqual[jwk.JWK](t, vm.PublicKeyJWK, jwk.JWK{}, "expected publicKeyJwk to not be empty")
+	assert.NotEqual[jwk.JWK](t, vm.PrivateKeyJWK, jwk.JWK{}, "expected privateKeyJWK to not be empty")
 }
 
 func TestBearerDIDFromKeys(t *testing.T) {
 	did, err := dids.NewDIDJWK()
-	if err != nil {
-		t.Errorf("failed to create DID %v", err)
-	}
+	assert.NoError(t, err)
 
 	portableDID, err := did.ToKeys()
-	if err != nil {
-		t.Errorf("failed to export DID")
-	}
+	assert.NoError(t, err)
 
 	importedDID, err := dids.BearerDIDFromKeys(portableDID)
-	if err != nil {
-		t.Errorf("failed to import DID %v", err)
-	}
+	assert.NoError(t, err)
 
 	compactJWS, err := jws.Sign("hi", did)
-	if err != nil {
-		t.Errorf("failed to sign with did: %v", err)
-	}
+	assert.NoError(t, err)
 
 	compactJWSAgane, err := jws.Sign("hi", importedDID)
-	if err != nil {
-		t.Errorf("failed to sign with imported did: %v", err)
-	}
+	assert.NoError(t, err)
 
-	if compactJWS != compactJWSAgane {
-		t.Errorf("failed to produce same signature with imported did")
-	}
+	assert.Equal[string](t, compactJWS, compactJWSAgane, "failed to produce same signature with imported did")
 }

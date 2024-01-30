@@ -3,32 +3,17 @@ package ecdsa_test
 import (
 	"testing"
 
+	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/crypto/dsa/ecdsa"
 )
 
 func TestSECP256K1GeneratePrivateKey(t *testing.T) {
 	key, err := ecdsa.SECP256K1GeneratePrivateKey()
-	if err != nil {
-		t.Errorf("failed to generate private key: %v", err.Error())
-	}
+	assert.NoError(t, err)
 
-	if key.KTY != ecdsa.KeyType {
-		t.Errorf("unexpected key type. expected: %v got: %v", ecdsa.KeyType, key.KTY)
-	}
-
-	if key.CRV != ecdsa.SECP256K1JWACurve {
-		t.Errorf("unexpected curve. expected: %v got: %v", ecdsa.SECP256K1JWACurve, key.CRV)
-	}
-
-	if key.D == "" {
-		t.Errorf("d is empty")
-	}
-
-	if key.X == "" {
-		t.Errorf("x is empty")
-	}
-
-	if key.Y == "" {
-		t.Errorf("y is empty")
-	}
+	assert.Equal(t, ecdsa.KeyType, key.KTY)
+	assert.Equal(t, ecdsa.SECP256K1JWACurve, key.CRV)
+	assert.True(t, key.D != "", "privateJwk.D is empty")
+	assert.True(t, key.X != "", "privateJwk.X is empty")
+	assert.True(t, key.Y != "", "privateJwk.Y is empty")
 }

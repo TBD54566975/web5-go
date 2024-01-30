@@ -3,6 +3,7 @@ package dids_test
 import (
 	"testing"
 
+	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/dids"
 )
 
@@ -93,37 +94,24 @@ func TestParse(t *testing.T) {
 			continue
 		}
 
-		if did.Method != v.output["method"] {
-			t.Errorf("expected method %s, got %s", v.output["method"], did.Method)
-		}
-
-		if did.ID != v.output["id"] {
-			t.Errorf("expected id %s, got %s", v.output["id"], did.ID)
-		}
+		assert.Equal[interface{}](t, did.Method, v.output["method"])
+		assert.Equal[interface{}](t, did.ID, v.output["id"])
 
 		if v.output["params"] != nil {
 			params, ok := v.output["params"].(map[string]string)
-			if !ok {
-				t.Errorf("failed to assert params as map[string]string")
-				continue
-			}
+			assert.True(t, ok, "expected params to be map[string]string")
+
 			for k, v := range params {
-				if did.Params[k] != v {
-					t.Errorf("expected param %s to be %s, got %s", k, v, did.Params[k])
-				}
+				assert.Equal[interface{}](t, did.Params[k], v)
 			}
 		}
 
 		if v.output["query"] != nil {
-			if did.Query != v.output["query"] {
-				t.Errorf("expected query %s, got %s", v.output["query"], did.Query)
-			}
+			assert.Equal[interface{}](t, did.Query, v.output["query"])
 		}
 
 		if v.output["fragment"] != nil {
-			if did.Fragment != v.output["fragment"] {
-				t.Errorf("expected fragment %s, got %s", v.output["fragment"], did.Fragment)
-			}
+			assert.Equal[interface{}](t, did.Fragment, v.output["fragment"])
 		}
 	}
 }
