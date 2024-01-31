@@ -71,6 +71,10 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 		return false, fmt.Errorf("failed to parse public key: %w", err)
 	}
 
+	if len(signature) != 64 {
+		return false, fmt.Errorf("signature must be 64 bytes")
+	}
+
 	r := new(_secp256k1.ModNScalar)
 	r.SetByteSlice(signature[:32])
 
