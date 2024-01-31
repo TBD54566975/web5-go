@@ -1,6 +1,10 @@
 package dids
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/alecthomas/assert/v2"
+)
 
 func TestAddVerificationMethod(t *testing.T) {
 	doc := Document{
@@ -16,15 +20,7 @@ func TestAddVerificationMethod(t *testing.T) {
 
 	doc.AddVerificationMethod(vm, Purposes("authentication"))
 
-	if len(doc.VerificationMethod) != 1 {
-		t.Errorf("expected 1 verification method, got %d", len(doc.VerificationMethod))
-	}
-
-	if len(doc.Authentication) != 1 {
-		t.Errorf("expected 1 authentication method, got %d", len(doc.Authentication))
-	}
-
-	if doc.Authentication[0] != vm.ID {
-		t.Errorf("expected authentication method %s, got %s", vm.ID, doc.Authentication[0])
-	}
+	assert.Equal(t, len(doc.VerificationMethod), 1)
+	assert.Equal(t, len(doc.Authentication), 1)
+	assert.Equal(t, doc.Authentication[0], vm.ID)
 }

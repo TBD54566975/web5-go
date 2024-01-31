@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/dids"
 	"github.com/tbd54566975/web5-go/jws"
 	"github.com/tbd54566975/web5-go/jwt"
@@ -17,22 +18,13 @@ func TestClaims_MarshalJSON(t *testing.T) {
 	}
 
 	b, err := json.Marshal(&claims)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	obj := make(map[string]interface{})
-	if err := json.Unmarshal(b, &obj); err != nil {
-		t.Fatal(err)
-	}
+	json.Unmarshal(b, &obj)
 
-	if obj["iss"] != "issuer" {
-		t.Errorf("expected iss to be 'issuer', got %v", obj["iss"])
-	}
-
-	if obj["foo"] == nil {
-		t.Errorf("expected foo to not be nil")
-	}
+	assert.Equal(t, obj["iss"], "issuer")
+	assert.False(t, obj["foo"] == nil)
 }
 
 func TestClaims_UnmarshalJSON(t *testing.T) {
@@ -42,32 +34,19 @@ func TestClaims_UnmarshalJSON(t *testing.T) {
 	}
 
 	b, err := json.Marshal(&claims)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	claimsAgane := jwt.Claims{}
 	json.Unmarshal(b, &claimsAgane)
 
-	if claimsAgane.Issuer != claims.Issuer {
-		t.Errorf("expected claims issuer to be %v. got %v", claims.Issuer, claimsAgane.Issuer)
-	}
-
-	if claimsAgane.Misc["foo"] == nil {
-		t.Errorf("expected private claim to be present")
-	}
-
-	if claimsAgane.Misc["foo"] != claims.Misc["foo"] {
-		t.Errorf("expected private claim to be %v. got %v",
-			claims.Misc["foo"], claimsAgane.Misc["foo"])
-	}
+	assert.Equal(t, claims.Issuer, claimsAgane.Issuer)
+	assert.False(t, claimsAgane.Misc["foo"] == nil)
+	assert.Equal(t, claimsAgane.Misc["foo"], claims.Misc["foo"])
 }
 
 func TestSign(t *testing.T) {
 	did, err := dids.NewDIDJWK()
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	claims := jwt.Claims{
 		Issuer: did.ID,
@@ -75,20 +54,14 @@ func TestSign(t *testing.T) {
 	}
 
 	jwt, err := jwt.Sign(claims, did)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
-	if jwt == "" {
-		t.Errorf("expected jwt to not be empty")
-	}
+	assert.False(t, jwt == "", "expected jwt to not be empty")
 }
 
 func TestVerify(t *testing.T) {
 	did, err := dids.NewDIDJWK()
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	claims := jwt.Claims{
 		Issuer: did.ID,
@@ -96,22 +69,14 @@ func TestVerify(t *testing.T) {
 	}
 
 	signedJwt, err := jwt.Sign(claims, did)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
-	if signedJwt == "" {
-		t.Errorf("expected jwt to not be empty")
-	}
+	assert.False(t, signedJwt == "", "expected jwt to not be empty")
 
 	verified, err := jwt.Verify(signedJwt)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
-	if !verified {
-		t.Errorf("expected jwt to be verified")
-	}
+	assert.True(t, verified, "expected verified")
 }
 
 func TestVerify_BadClaims(t *testing.T) {
@@ -119,14 +84,6 @@ func TestVerify_BadClaims(t *testing.T) {
 	input := fmt.Sprintf("%s.%s.%s", okHeader, "hehe", "hehe")
 
 	verified, err := jwt.Verify(input)
-	if err == nil {
-		t.Errorf("expected error")
-	}
-
-	if verified {
-		t.Errorf("expected !verified")
-	}
-
-	fmt.Printf("err: %v\n", err.Error())
-
+	assert.Error(t, err)
+	assert.False(t, verified, "expected !verified")
 }

@@ -7,30 +7,23 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/dids"
 	"github.com/tbd54566975/web5-go/jws"
 )
 
 func TestSign(t *testing.T) {
 	did, err := dids.NewDIDJWK()
-	if err != nil {
-		t.Errorf("failed to create did: %v", err.Error())
-	}
+	assert.NoError(t, err)
 
 	payload := map[string]interface{}{"hello": "world"}
 	compactJWS, err := jws.Sign(payload, did)
-	if err != nil {
-		t.Errorf("failed to sign: %v", err.Error())
-	}
+	assert.NoError(t, err)
 
-	if compactJWS == "" {
-		t.Errorf("signature is empty: %v", err.Error())
-	}
+	assert.True(t, compactJWS != "", "expected signature to be non-empty")
 
 	parts := strings.Split(compactJWS, ".")
-	if len(parts) != 3 {
-		t.Errorf("invalid jws format. expected 3 parts. got %d", len(parts))
-	}
+	assert.Equal(t, len(parts), 3, "expected 3 parts in compact JWS")
 }
 
 func TestVerify_bad(t *testing.T) {
@@ -53,37 +46,23 @@ func TestVerify_bad(t *testing.T) {
 
 	for _, vector := range vectors {
 		ok, err := jws.Verify(vector)
-		if err == nil {
-			t.Errorf("expected verification error. vector: %s", vector)
-		}
 
-		fmt.Printf("vector: %s, err: %v\n", vector, err)
-
-		if ok {
-			t.Errorf("expected verification !ok. vector %s", vector)
-		}
+		assert.Error(t, err, "expected verification error. vector: %s", vector)
+		assert.False(t, ok, "expected verification !ok. vector %s", vector)
 	}
 }
 
 func TestVerify_ok(t *testing.T) {
 	did, err := dids.NewDIDJWK()
-	if err != nil {
-		t.Errorf("failed to create did: %v", err.Error())
-	}
+	assert.NoError(t, err)
 
 	payloadJSON := map[string]interface{}{"hello": "world"}
 	compactJWS, err := jws.Sign(payloadJSON, did)
 
-	if err != nil {
-		t.Errorf("failed to sign: %v", err.Error())
-	}
+	assert.NoError(t, err)
 
 	ok, err := jws.Verify(compactJWS)
-	if err != nil {
-		t.Errorf("failed to verify: %v", err.Error())
-	}
+	assert.NoError(t, err)
 
-	if !ok {
-		t.Errorf("expected verification ok")
-	}
+	assert.True(t, ok, "expected verification ok")
 }
