@@ -10,7 +10,7 @@ import (
 )
 
 func TestGeneratePrivateKeySECP256K1(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 
 	assert.NoError(t, err)
 	assert.Equal[string](t, privateJwk.CRV, ecdsa.SECP256K1JWACurve)
@@ -21,7 +21,7 @@ func TestGeneratePrivateKeySECP256K1(t *testing.T) {
 }
 
 func TestGeneratePrivateKeyED25519(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.ED25519)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDED25519)
 	if err != nil {
 		t.Errorf("failed to generate private key: %v", err.Error())
 	}
@@ -34,7 +34,7 @@ func TestGeneratePrivateKeyED25519(t *testing.T) {
 }
 
 func TestSignSECP256K1(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 	assert.NoError(t, err)
 
 	payload := []byte("hello world")
@@ -45,7 +45,7 @@ func TestSignSECP256K1(t *testing.T) {
 }
 
 func TestSignED25519(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.ED25519)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDED25519)
 	assert.NoError(t, err)
 
 	payload := []byte("hello world")
@@ -56,7 +56,7 @@ func TestSignED25519(t *testing.T) {
 }
 
 func TestSignDeterministicSECP256K1(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 	assert.NoError(t, err)
 
 	payload := []byte("hello world")
@@ -70,7 +70,7 @@ func TestSignDeterministicSECP256K1(t *testing.T) {
 }
 
 func TestSignDeterministicED25519(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.ED25519)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDED25519)
 	assert.NoError(t, err)
 
 	payload := []byte("hello world")
@@ -84,7 +84,7 @@ func TestSignDeterministicED25519(t *testing.T) {
 }
 
 func TestVerifySECP256K1(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 	assert.NoError(t, err)
 
 	payload := []byte("hello world")
@@ -100,7 +100,7 @@ func TestVerifySECP256K1(t *testing.T) {
 }
 
 func TestVerifyED25519(t *testing.T) {
-	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmID.ED25519)
+	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDED25519)
 	assert.NoError(t, err)
 
 	payload := []byte("hello world")

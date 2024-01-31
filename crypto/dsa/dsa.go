@@ -8,13 +8,10 @@ import (
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
-var AlgorithmID = struct {
-	SECP256K1 string
-	ED25519   string
-}{
-	SECP256K1: ecdsa.SECP256K1AlgorithmID,
-	ED25519:   eddsa.ED25519AlgorithmID,
-}
+const (
+	AlgorithmIDSECP256K1 = ecdsa.SECP256K1AlgorithmID
+	AlgorithmIDED25519   = eddsa.ED25519AlgorithmID
+)
 
 // GeneratePrivateKey generates a private key using the algorithm specified by algorithmID.
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {

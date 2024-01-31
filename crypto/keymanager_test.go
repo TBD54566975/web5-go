@@ -11,7 +11,7 @@ import (
 func TestGeneratePrivateKey(t *testing.T) {
 	keyManager := crypto.NewLocalKeyManager()
 
-	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
+	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 	assert.NoError(t, err)
 
 	assert.True(t, keyID != "", "keyID is empty")
@@ -20,7 +20,7 @@ func TestGeneratePrivateKey(t *testing.T) {
 func TestGetPublicKey(t *testing.T) {
 	keyManager := crypto.NewLocalKeyManager()
 
-	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
+	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 	assert.NoError(t, err)
 
 	publicKey, err := keyManager.GetPublicKey(keyID)
@@ -35,7 +35,7 @@ func TestGetPublicKey(t *testing.T) {
 func TestSign(t *testing.T) {
 	keyManager := crypto.NewLocalKeyManager()
 
-	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmID.SECP256K1)
+	keyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 	assert.NoError(t, err)
 
 	payload := []byte("hello world")
