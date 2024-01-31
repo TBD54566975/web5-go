@@ -23,10 +23,11 @@ func (d *BearerDID) ToKeys() (PortableDID, error) {
 		return PortableDID{}, fmt.Errorf("key manager does not implement KeyExporter")
 	}
 
-	resolutionResult := Resolve(d.URI)
-	if resolutionResult.GetError() != "" {
-		return PortableDID{}, fmt.Errorf("failed to resolve DID: %s", resolutionResult.GetError())
+	resolutionResult, err := Resolve(d.URI)
+	if err != nil {
+		return PortableDID{}, fmt.Errorf("failed to resolve DID: %w", err)
 	}
+
 	portableDID := PortableDID{URI: d.URI}
 	keys := make([]VerificationMethodKeyPair, 0)
 

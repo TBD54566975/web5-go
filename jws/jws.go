@@ -90,9 +90,9 @@ func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, err
 		opt(&o)
 	}
 
-	resolutionResult := dids.Resolve(did.URI)
-	if resolutionResult.GetError() != "" {
-		return "", fmt.Errorf("DID resolution error: %s", resolutionResult.GetError())
+	resolutionResult, err := dids.Resolve(did.URI)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve DID: %w", err)
 	}
 
 	var verificationMethodID string
@@ -212,9 +212,9 @@ func Verify(compactJWS string) (bool, error) {
 
 	var didURI = verificationMethodIDParts[0]
 
-	resolutionResult := dids.Resolve(didURI)
-	if resolutionResult.GetError() != "" {
-		return false, fmt.Errorf("failed to resolve DID. error: %s", resolutionResult.GetError())
+	resolutionResult, err := dids.Resolve(didURI)
+	if err != nil {
+		return false, fmt.Errorf("failed to resolve DID: %w", err)
 	}
 
 	var verificationMethod dids.VerificationMethod

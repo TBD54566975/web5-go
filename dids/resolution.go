@@ -73,3 +73,17 @@ type ResolutionMetadata struct {
 	// [DID Specification Registries](https://www.w3.org/TR/did-spec-registries/#error)
 	Error string `json:"error,omitempty"`
 }
+
+// ResolutionError represents the error field of a ResolutionMetadata object. This struct implements error and is used to
+// surface the error code from the resolution process. it is returned as the error value from resolve as a means to
+// support idiomatic go error handling while also remaining spec compliant. It's worth mentioning that the spec expects
+// error to be returned within ResolutionMedata. Given this, the error code is also present on ResolutionMetadata whenever
+// an error occurs
+// well known code values can be found here: https://www.w3.org/TR/did-spec-registries/#error
+type ResolutionError struct {
+	Code string
+}
+
+func (e ResolutionError) Error() string {
+	return e.Code
+}

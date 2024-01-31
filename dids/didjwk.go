@@ -75,25 +75,25 @@ func NewDIDJWK(opts ...NewDIDJWKOption) (BearerDID, error) {
 }
 
 // Resolves the provided DID URI
-func ResolveDIDJWK(uri string) ResolutionResult {
+func ResolveDIDJWK(uri string) (ResolutionResult, error) {
 	did, err := Parse(uri)
 	if err != nil {
-		return ResolutionResultWithError("invalidDid")
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	if did.Method != "jwk" {
-		return ResolutionResultWithError("invalidDid")
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	decodedID, err := base64.RawURLEncoding.DecodeString(did.ID)
 	if err != nil {
-		return ResolutionResultWithError("invalidDid")
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	var jwk jwk.JWK
 	err = json.Unmarshal(decodedID, &jwk)
 	if err != nil {
-		return ResolutionResultWithError("invalidDid")
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	doc := Document{
@@ -113,5 +113,5 @@ func ResolveDIDJWK(uri string) ResolutionResult {
 		Purposes("assertionMethod", "authentication", "capabilityInvocation", "capabilityDelegation"),
 	)
 
-	return ResolutionResultWithDocument(doc)
+	return ResolutionResultWithDocument(doc), nil
 }
