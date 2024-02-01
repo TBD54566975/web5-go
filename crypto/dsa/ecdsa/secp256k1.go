@@ -86,3 +86,17 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 
 	return legit, nil
 }
+
+func SECP256K1BytesToPublicKey(input []byte) (jwk.JWK, error) {
+	pubKey, err := _secp256k1.ParsePubKey(input)
+	if err != nil {
+		return jwk.JWK{}, fmt.Errorf("failed to parse public key: %w", err)
+	}
+
+	return jwk.JWK{
+		KTY: KeyType,
+		CRV: SECP256K1JWACurve,
+		X:   base64.RawURLEncoding.EncodeToString(pubKey.X().Bytes()),
+		Y:   base64.RawURLEncoding.EncodeToString(pubKey.Y().Bytes()),
+	}, nil
+}

@@ -61,6 +61,15 @@ func GetJWA(jwk jwk.JWK) (string, error) {
 	return JWA, nil
 }
 
+func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
+	switch algorithmID {
+	case ED25519AlgorithmID:
+		return ED25519BytesToPublicKey(input)
+	default:
+		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
+	}
+}
+
 func SupportsAlgorithmID(id string) bool {
 	return algorithmIDs[id]
 }

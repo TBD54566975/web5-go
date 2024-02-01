@@ -115,3 +115,13 @@ func TestVerifyED25519(t *testing.T) {
 
 	assert.True(t, legit, "failed to verify signature")
 }
+
+func TestBytesToPublicKey_BadAlgorithm(t *testing.T) {
+	_, err := dsa.BytesToPublicKey("yolocrypto", []byte{0x00, 0x01, 0x02, 0x03})
+	assert.Error(t, err)
+}
+
+func TestBytesToPublicKey_BadBytes(t *testing.T) {
+	_, err := dsa.BytesToPublicKey(dsa.AlgorithmIDSECP256K1, []byte{0x00, 0x01, 0x02, 0x03})
+	assert.Error(t, err)
+}

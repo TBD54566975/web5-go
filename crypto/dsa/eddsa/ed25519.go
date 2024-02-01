@@ -49,3 +49,17 @@ func ED25519Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, e
 	legit := _ed25519.Verify(publicKeyBytes, payload, signature)
 	return legit, nil
 }
+
+func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
+	if len(input) != _ed25519.PublicKeySize {
+		return jwk.JWK{}, fmt.Errorf("invalid public key")
+	}
+
+	publicKey := jwk.JWK{
+		KTY: KeyType,
+		CRV: ED25519JWACurve,
+		X:   base64.RawURLEncoding.EncodeToString(input),
+	}
+
+	return publicKey, nil
+}

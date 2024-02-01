@@ -71,3 +71,14 @@ func GetJWA(jwk jwk.JWK) (string, error) {
 		return "", fmt.Errorf("unsupported key type: %s", jwk.KTY)
 	}
 }
+
+// BytesToPublicKey converts the given bytes to a public key based on the algorithm specified by algorithmID.
+func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
+	if ecdsa.SupportsAlgorithmID(algorithmID) {
+		return ecdsa.BytesToPublicKey(algorithmID, input)
+	} else if eddsa.SupportsAlgorithmID(algorithmID) {
+		return eddsa.BytesToPublicKey(algorithmID, input)
+	} else {
+		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
+	}
+}
