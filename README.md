@@ -1,38 +1,64 @@
-# $PROJECT_NAME README
+# web5-go <!-- omit in toc -->
 
-Congrats, project leads! You got a new project to grow!
+# Table of Contents <!-- omit in toc -->
+- [Summary](#summary)
+  - [`crypto`](#crypto)
+  - [`dids`](#dids)
+  - [`jws`](#jws)
+  - [`jwt`](#jwt)
+- [Development](#development)
+  - [Prerequisites](#prerequisites)
+    - [`hermit`](#hermit)
+    - [Helpful Commands](#helpful-commands)
+    - [Contributing](#contributing)
 
-This stub is meant to help you form a strong community around your work. It's yours to adapt, and may 
-diverge from this initial structure. Just keep the files seeded in this repo, and the rest is yours to evolve! 
 
-## Introduction
+# Summary
+This repo contains the following packages:
+| package  | description                                                                         |
+| :------- | :---------------------------------------------------------------------------------- |
+| `crypto` | Key Generation, signing, verification, and a Key Manager abstraction                |
+| `dids`   | DID creation and resolution.                                                        |
+| `jwk`    | implements a subset of the [JSON Web Key spec](https://tools.ietf.org/html/rfc7517) |
+| `jws`    | JWS signing and verification                                                        |
+| `jwt`    | JWT parsing, signing, and verification                                              |
 
-Orient users to the project here. This is a good place to start with an assumption
-that the user knows very little - so start with the Big Picture and show how this
-project fits into it. It may be good to reference/link the broader architecture in the
-`collaboration` repo or the developer site here.
 
-Then maybe a dive into what this project does.
+## `crypto`
+Supported Digital Signature Algorithms:
+* [`secp256k1`](https://en.bitcoin.it/wiki/Secp256k1)
+* [`Ed25519`](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1)
 
-Diagrams and other visuals are helpful here. Perhaps code snippets showing usage.
+## `dids`
+Supported DID Methods:
+* [`did:jwk`](https://github.com/quartzjer/did-jwk/blob/main/spec.md)
+* 🚧 [`did:dht`](https://github.com/TBD54566975/did-dht-method) 🚧
 
-Project leads should complete, alongside this `README`:
-* [CODEOWNERS](./CODEOWNERS) - set project lead(s)
-* [CONTRIBUTING.md](./CONTRIBUTING.md) - Fill out how to: install prereqs, build, test, run, access CI, chat, discuss, file issues
-* [Bug-report.md](.github/ISSUE_TEMPLATE/bug-report.md) - Fill out `Assignees` add codeowners @names
-* [config.yml](.github/ISSUE_TEMPLATE/config.yml) - remove "(/add your discord channel..)" and replace the url with your Discord channel if applicable
+## `jws`
+JWS signing and verification using DIDs
 
-The other files in this template repo may be used as-is:
-* [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
-* [GOVERNANCE.md](./GOVERNANCE.md)
-* [LICENSE](./LICENSE)
+## `jwt` 
+JWT signing and verification using DIDs
 
-## Project Resources
+# Development
 
-| Resource                                   | Description                                                                    |
-| ------------------------------------------ | ------------------------------------------------------------------------------ |
-| [CODEOWNERS](./CODEOWNERS)                 | Outlines the project lead(s)                                                   |
-| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | Expected behavior for project contributors, promoting a welcoming environment |
-| [CONTRIBUTING.md](./CONTRIBUTING.md)       | Developer guide to build, test, run, access CI, chat, discuss, file issues     |
-| [GOVERNANCE.md](./GOVERNANCE.md)           | Project governance                                                             |
-| [LICENSE](./LICENSE)                       | Apache License, Version 2.0                                                    |
+## Prerequisites
+
+### [`hermit`](https://cashapp.github.io/hermit/)
+This repo uses hermit to manage all environment dependencies (e.g. `just`, `go`). 
+
+> [!IMPORTANT]
+> run `. ./bin/activate-hermit` _everytime_ you enter this directory if you don't have hermit [shell hooks](https://cashapp.github.io/hermit/usage/shell/#shell-hooks) configured
+
+### Helpful Commands
+
+This repo uses [`just`](https://github.com/casey/just) as a command runner. Below is a table of helpful `just` commands:
+
+| command     | description    |
+| ----------- | -------------- |
+| `just test` | runs all tests |
+| `just lint` | runs linter    |
+
+
+### Contributing
+Each package's README contains in-depth information about the package's structure and suggestions on how add features specific to that package

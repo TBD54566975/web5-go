@@ -1,0 +1,131 @@
+run:
+  tests: true
+  timeout: 5m
+  skip-dirs:
+    - resources
+    - old
+  skip-files:
+    - cmd/protopkg/main.go
+
+output:
+  print-issued-lines: false
+
+linters:
+  enable-all: true
+  disable:
+    - maligned
+    - megacheck
+    - lll
+    - typecheck # `go build` catches this, and it doesn't currently work with Go 1.11 modules
+    - goimports # horrendously slow with go modules :(
+    - dupl # has never been actually useful
+    - gochecknoglobals
+    - gochecknoinits
+    - interfacer # author deprecated it because it provides bad suggestions
+    - funlen
+    - whitespace
+    - godox
+    - wsl
+    - dogsled
+    - gomnd
+    - gocognit
+    - gocyclo
+    - scopelint
+    - godot
+    - nestif
+    - testpackage
+    - goerr113
+    - gci
+    - gofumpt
+    - exhaustivestruct
+    - nlreturn
+    - forbidigo
+    - cyclop
+    - paralleltest
+    - ifshort # so annoying
+    - golint
+    - tagliatelle
+    - gomoddirectives
+    - varnamelen
+    - ireturn
+    - containedctx
+    - nilnil
+    - contextcheck
+    - nonamedreturns
+    - exhaustruct
+    - nosnakecase
+    - nosprintfhostport
+    - nilerr
+    - goconst
+    - prealloc
+    - deadcode # doesn't support generics
+    - varcheck # doesn't support generics
+    - structcheck # doesn't support generics
+    - rowserrcheck # doesn't support generics
+    - wastedassign # doesn't support generics
+    - goprintffuncname
+    - dupword
+    - errchkjson
+    - musttag
+    - gofmt # autofmt
+    - interfacebloat
+    - tagalign
+    - nolintlint
+    - wrapcheck # We might want to re-enable this if we manually wrap all the existing errors with fmt.Errorf
+
+linters-settings:
+  exhaustive:
+    default-signifies-exhaustive: true
+  govet:
+    check-shadowing: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 8
+    min-occurrences: 3
+  gocyclo:
+    min-complexity: 20
+  gocritic:
+    disabled-checks:
+      - ifElseChain
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: github.com/pkg/errors
+            desc: "use fmt.Errorf or errors.New"
+          - pkg: github.com/stretchr/testify
+            desc: "use fmt.Errorf or errors.New"
+          - pkg: github.com/alecthomas/errors
+            desc: "use fmt.Errorf or errors.New"
+          - pkg: braces.dev/errtrace
+            desc: "use fmt.Errorf or errors.New"
+  # wrapcheck:
+  #   ignorePackageGlobs:
+  #     - github.com/TBD54566975/ftl/*
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0
+  exclude-use-default: false
+  exclude:
+    # Captured by errcheck.
+    - "^(G104|G204):"
+    # Very commonly not checked.
+    - 'Error return value of .(.*\.Help|.*\.MarkFlagRequired|(os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*Print(f|ln|)|os\.(Un)?Setenv). is not checked'
+    # Weird error only seen on Kochiku...
+    - "internal error: no range for"
+    - 'exported method `.*\.(MarshalJSON|UnmarshalJSON|URN|Payload|GoString|Close|Provides|Requires|ExcludeFromHash|MarshalText|UnmarshalText|Description|Check|Poll|Severity)` should have comment or be unexported'
+    - "composite literal uses unkeyed fields"
+    - 'declaration of "err" shadows declaration'
+    - "by other packages, and that stutters"
+    - "Potential file inclusion via variable"
+    - "at least one file in a package should have a package comment"
+    - "bad syntax for struct tag pair"
+    - "should have comment or be unexported"
+    - "package-comments"
+    - "parameter testing.TB should have name tb"
+    - "blank-imports"
+    - 'should have comment \(or a comment on this block\) or be unexported'
+    - caseOrder
+    - unused-parameter
