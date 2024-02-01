@@ -55,11 +55,9 @@ func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
 		return jwk.JWK{}, fmt.Errorf("invalid public key")
 	}
 
-	publicKey := jwk.JWK{
+	return jwk.JWK{
 		KTY: KeyType,
 		CRV: ED25519JWACurve,
 		X:   base64.RawURLEncoding.EncodeToString(input),
-	}
-
-	return publicKey, nil
+	}, nil
 }
