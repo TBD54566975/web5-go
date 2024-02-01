@@ -87,6 +87,7 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 	return legit, nil
 }
 
+// SECP256K1BytesToPublicKey converts a secp256k1 public key to a JWK. Supports both Compressed and Uncompressed public keys described in https://www.secg.org/sec1-v2.pdf section 2.3.3
 func SECP256K1BytesToPublicKey(input []byte) (jwk.JWK, error) {
 	pubKey, err := _secp256k1.ParsePubKey(input)
 	if err != nil {
