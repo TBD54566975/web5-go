@@ -83,6 +83,6 @@ type PortableDID struct {
 // VerificationMethodKeyPair is a public/private keypair associated to a
 // BearerDID's verification method. Used in PortableDID
 type VerificationMethodKeyPair struct {
-	PublicKeyJWK  jwk.JWK `json:"publicKeyJwk"`
-	PrivateKeyJWK jwk.JWK `json:"privateKeyJwk"`
+	PublicKeyJWK  *jwk.JWK `json:"publicKeyJwk"`
+	PrivateKeyJWK jwk.JWK  `json:"privateKeyJwk"`
 }

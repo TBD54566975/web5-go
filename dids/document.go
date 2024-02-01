@@ -36,7 +36,7 @@ type Document struct {
 	// Service expresses ways of communicating with the DID subject or associated entities.
 	// A service can be any type of service the DID subject wants to advertise.
 	// spec reference: https://www.w3.org/TR/did-core/#verification-methods
-	Service []Service `json:"service,omitempty"`
+	Service []*Service `json:"service,omitempty"`
 
 	// AssertionMethod is used to specify how the DID subject is expected to express claims,
 	// such as for the purposes of issuing a Verifiable Credential.
@@ -95,6 +95,10 @@ func (d *Document) AddVerificationMethod(method VerificationMethod, opts ...AddV
 			d.CapabilityInvocation = append(d.CapabilityInvocation, method.ID)
 		}
 	}
+}
+
+func (d *Document) AddService(service *Service) {
+	d.Service = append(d.Service, service)
 }
 
 // DocumentMetadata contains metadata about the DID Document
@@ -182,5 +186,5 @@ type VerificationMethod struct {
 	// a value that conforms to the rules in DID Syntax: https://www.w3.org/TR/did-core/#did-syntax
 	Controller string `json:"controller"`
 	// specification reference: https://www.w3.org/TR/did-core/#dfn-publickeyjwk
-	PublicKeyJwk jwk.JWK `json:"publicKeyJwk,omitempty"`
+	PublicKeyJwk *jwk.JWK `json:"publicKeyJwk,omitempty"`
 }
