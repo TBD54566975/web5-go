@@ -105,7 +105,7 @@ func ResolveDIDJWK(uri string) (ResolutionResult, error) {
 		ID:           uri + "#0",
 		Type:         "JsonWebKey2020",
 		Controller:   uri,
-		PublicKeyJwk: jwk,
+		PublicKeyJwk: &jwk,
 	}
 
 	doc.AddVerificationMethod(

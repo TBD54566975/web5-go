@@ -12,6 +12,7 @@ import (
 // spec allows for that are not represented here at the moment. This is because we
 // only need a subset of the spec for our purposes.
 type JWK struct {
+	ALG string `json:"alg,omitempty"`
 	KTY string `json:"kty,omitempty"`
 	CRV string `json:"crv,omitempty"`
 	D   string `json:"d,omitempty"`
