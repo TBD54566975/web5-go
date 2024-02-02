@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
@@ -26,7 +27,7 @@ func TestResolveDIDJWK(t *testing.T) {
 	assert.Equal(t, len(result.Document.VerificationMethod), 1)
 
 	vm := result.Document.VerificationMethod[0]
-	assert.True(t, vm != VerificationMethod{}, "expected verification method to be non-empty")
+	assert.True(t, vm != didcore.VerificationMethod{}, "expected verification method to be non-empty")
 	assert.NotEqual[jwk.JWK](t, jwk.JWK{}, *vm.PublicKeyJwk, "expected publicKeyJwk to be non-empty")
 
 	assert.Equal(t, len(result.Document.Authentication), 1)

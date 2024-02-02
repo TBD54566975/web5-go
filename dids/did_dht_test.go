@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -57,7 +58,7 @@ func TestDHTResolve(t *testing.T) {
 		didURI               string
 		msg                  dnsmessage.Message
 		expectedErrorMessage string
-		assertResult         func(t *testing.T, d *Document)
+		assertResult         func(t *testing.T, d *didcore.Document)
 	}{
 		"did with valid key and no service": {
 			didURI: "did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy",
@@ -66,7 +67,7 @@ func TestDHTResolve(t *testing.T) {
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 			),
 
-			assertResult: func(t *testing.T, d *Document) {
+			assertResult: func(t *testing.T, d *didcore.Document) {
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
@@ -81,7 +82,7 @@ func TestDHTResolve(t *testing.T) {
 				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=2;k=%s", base64EncodedSecp256k)),
 			),
 
-			assertResult: func(t *testing.T, d *Document) {
+			assertResult: func(t *testing.T, d *didcore.Document) {
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.Equal[int](t, 3, len(d.VerificationMethod), "Expected 3 verification methods")
@@ -96,7 +97,7 @@ func TestDHTResolve(t *testing.T) {
 				WithDNSRecord("_s1._did.", "id=dwn;t=DecentralizedWebNode;se=https://dwn.tbddev.org/dwn5"),
 			),
 
-			assertResult: func(t *testing.T, d *Document) {
+			assertResult: func(t *testing.T, d *didcore.Document) {
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")

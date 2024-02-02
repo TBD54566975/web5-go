@@ -1,4 +1,4 @@
-package dids
+package didcore
 
 // ResolutionResult represents the result of a DID (Decentralized Identifier)
 // resolution.

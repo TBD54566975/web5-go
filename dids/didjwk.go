@@ -7,6 +7,7 @@ import (
 
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
@@ -77,33 +78,33 @@ func NewDIDJWK(opts ...NewDIDJWKOption) (BearerDID, error) {
 type JWKResolver struct{}
 
 // Resolves the provided DID URI
-func (r JWKResolver) Resolve(uri string) (ResolutionResult, error) {
+func (r JWKResolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	did, err := Parse(uri)
 	if err != nil {
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	if did.Method != "jwk" {
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	decodedID, err := base64.RawURLEncoding.DecodeString(did.ID)
 	if err != nil {
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	var jwk jwk.JWK
 	err = json.Unmarshal(decodedID, &jwk)
 	if err != nil {
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	doc := Document{
+	doc := didcore.Document{
 		Context: "https://www.w3.org/ns/did/v1",
 		ID:      uri,
 	}
 
-	vm := VerificationMethod{
+	vm := didcore.VerificationMethod{
 		ID:           uri + "#0",
 		Type:         "JsonWebKey2020",
 		Controller:   uri,
@@ -112,8 +113,8 @@ func (r JWKResolver) Resolve(uri string) (ResolutionResult, error) {
 
 	doc.AddVerificationMethod(
 		vm,
-		Purposes("assertionMethod", "authentication", "capabilityInvocation", "capabilityDelegation"),
+		didcore.Purposes("assertionMethod", "authentication", "capabilityInvocation", "capabilityDelegation"),
 	)
 
-	return ResolutionResultWithDocument(doc), nil
+	return didcore.ResolutionResultWithDocument(doc), nil
 }

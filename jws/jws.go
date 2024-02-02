@@ -8,6 +8,7 @@ import (
 
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
 // Header represents a JWS (JSON Web Signature) header. See [Specification] for more details.
@@ -109,7 +110,7 @@ func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, err
 		return "", fmt.Errorf("no verification method found for purpose: %s", o.purpose)
 	}
 
-	var verificationMethod dids.VerificationMethod
+	var verificationMethod didcore.VerificationMethod
 	for _, vm := range resolutionResult.Document.VerificationMethod {
 		if vm.ID == verificationMethodID {
 			verificationMethod = vm
@@ -117,7 +118,7 @@ func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, err
 		}
 	}
 
-	if verificationMethod == (dids.VerificationMethod{}) {
+	if verificationMethod == (didcore.VerificationMethod{}) {
 		return "", fmt.Errorf("no verification method found for purpose: %s", o.purpose)
 	}
 
@@ -217,7 +218,7 @@ func Verify(compactJWS string) (bool, error) {
 		return false, fmt.Errorf("failed to resolve DID: %w", err)
 	}
 
-	var verificationMethod dids.VerificationMethod
+	var verificationMethod didcore.VerificationMethod
 	for _, vm := range resolutionResult.Document.VerificationMethod {
 		if vm.ID == verificationMethodID {
 			verificationMethod = vm
@@ -225,7 +226,7 @@ func Verify(compactJWS string) (bool, error) {
 		}
 	}
 
-	if verificationMethod == (dids.VerificationMethod{}) {
+	if verificationMethod == (didcore.VerificationMethod{}) {
 		return false, fmt.Errorf("no verification method found that matches kid: %s", verificationMethodID)
 	}
 

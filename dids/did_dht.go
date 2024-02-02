@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 
 	"github.com/tbd54566975/web5-go/crypto/dsa"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tv42/zbase32"
 )
 
@@ -55,11 +56,11 @@ type dhtDIDRecord struct {
 	records    map[string]string
 }
 
-func (rec *dhtDIDRecord) DIDDocument(didURI string) *Document {
+func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 	relationshipMap := parseVerificationRelationships(rec.rootRecord)
 
 	// Now we have a did in a dns record. yay
-	document := &Document{
+	document := &didcore.Document{
 		ID: didURI,
 	}
 
@@ -91,7 +92,7 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *Document {
 
 			document.AddVerificationMethod(
 				*vMethod,
-				Purposes(opts...),
+				didcore.Purposes(opts...),
 			)
 		case strings.HasPrefix(name, "_s"):
 			s := UnmarshalService(data)
@@ -112,54 +113,54 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *Document {
 }
 
 // Resolve resolves a DID using the DHT method
-func (r *DHTResolver) Resolve(uri string) (ResolutionResult, error) {
+func (r *DHTResolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 
 	// 1. Parse URI and make sure it's a DHT method
 	did, err := Parse(uri)
 	if err != nil {
 		// TODO log err
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	if did.Method != "dht" {
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	// 2. ensure did ID is zbase32
 	identifier, err := zbase32.DecodeString(did.ID)
 	if err != nil {
 		// TODO log err
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	if len(identifier) <= 0 {
 		// return nil, fmt.Errorf("no bytes decoded from zbase32 identifier %s", did.ID)
 		// TODO log err
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	// 3. fetch bep44 encoded did document
 	res, err := r.client.Get(fmt.Sprintf("%s/%s", r.relay, did.ID))
 	if err != nil {
 		// TODO log err
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 	defer res.Body.Close()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
 		// TODO log err
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	didRecord, err := parseDNSDID(data)
 	if err != nil {
 		// TODO log err
-		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	document := didRecord.DIDDocument(uri)
-	return ResolutionResultWithDocument(*document), nil
+	return didcore.ResolutionResultWithDocument(*document), nil
 }
 
 // parseDNSDID takes the bytes of the DNS representation of a DID and creates an internal representation
@@ -245,15 +246,15 @@ func parseTXTRecordData(data string) map[string][]string {
 	return result
 }
 
-func Create(did *Document) {
+func Create(did *didcore.Document) {
 
 }
 
 // UnmarshalVerificationMethod unpacks the TXT DNS resource encoded verification method
-func UnmarshalVerificationMethod(data string) (*VerificationMethod, error) {
+func UnmarshalVerificationMethod(data string) (*didcore.VerificationMethod, error) {
 	propertyMap := parseTXTRecordData(data)
 
-	vm := &VerificationMethod{}
+	vm := &didcore.VerificationMethod{}
 	var key string
 	var algorithmID string
 	for property, v := range propertyMap {
@@ -301,10 +302,10 @@ func UnmarshalVerificationMethod(data string) (*VerificationMethod, error) {
 	return vm, nil
 }
 
-func UnmarshalService(data string) *Service {
+func UnmarshalService(data string) *didcore.Service {
 	propertyMap := parseTXTRecordData(data)
 
-	s := &Service{}
+	s := &didcore.Service{}
 	for property, v := range propertyMap {
 		switch property {
 		case "id":
