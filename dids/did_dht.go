@@ -56,33 +56,31 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *Document {
 
 		switch {
 		case strings.HasPrefix(name, "_k"):
-			{
-				vMethod, err := UnmarshalVerificationMethod(data)
-				if err != nil {
-					// TODO handle error
-				}
-
-				// extracting kN from _kN._did
-				entryId := strings.Split(name, ".")[0][1:]
-				relationships, ok := relationshipMap[entryId]
-
-				if !ok {
-					// no relationships
-					continue
-				}
-
-				opts := []string{}
-				for _, r := range relationships {
-					if o, ok := relationshipDNStoDID[r]; ok {
-						opts = append(opts, o)
-					}
-				}
-
-				document.AddVerificationMethod(
-					*vMethod,
-					Purposes(opts...),
-				)
+			vMethod, err := UnmarshalVerificationMethod(data)
+			if err != nil {
+				// TODO handle error
 			}
+
+			// extracting kN from _kN._did
+			entryId := strings.Split(name, ".")[0][1:]
+			relationships, ok := relationshipMap[entryId]
+
+			if !ok {
+				// no relationships
+				continue
+			}
+
+			opts := []string{}
+			for _, r := range relationships {
+				if o, ok := relationshipDNStoDID[r]; ok {
+					opts = append(opts, o)
+				}
+			}
+
+			document.AddVerificationMethod(
+				*vMethod,
+				Purposes(opts...),
+			)
 		case strings.HasPrefix(name, "_s"):
 			s := UnmarshalService(data)
 			document.AddService(s)
@@ -101,16 +99,8 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *Document {
 	return document
 }
 
+// ResolveDIDDHT resolves a DID using the DHT method
 func ResolveDIDDHT(uri, relay string, client *http.Client) (ResolutionResult, error) {
-	// 1. Parse URI and make sure it's a DHT method
-	// 2. Get the public key bytes / decode did.id from z-base-32
-	// 3. create the bep44 message - needs the zbase32 encoded publicKey / did.id
-	// 4. create the Pkarr url with the relay + did.id
-	// 5. fetch
-	// 6. bep44 message using (publicKey bytes - decoded zbase32 - ) etc.
-	// 7. fetch the dns packet using the bep44 message
-	// 8. decode the dns packet
-	// 9. create the did document
 
 	// 1. Parse URI and make sure it's a DHT method
 	did, err := Parse(uri)
@@ -265,6 +255,8 @@ func UnmarshalVerificationMethod(data string) (*VerificationMethod, error) {
 			key = strings.Join(v, "")
 		case "c": // the controller is optional
 			vm.Controller = strings.Join(v, "")
+		default:
+			continue
 		}
 	}
 
@@ -315,6 +307,8 @@ func UnmarshalService(data string) *Service {
 				}
 			}
 			s.ServiceEndpoint = strings.Join(validEndpoints, ",")
+		default:
+			continue
 		}
 	}
 

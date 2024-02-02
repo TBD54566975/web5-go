@@ -21,8 +21,8 @@ func Test_ToKeys(t *testing.T) {
 
 	vm := portableDID.VerificationMethod[0]
 
-	assert.NotEqual[jwk.JWK](t, *vm.PublicKeyJWK, jwk.JWK{}, "expected publicKeyJwk to not be empty")
-	assert.NotEqual[jwk.JWK](t, vm.PrivateKeyJWK, jwk.JWK{}, "expected privateKeyJWK to not be empty")
+	assert.NotEqual(t, *vm.PublicKeyJWK, jwk.JWK{}, "expected publicKeyJwk to not be empty")
+	assert.NotEqual(t, vm.PrivateKeyJWK, jwk.JWK{}, "expected privateKeyJWK to not be empty")
 }
 
 func TestBearerDIDFromKeys(t *testing.T) {

@@ -54,10 +54,10 @@ func TestDHTResolve(t *testing.T) {
 	base64EncodedSecp256k := base64.RawURLEncoding.EncodeToString(pubKeyBytesSecp256k1)
 
 	tests := map[string]struct {
-		didURI        string
-		msg           dnsmessage.Message
-		expectedError error
-		assertResult  func(t *testing.T, d *Document)
+		didURI               string
+		msg                  dnsmessage.Message
+		expectedErrorMessage string
+		assertResult         func(t *testing.T, d *Document)
 	}{
 		"did with valid key and no service": {
 			didURI: "did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy",
@@ -65,11 +65,11 @@ func TestDHTResolve(t *testing.T) {
 				WithDNSRecord("_did.", "vm=k0;auth=k0;asm=k0;inv=k0;del=k0"),
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 			),
-			expectedError: nil,
+
 			assertResult: func(t *testing.T, d *Document) {
 				assert.False(t, d == nil, "Expected non nil document")
-				assert.NotZero[string](t, d.ID, "Expected DID Document ID to be initialized")
-				assert.NotZero[[]VerificationMethod](t, d.VerificationMethod, "Expected at least 1 verification method")
+				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
+				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
 			},
 		},
 		"did with multiple valid keys and no service - out of order verification methods": {
@@ -80,10 +80,10 @@ func TestDHTResolve(t *testing.T) {
 				WithDNSRecord("_k2._did.", fmt.Sprintf("id=2;t=1;k=%s", base64EncodedSecp256k)),
 				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=2;k=%s", base64EncodedSecp256k)),
 			),
-			expectedError: nil,
+
 			assertResult: func(t *testing.T, d *Document) {
 				assert.False(t, d == nil, "Expected non nil document")
-				assert.NotZero[string](t, d.ID, "Expected DID Document ID to be initialized")
+				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.Equal[int](t, 3, len(d.VerificationMethod), "Expected 3 verification methods")
 			},
 		},
@@ -95,11 +95,11 @@ func TestDHTResolve(t *testing.T) {
 				WithDNSRecord("_s0._did.", "id=domain;t=LinkedDomains;se=foo.com"),
 				WithDNSRecord("_s1._did.", "id=dwn;t=DecentralizedWebNode;se=https://dwn.tbddev.org/dwn5"),
 			),
-			expectedError: nil,
+
 			assertResult: func(t *testing.T, d *Document) {
 				assert.False(t, d == nil, "Expected non nil document")
-				assert.NotZero[string](t, d.ID, "Expected DID Document ID to be initialized")
-				assert.NotZero[[]VerificationMethod](t, d.VerificationMethod, "Expected at least 1 verification method")
+				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
+				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
 				assert.Equal[int](t, 2, len(d.Service), "Expected 2 services")
 			},
 		},
@@ -118,10 +118,7 @@ func TestDHTResolve(t *testing.T) {
 
 			result, err := ResolveDIDDHT(test.didURI, ts.URL, http.DefaultClient)
 
-			if test.expectedError != nil {
-				assert.Error(t, test.expectedError, err)
-				return
-			}
+			assert.EqualError(t, err, test.expectedErrorMessage)
 
 			test.assertResult(t, &result.Document)
 		})
@@ -132,7 +129,7 @@ func TestDHTResolve(t *testing.T) {
 func Test_parseDNSDID(t *testing.T) {
 	tests := map[string]struct {
 		msg           dnsmessage.Message
-		expectedError error
+		expectedError string
 		assertResult  func(t *testing.T, d *dhtDIDRecord)
 	}{
 		"basic did with key": {
@@ -140,7 +137,6 @@ func Test_parseDNSDID(t *testing.T) {
 				WithDNSRecord("_did.", "vm=k0;auth=k0;asm=k0;inv=k0;del=k0"),
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 			),
-			expectedError: nil,
 			assertResult: func(t *testing.T, d *dhtDIDRecord) {
 				assert.False(t, d == nil)
 				expectedRecords := map[string]string{
@@ -158,10 +154,7 @@ func Test_parseDNSDID(t *testing.T) {
 			assert.NoError(t, err)
 
 			dhtDidRecord, err := parseDNSDID(buf)
-			if test.expectedError != nil {
-				assert.Error(t, test.expectedError, err)
-				return
-			}
+			assert.EqualError(t, err, test.expectedError)
 
 			assert.Equal(t, "vm=k0;auth=k0;asm=k0;inv=k0;del=k0", dhtDidRecord.rootRecord)
 
