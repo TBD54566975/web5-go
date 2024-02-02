@@ -74,8 +74,10 @@ func NewDIDJWK(opts ...NewDIDJWKOption) (BearerDID, error) {
 	return did, nil
 }
 
+type JWKResolver struct{}
+
 // Resolves the provided DID URI
-func ResolveDIDJWK(uri string) (ResolutionResult, error) {
+func (r JWKResolver) Resolve(uri string) (ResolutionResult, error) {
 	did, err := Parse(uri)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}

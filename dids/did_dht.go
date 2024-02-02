@@ -37,6 +37,18 @@ var keyTypes = map[string]string{
 	"2": dsa.AlgorithmIDSECP256K1,
 }
 
+type DHTResolver struct {
+	relay  string
+	client *http.Client
+}
+
+func NewDHTResolver(relay string, client *http.Client) *DHTResolver {
+	return &DHTResolver{
+		relay:  relay,
+		client: client,
+	}
+}
+
 // dhtDIDRecord is used to structure the DNS representation of a DID
 type dhtDIDRecord struct {
 	rootRecord string
@@ -99,8 +111,8 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *Document {
 	return document
 }
 
-// ResolveDIDDHT resolves a DID using the DHT method
-func ResolveDIDDHT(uri, relay string, client *http.Client) (ResolutionResult, error) {
+// Resolve resolves a DID using the DHT method
+func (r *DHTResolver) Resolve(uri string) (ResolutionResult, error) {
 
 	// 1. Parse URI and make sure it's a DHT method
 	did, err := Parse(uri)
