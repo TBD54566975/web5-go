@@ -1,32 +1,41 @@
 package dids
 
-import "sync"
+import (
+	"net/http"
+	"sync"
+)
 
 // Resolve resolves the provided DID URI. This function is capable of resolving
 // the DID methods implemented in web5-go
 func Resolve(uri string) (ResolutionResult, error) {
-	return getDefaultResolver().resolve(uri)
+	return getDefaultResolver().Resolve(uri)
 }
-
-type methodResolver func(did string) (ResolutionResult, error)
 
 var instance *didResolver
 var once sync.Once
 
 func getDefaultResolver() *didResolver {
 	once.Do(func() {
-		instance = &didResolver{resolvers: make(map[string]methodResolver)}
-		instance.resolvers["jwk"] = ResolveDIDJWK
+		instance = &didResolver{
+			resolvers: map[string]DIDResolver{
+				"jwk": &JWKResolver{},
+				"dht": NewDHTResolver("", http.DefaultClient),
+			},
+		}
 	})
 
 	return instance
 }
 
-type didResolver struct {
-	resolvers map[string]methodResolver
+type DIDResolver interface {
+	Resolve(uri string) (ResolutionResult, error)
 }
 
-func (r *didResolver) resolve(uri string) (ResolutionResult, error) {
+type didResolver struct {
+	resolvers map[string]DIDResolver
+}
+
+func (r *didResolver) Resolve(uri string) (ResolutionResult, error) {
 	did, err := Parse(uri)
 	if err != nil {
 		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
@@ -37,5 +46,5 @@ func (r *didResolver) resolve(uri string) (ResolutionResult, error) {
 		return ResolutionResultWithError("methodNotSupported"), ResolutionError{"methodNotSupported"}
 	}
 
-	return resolver(uri)
+	return resolver.Resolve(uri)
 }

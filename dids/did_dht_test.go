@@ -115,8 +115,8 @@ func TestDHTResolve(t *testing.T) {
 				assert.NoError(t, err)
 			}))
 			defer ts.Close()
-
-			result, err := ResolveDIDDHT(test.didURI, ts.URL, http.DefaultClient)
+			r := NewDHTResolver(ts.URL, http.DefaultClient)
+			result, err := r.Resolve(test.didURI)
 
 			assert.EqualError(t, err, test.expectedErrorMessage)
 
