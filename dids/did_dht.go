@@ -139,7 +139,7 @@ func (r *DHTResolver) Resolve(uri string) (ResolutionResult, error) {
 	}
 
 	// 3. fetch bep44 encoded did document
-	res, err := client.Get(fmt.Sprintf("%s/%s", relay, did.ID))
+	res, err := r.client.Get(fmt.Sprintf("%s/%s", r.relay, did.ID))
 	if err != nil {
 		// TODO log err
 		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}

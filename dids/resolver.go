@@ -11,8 +11,6 @@ func Resolve(uri string) (ResolutionResult, error) {
 	return getDefaultResolver().resolve(uri)
 }
 
-type methodResolver func(did string) (ResolutionResult, error)
-
 var instance *didResolver
 var once sync.Once
 
