@@ -101,7 +101,7 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *Document {
 	return document
 }
 
-func ResolveDIDDHT(uri, relay string, client *http.Client) (*Document, error) {
+func ResolveDIDDHT(uri, relay string, client *http.Client) (ResolutionResult, error) {
 	// 1. Parse URI and make sure it's a DHT method
 	// 2. Get the public key bytes / decode did.id from z-base-32
 	// 3. create the bep44 message - needs the zbase32 encoded publicKey / did.id
@@ -115,37 +115,49 @@ func ResolveDIDDHT(uri, relay string, client *http.Client) (*Document, error) {
 	// 1. Parse URI and make sure it's a DHT method
 	did, err := Parse(uri)
 	if err != nil {
-		return nil, err
+		// TODO log err
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
+	}
+
+	if did.Method != "dht" {
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	// 2. ensure did ID is zbase32
 	identifier, err := zbase32.DecodeString(did.ID)
 	if err != nil {
-		return nil, err
+		// TODO log err
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	if len(identifier) <= 0 {
-		return nil, fmt.Errorf("no bytes decoded from zbase32 identifier %s", did.ID)
+		// return nil, fmt.Errorf("no bytes decoded from zbase32 identifier %s", did.ID)
+		// TODO log err
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	// 3. fetch bep44 encoded did document
 	res, err := client.Get(fmt.Sprintf("%s/%s", relay, did.ID))
 	if err != nil {
-		return nil, err
+		// TODO log err
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 	defer res.Body.Close()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		// TODO log err
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
 	didRecord, err := parseDNSDID(data)
 	if err != nil {
-		return nil, err
+		// TODO log err
+		return ResolutionResultWithError("invalidDid"), ResolutionError{"invalidDid"}
 	}
 
-	return didRecord.DIDDocument(uri), nil
+	document := didRecord.DIDDocument(uri)
+	return ResolutionResultWithDocument(*document), nil
 }
 
 // parseDNSDID takes the bytes of the DNS representation of a DID and creates an internal representation

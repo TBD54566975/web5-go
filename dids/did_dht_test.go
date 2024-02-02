@@ -116,14 +116,14 @@ func TestDHTResolve(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			document, err := ResolveDIDDHT(test.didURI, ts.URL, http.DefaultClient)
+			result, err := ResolveDIDDHT(test.didURI, ts.URL, http.DefaultClient)
 
 			if test.expectedError != nil {
 				assert.Error(t, test.expectedError, err)
 				return
 			}
 
-			test.assertResult(t, document)
+			test.assertResult(t, &result.Document)
 		})
 
 	}
