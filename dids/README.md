@@ -32,8 +32,7 @@
 * singleton DID resolver
 
 > [!NOTE]
-> This package uses the term `DID` to refer to the string representation e.g. `did:ex:1234` and `BearerDID` to refer to is a composite type that combines a DID with a KeyManager containing keys
-associated to the DID. Together, these two components form a BearerDID that can be used to
+> This package uses the term `DID` to refer to the string representation e.g. `did:ex:1234` and `BearerDID` to refer to is a composite type that combines a DID with a KeyManager containing keys associated to the DID. Together, these two components form a BearerDID that can be used to
 sign data.
 
 > [!NOTE]
@@ -256,6 +255,7 @@ dids
 | `did`         | contains _representations_ of a DID.                                                            |
 | `didcore`     | contains all of the data models defined in the [DID Core Spec](https://www.w3.org/TR/did-core/) |
 | `did<method>` | one package for each did method                                                                 |
+| `dids`        | high-level APIs that support multiple DID methods                                               |
 
 ### Rationale
 
