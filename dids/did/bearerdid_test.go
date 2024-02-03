@@ -1,16 +1,17 @@
-package dids_test
+package did_test
 
 import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/dids/did"
+	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jwk"
 	"github.com/tbd54566975/web5-go/jws"
 )
 
 func Test_ToKeys(t *testing.T) {
-	did, err := dids.NewDIDJWK()
+	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
 	portableDID, err := did.ToKeys()
@@ -26,16 +27,16 @@ func Test_ToKeys(t *testing.T) {
 }
 
 func TestBearerDIDFromKeys(t *testing.T) {
-	did, err := dids.NewDIDJWK()
+	bearerDID, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	portableDID, err := did.ToKeys()
+	portableDID, err := bearerDID.ToKeys()
 	assert.NoError(t, err)
 
-	importedDID, err := dids.BearerDIDFromKeys(portableDID)
+	importedDID, err := did.BearerDIDFromKeys(portableDID)
 	assert.NoError(t, err)
 
-	compactJWS, err := jws.Sign("hi", did)
+	compactJWS, err := jws.Sign("hi", bearerDID)
 	assert.NoError(t, err)
 
 	compactJWSAgane, err := jws.Sign("hi", importedDID)

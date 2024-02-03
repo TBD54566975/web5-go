@@ -8,6 +8,7 @@ import (
 
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
@@ -85,7 +86,7 @@ func DetatchedPayload(detached bool) SignOpts {
 // Sign signs the provided payload with a key associated to the provided DID.
 // if no purpose is provided, the default is "assertionMethod". Passing Detached(true)
 // will return a compact JWS with detached content
-func Sign(payload JWSPayload, did dids.BearerDID, opts ...SignOpts) (string, error) {
+func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, error) {
 	o := signOpts{purpose: "assertionMethod", detached: false}
 	for _, opt := range opts {
 		opt(&o)

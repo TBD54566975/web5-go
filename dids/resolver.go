@@ -4,7 +4,10 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
+	"github.com/tbd54566975/web5-go/dids/diddht"
+	"github.com/tbd54566975/web5-go/dids/didjwk"
 )
 
 // Resolve resolves the provided DID URI. This function is capable of resolving
@@ -19,9 +22,9 @@ var once sync.Once
 func getDefaultResolver() *didResolver {
 	once.Do(func() {
 		instance = &didResolver{
-			resolvers: map[string]DIDResolver{
-				"jwk": &JWKResolver{},
-				"dht": NewDHTResolver("", http.DefaultClient),
+			resolvers: map[string]didcore.MethodResolver{
+				"jwk": didjwk.Resolver{},
+				"dht": diddht.NewResolver("", http.DefaultClient),
 			},
 		}
 	})
@@ -29,16 +32,12 @@ func getDefaultResolver() *didResolver {
 	return instance
 }
 
-type DIDResolver interface {
-	Resolve(uri string) (didcore.ResolutionResult, error)
-}
-
 type didResolver struct {
-	resolvers map[string]DIDResolver
+	resolvers map[string]didcore.MethodResolver
 }
 
 func (r *didResolver) Resolve(uri string) (didcore.ResolutionResult, error) {
-	did, err := Parse(uri)
+	did, err := did.Parse(uri)
 	if err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}

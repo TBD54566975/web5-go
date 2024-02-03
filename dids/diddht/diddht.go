@@ -1,4 +1,4 @@
-package dids
+package diddht
 
 import (
 	"encoding/base64"
@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 
 	"github.com/tbd54566975/web5-go/crypto/dsa"
+	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tv42/zbase32"
 )
@@ -38,13 +39,13 @@ var keyTypes = map[string]string{
 	"2": dsa.AlgorithmIDSECP256K1,
 }
 
-type DHTResolver struct {
+type Resolver struct {
 	relay  string
 	client *http.Client
 }
 
-func NewDHTResolver(relay string, client *http.Client) *DHTResolver {
-	return &DHTResolver{
+func NewResolver(relay string, client *http.Client) *Resolver {
+	return &Resolver{
 		relay:  relay,
 		client: client,
 	}
@@ -113,10 +114,10 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 }
 
 // Resolve resolves a DID using the DHT method
-func (r *DHTResolver) Resolve(uri string) (didcore.ResolutionResult, error) {
+func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 
 	// 1. Parse URI and make sure it's a DHT method
-	did, err := Parse(uri)
+	did, err := did.Parse(uri)
 	if err != nil {
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}

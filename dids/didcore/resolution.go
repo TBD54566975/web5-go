@@ -1,5 +1,12 @@
 package didcore
 
+// MethodResolver is an interface that can be implemented for resolving specific DID methods.
+// Each concrete implementation should adhere to the DID core specficiation defined here:
+// https://www.w3.org/TR/did-core/#did-resolution
+type MethodResolver interface {
+	Resolve(uri string) (ResolutionResult, error)
+}
+
 // ResolutionResult represents the result of a DID (Decentralized Identifier)
 // resolution.
 //

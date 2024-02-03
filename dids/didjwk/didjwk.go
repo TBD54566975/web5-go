@@ -1,4 +1,4 @@
-package dids
+package didjwk
 
 import (
 	"encoding/base64"
@@ -7,40 +7,43 @@ import (
 
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
+	"github.com/tbd54566975/web5-go/dids/did"
+	_did "github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
-type newDIDJWKOptions struct {
+// createOptions is a struct that contains all options that can be passed to [Create]
+type createOptions struct {
 	keyManager  crypto.KeyManager
 	algorithmID string
 }
 
-type NewDIDJWKOption func(o *newDIDJWKOptions)
+type CreateOption func(o *createOptions)
 
 // KeyManager is an option that can be passed to NewDIDJWK to provide a KeyManager
-func KeyManager(k crypto.KeyManager) NewDIDJWKOption {
-	return func(o *newDIDJWKOptions) {
+func KeyManager(k crypto.KeyManager) CreateOption {
+	return func(o *createOptions) {
 		o.keyManager = k
 	}
 }
 
 // AlgorithmID is an option that can be passed to NewDIDJWK to specify a specific
 // cryptographic algorithm to use to generate the private key
-func AlgorithmID(id string) NewDIDJWKOption {
-	return func(o *newDIDJWKOptions) {
+func AlgorithmID(id string) CreateOption {
+	return func(o *createOptions) {
 		o.algorithmID = id
 	}
 }
 
-// NewDIDJWK can be used to generate a new `did:jwk`. `did:jwk` is useful in scenarios where:
+// Create can be used to create a new `did:jwk`. `did:jwk` is useful in scenarios where:
 //   - Offline resolution is preferred
 //   - Key rotation is not required
 //   - Service endpoints are not necessary
 //
 // Spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
-func NewDIDJWK(opts ...NewDIDJWKOption) (BearerDID, error) {
-	o := newDIDJWKOptions{
+func Create(opts ...CreateOption) (did.BearerDID, error) {
+	o := createOptions{
 		keyManager:  crypto.NewLocalKeyManager(),
 		algorithmID: dsa.AlgorithmIDED25519,
 	}
@@ -53,33 +56,37 @@ func NewDIDJWK(opts ...NewDIDJWKOption) (BearerDID, error) {
 
 	keyID, err := keyMgr.GeneratePrivateKey(o.algorithmID)
 	if err != nil {
-		return BearerDID{}, fmt.Errorf("failed to generate private key: %w", err)
+		return did.BearerDID{}, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	publicJWK, _ := keyMgr.GetPublicKey(keyID)
 	bytes, err := json.Marshal(publicJWK)
 	if err != nil {
-		return BearerDID{}, fmt.Errorf("failed to marshal public key: %w", err)
+		return _did.BearerDID{}, fmt.Errorf("failed to marshal public key: %w", err)
 	}
 
 	id := base64.RawURLEncoding.EncodeToString(bytes)
-	did := BearerDID{
-		DID: DID{
-			Method: "jwk",
-			URI:    "did:jwk:" + id,
-			ID:     id,
-		},
-		KeyManager: keyMgr,
+	did := _did.DID{
+		Method: "jwk",
+		URI:    "did:jwk:" + id,
+		ID:     id,
 	}
 
-	return did, nil
+	bearerDID := _did.BearerDID{
+		DID:        did,
+		KeyManager: keyMgr,
+		Document:   createDocument(did, publicJWK),
+	}
+
+	return bearerDID, nil
 }
 
-type JWKResolver struct{}
+type Resolver struct{}
 
-// Resolves the provided DID URI
-func (r JWKResolver) Resolve(uri string) (didcore.ResolutionResult, error) {
-	did, err := Parse(uri)
+// Resolves the provided DID URI (must be a did:jwk) as per the wee bit of detail provided in the
+// spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
+func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
+	did, err := _did.Parse(uri)
 	if err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
@@ -99,16 +106,21 @@ func (r JWKResolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
+	doc := createDocument(did, jwk)
+	return didcore.ResolutionResultWithDocument(doc), nil
+}
+
+func createDocument(did _did.DID, publicKey jwk.JWK) didcore.Document {
 	doc := didcore.Document{
 		Context: "https://www.w3.org/ns/did/v1",
-		ID:      uri,
+		ID:      did.URI,
 	}
 
 	vm := didcore.VerificationMethod{
-		ID:           uri + "#0",
+		ID:           did.URI + "#0",
 		Type:         "JsonWebKey2020",
-		Controller:   uri,
-		PublicKeyJwk: &jwk,
+		Controller:   did.URI,
+		PublicKeyJwk: &publicKey,
 	}
 
 	doc.AddVerificationMethod(
@@ -116,5 +128,5 @@ func (r JWKResolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		didcore.Purposes("assertionMethod", "authentication", "capabilityInvocation", "capabilityDelegation"),
 	)
 
-	return didcore.ResolutionResultWithDocument(doc), nil
+	return doc
 }

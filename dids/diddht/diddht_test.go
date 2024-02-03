@@ -1,4 +1,4 @@
-package dids
+package diddht
 
 import (
 	"encoding/base64"
@@ -116,7 +116,7 @@ func TestDHTResolve(t *testing.T) {
 				assert.NoError(t, err)
 			}))
 			defer ts.Close()
-			r := NewDHTResolver(ts.URL, http.DefaultClient)
+			r := NewResolver(ts.URL, http.DefaultClient)
 			result, err := r.Resolve(test.didURI)
 
 			assert.EqualError(t, err, test.expectedErrorMessage)
