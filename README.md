@@ -15,13 +15,17 @@
 
 # Summary
 This repo contains the following packages:
-| package  | description                                                                         |
-| :------- | :---------------------------------------------------------------------------------- |
-| `crypto` | Key Generation, signing, verification, and a Key Manager abstraction                |
-| `dids`   | DID creation and resolution.                                                        |
-| `jwk`    | implements a subset of the [JSON Web Key spec](https://tools.ietf.org/html/rfc7517) |
-| `jws`    | JWS signing and verification                                                        |
-| `jwt`    | JWT parsing, signing, and verification                                              |
+| package               | description                                                                                              |
+| :-------------------- | :------------------------------------------------------------------------------------------------------- |
+| [`crypto`](./crypto/) | Key Generation, signing, verification, and a Key Manager abstraction                                     |
+| [`dids`](./dids/)     | DID creation and resolution.                                                                             |
+| [`jwk`](./jwk/)       | implements a subset of the [JSON Web Key spec](https://tools.ietf.org/html/rfc7517)                      |
+| [`jws`](./jws/)       | [JWS](https://datatracker.ietf.org/doc/html/rfc7515) (JSON Web Signature) signing and verification       |
+| [`jwt`](./jwt/)       | [JWT](https://datatracker.ietf.org/doc/html/rfc7519) (JSON Web Token) parsing, signing, and verification |
+
+
+> [!IMPORTANT]
+> Check the README in each directory for more details
 
 
 ## `crypto`

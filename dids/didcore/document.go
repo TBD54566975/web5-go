@@ -1,4 +1,4 @@
-package dids
+package didcore
 
 import "github.com/tbd54566975/web5-go/jwk"
 

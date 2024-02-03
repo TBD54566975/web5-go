@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/jws"
 )
 
@@ -138,7 +138,7 @@ func Purpose(purpose string) SignOpt {
 // The Purpose option can be provided to specify that a key from a given
 // DID Document Verification Relationship should be used (e.g. authentication).
 // defaults to using assertionMethod
-func Sign(claims Claims, did dids.BearerDID, opts ...SignOpt) (string, error) {
+func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{purpose: "assertionMethod"}
 	for _, opt := range opts {
 		opt(&o)

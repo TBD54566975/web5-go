@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jws"
 	"github.com/tbd54566975/web5-go/jwt"
 )
@@ -45,7 +45,7 @@ func TestClaims_UnmarshalJSON(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	did, err := dids.NewDIDJWK()
+	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
 	claims := jwt.Claims{
@@ -60,7 +60,7 @@ func TestSign(t *testing.T) {
 }
 
 func TestVerify(t *testing.T) {
-	did, err := dids.NewDIDJWK()
+	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
 	claims := jwt.Claims{

@@ -1,4 +1,4 @@
-package dids
+package did
 
 import (
 	"fmt"

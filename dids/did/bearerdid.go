@@ -1,9 +1,10 @@
-package dids
+package did
 
 import (
 	"fmt"
 
 	"github.com/tbd54566975/web5-go/crypto"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
@@ -13,6 +14,7 @@ import (
 type BearerDID struct {
 	DID
 	crypto.KeyManager
+	Document didcore.Document
 }
 
 // ToKeys exports a BearerDID into a portable format that contains the DID's URI in addition to
@@ -23,16 +25,10 @@ func (d *BearerDID) ToKeys() (PortableDID, error) {
 		return PortableDID{}, fmt.Errorf("key manager does not implement KeyExporter")
 	}
 
-	resolutionResult, err := Resolve(d.URI)
-	if err != nil {
-		return PortableDID{}, fmt.Errorf("failed to resolve DID: %w", err)
-	}
-
 	portableDID := PortableDID{URI: d.URI}
 	keys := make([]VerificationMethodKeyPair, 0)
 
-	didDoc := resolutionResult.Document
-	for _, vm := range didDoc.VerificationMethod {
+	for _, vm := range d.Document.VerificationMethod {
 		keyAlias, err := vm.PublicKeyJwk.ComputeThumbprint()
 		if err != nil {
 			continue

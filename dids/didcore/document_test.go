@@ -1,4 +1,4 @@
-package dids
+package didcore
 
 import (
 	"testing"

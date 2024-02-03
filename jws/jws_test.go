@@ -8,12 +8,12 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jws"
 )
 
 func TestSign(t *testing.T) {
-	did, err := dids.NewDIDJWK()
+	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
 	payload := map[string]interface{}{"hello": "world"}
@@ -53,7 +53,7 @@ func TestVerify_bad(t *testing.T) {
 }
 
 func TestVerify_ok(t *testing.T) {
-	did, err := dids.NewDIDJWK()
+	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
 	payloadJSON := map[string]interface{}{"hello": "world"}

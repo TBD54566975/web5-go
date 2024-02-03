@@ -1,10 +1,10 @@
-package dids_test
+package did_test
 
 import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/tbd54566975/web5-go/dids"
+	"github.com/tbd54566975/web5-go/dids/did"
 )
 
 type vector struct {
@@ -81,7 +81,7 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, v := range vectors {
-		did, err := dids.Parse(v.input)
+		did, err := did.Parse(v.input)
 
 		if v.error && err == nil {
 			t.Errorf("expected error, got nil")
