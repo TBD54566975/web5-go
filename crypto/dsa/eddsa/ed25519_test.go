@@ -1,11 +1,13 @@
 package eddsa_test
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/crypto/dsa/eddsa"
+	"github.com/tbd54566975/web5-go/jwk"
 )
 
 func TestED25519BytesToPublicKey_Bad(t *testing.T) {
@@ -26,4 +28,40 @@ func TestED25519BytesToPublicKey_Good(t *testing.T) {
 	assert.Equal(t, jwk.KTY, eddsa.KeyType)
 	assert.Equal(t, jwk.CRV, eddsa.ED25519JWACurve)
 	assert.Equal(t, jwk.X, "fU0Of2FTpptiQrUiq77mhf2kQg-INLEIw72uNp71Sfo")
+}
+
+func TestED25519PublicKeyToBytes(t *testing.T) {
+	// vector taken from: https://github.com/TBD54566975/web5-spec/blob/main/test-vectors/crypto_ed25519/sign.json
+	jwk := jwk.JWK{
+		KTY: "OKP",
+		CRV: eddsa.ED25519JWACurve,
+		X:   "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+	}
+
+	pubKeyBytes, err := eddsa.ED25519PublicKeyToBytes(jwk)
+	assert.NoError(t, err)
+
+	pubKeyB64URL := base64.RawURLEncoding.EncodeToString(pubKeyBytes)
+	assert.Equal(t, jwk.X, pubKeyB64URL)
+}
+
+func TestED25519PublicKeyToBytes_Bad(t *testing.T) {
+	vectors := []jwk.JWK{
+		{
+			KTY: "OKP",
+			CRV: eddsa.ED25519JWACurve,
+		},
+		{
+			KTY: "OKP",
+			CRV: eddsa.ED25519JWACurve,
+			X:   "=/---",
+		},
+	}
+
+	for _, jwk := range vectors {
+		pubKeyBytes, err := eddsa.ED25519PublicKeyToBytes(jwk)
+		assert.Error(t, err)
+
+		assert.Equal(t, nil, pubKeyBytes)
+	}
 }

@@ -61,3 +61,17 @@ func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
 		X:   base64.RawURLEncoding.EncodeToString(input),
 	}, nil
 }
+
+// ED25519PublicKeyToBytes converts the provided public key to bytes
+func ED25519PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
+	if publicKey.X == "" {
+		return nil, fmt.Errorf("x must be set")
+	}
+
+	publicKeyBytes, err := base64.RawURLEncoding.DecodeString(publicKey.X)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode x %w", err)
+	}
+
+	return publicKeyBytes, nil
+}
