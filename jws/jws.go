@@ -73,11 +73,11 @@ func Purpose(purpose string) SignOpts {
 	}
 }
 
-// DetatchedPayload is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// DetachedPayload is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
 // It is used to indicate whether the payload should be included in the signature.
 // More details can be found in [Specification].
 // [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#appendix-F
-func DetatchedPayload(detached bool) SignOpts {
+func DetachedPayload(detached bool) SignOpts {
 	return func(opts *signOpts) {
 		opts.detached = detached
 	}
@@ -92,17 +92,12 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 		opt(&o)
 	}
 
-	resolutionResult, err := dids.Resolve(did.URI)
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve DID: %w", err)
-	}
-
 	var verificationMethodID string
 	switch o.purpose {
 	case "assertionMethod":
-		verificationMethodID = resolutionResult.Document.AssertionMethod[0]
+		verificationMethodID = did.Document.AssertionMethod[0]
 	case "authentication":
-		verificationMethodID = resolutionResult.Document.Authentication[0]
+		verificationMethodID = did.Document.Authentication[0]
 	default:
 		return "", fmt.Errorf("unsupported purpose: %s", o.purpose)
 	}
@@ -112,7 +107,7 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 	}
 
 	var verificationMethod didcore.VerificationMethod
-	for _, vm := range resolutionResult.Document.VerificationMethod {
+	for _, vm := range did.Document.VerificationMethod {
 		if vm.ID == verificationMethodID {
 			verificationMethod = vm
 			break
