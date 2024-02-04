@@ -82,3 +82,15 @@ func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
 		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 	}
 }
+
+// PublicKeyToBytes converts the provided public key to bytes
+func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
+	switch publicKey.KTY {
+	case ecdsa.KeyType:
+		return ecdsa.PublicKeyToBytes(publicKey)
+	case eddsa.KeyType:
+		return eddsa.PublicKeyToBytes(publicKey)
+	default:
+		return nil, fmt.Errorf("unsupported key type: %s", publicKey.KTY)
+	}
+}

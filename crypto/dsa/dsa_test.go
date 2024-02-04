@@ -8,6 +8,7 @@ import (
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/crypto/dsa/ecdsa"
 	"github.com/tbd54566975/web5-go/crypto/dsa/eddsa"
+	"github.com/tbd54566975/web5-go/jwk"
 )
 
 func TestGeneratePrivateKeySECP256K1(t *testing.T) {
@@ -128,7 +129,7 @@ func TestBytesToPublicKey_BadBytes(t *testing.T) {
 }
 
 func TestBytesToPublicKey_SECP256K1(t *testing.T) {
-	// vector taken from		// vector taken from https://github.com/TBD54566975/web5-js/blob/dids-new-crypto/packages/crypto/tests/fixtures/test-vectors/secp256k1/bytes-to-public-key.json
+	// vector taken from // vector taken from https://github.com/TBD54566975/web5-js/blob/dids-new-crypto/packages/crypto/tests/fixtures/test-vectors/secp256k1/bytes-to-public-key.json
 	publicKeyHex := "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
 	pubKeyBytes, err := hex.DecodeString(publicKeyHex)
 	assert.NoError(t, err)
@@ -140,4 +141,27 @@ func TestBytesToPublicKey_SECP256K1(t *testing.T) {
 	assert.Equal(t, jwk.KTY, ecdsa.KeyType)
 	assert.Equal(t, jwk.X, "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g")
 	assert.Equal(t, jwk.Y, "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg")
+}
+
+func TestPublicKeyToBytes_UnsupportedKTY(t *testing.T) {
+	_, err := dsa.PublicKeyToBytes(jwk.JWK{KTY: "yolocrypto"})
+	assert.Error(t, err)
+}
+
+func TestPublicKeyToBytes_SECP256K1(t *testing.T) {
+	// vector taken from https://github.com/TBD54566975/web5-js/blob/dids-new-crypto/packages/crypto/tests/fixtures/test-vectors/secp256k1/bytes-to-public-key.json
+	jwk := jwk.JWK{
+		KTY: "EC",
+		CRV: ecdsa.SECP256K1JWACurve,
+		X:   "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g",
+		Y:   "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg",
+	}
+
+	pubKeyBytes, err := dsa.PublicKeyToBytes(jwk)
+	assert.NoError(t, err)
+
+	pubKeyHex := hex.EncodeToString(pubKeyBytes)
+	expected := "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
+
+	assert.Equal(t, pubKeyHex, expected)
 }
