@@ -49,7 +49,7 @@ func TestSECP256K1PublicKeyToBytes(t *testing.T) {
 		Y:   "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg",
 	}
 
-	pubKeyBytes, err := ecdsa.PublicKeyToBytes(jwk)
+	pubKeyBytes, err := ecdsa.SECP256K1PublicKeyToBytes(jwk)
 	assert.NoError(t, err)
 
 	pubKeyHex := hex.EncodeToString(pubKeyBytes)
@@ -91,7 +91,7 @@ func TestSECP256K1PublicKeyToBytes_Bad(t *testing.T) {
 	}
 
 	for _, vec := range vectors {
-		pubKeyBytes, err := ecdsa.PublicKeyToBytes(vec)
+		pubKeyBytes, err := ecdsa.SECP256K1PublicKeyToBytes(vec)
 		assert.Error(t, err)
 		assert.Equal(t, pubKeyBytes, nil)
 	}
