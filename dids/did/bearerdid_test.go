@@ -10,30 +10,29 @@ import (
 	"github.com/tbd54566975/web5-go/jws"
 )
 
-func Test_ToKeys(t *testing.T) {
+func TestToPortableDID(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	portableDID, err := did.ToKeys()
+	portableDID, err := did.ToPortableDID()
 	assert.NoError(t, err)
 
 	assert.Equal[string](t, did.URI, portableDID.URI)
-	assert.True(t, len(portableDID.VerificationMethod) == 1, "expected 1 key")
+	assert.True(t, len(portableDID.PrivateKeys) == 1, "expected 1 key")
 
-	vm := portableDID.VerificationMethod[0]
+	key := portableDID.PrivateKeys[0]
 
-	assert.NotEqual(t, *vm.PublicKeyJWK, jwk.JWK{}, "expected publicKeyJwk to not be empty")
-	assert.NotEqual(t, vm.PrivateKeyJWK, jwk.JWK{}, "expected privateKeyJWK to not be empty")
+	assert.NotEqual(t, key, jwk.JWK{}, "expected key to not be empty")
 }
 
-func TestBearerDIDFromKeys(t *testing.T) {
+func TestFromPortableDID(t *testing.T) {
 	bearerDID, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	portableDID, err := bearerDID.ToKeys()
+	portableDID, err := bearerDID.ToPortableDID()
 	assert.NoError(t, err)
 
-	importedDID, err := did.BearerDIDFromKeys(portableDID)
+	importedDID, err := did.FromPortableDID(portableDID)
 	assert.NoError(t, err)
 
 	compactJWS, err := jws.Sign("hi", bearerDID)

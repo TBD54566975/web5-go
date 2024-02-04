@@ -1,8 +1,6 @@
 package did
 
 import (
-	"fmt"
-
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/jwk"
@@ -17,68 +15,53 @@ type BearerDID struct {
 	Document didcore.Document
 }
 
-// ToKeys exports a BearerDID into a portable format that contains the DID's URI in addition to
-// every private key associated with a verification method.
-func (d *BearerDID) ToKeys() (PortableDID, error) {
+// ToPortableDID exports a BearerDID to a portable format
+func (d *BearerDID) ToPortableDID() (PortableDID, error) {
+	portableDID := PortableDID{
+		URI:      d.URI,
+		Document: d.Document,
+	}
+
 	exporter, ok := d.KeyManager.(crypto.KeyExporter)
-	if !ok {
-		return PortableDID{}, fmt.Errorf("key manager does not implement KeyExporter")
-	}
+	if ok {
+		privateKeys := make([]jwk.JWK, 0)
 
-	portableDID := PortableDID{URI: d.URI}
-	keys := make([]VerificationMethodKeyPair, 0)
+		for _, vm := range d.Document.VerificationMethod {
+			keyAlias, err := vm.PublicKeyJwk.ComputeThumbprint()
+			if err != nil {
+				continue
+			}
 
-	for _, vm := range d.Document.VerificationMethod {
-		keyAlias, err := vm.PublicKeyJwk.ComputeThumbprint()
-		if err != nil {
-			continue
+			key, err := exporter.ExportKey(keyAlias)
+			if err != nil {
+				// TODO: decide if we want to blow up or continue
+				continue
+			}
+
+			privateKeys = append(privateKeys, key)
 		}
 
-		key, err := exporter.ExportKey(keyAlias)
-		if err != nil {
-			continue
-		}
-
-		keys = append(keys, VerificationMethodKeyPair{
-			PublicKeyJWK:  vm.PublicKeyJwk,
-			PrivateKeyJWK: key,
-		})
+		portableDID.PrivateKeys = privateKeys
 	}
-
-	portableDID.VerificationMethod = keys
 
 	return portableDID, nil
 }
 
-// FromKeys imports a BearerDID from a portable format that contains the DID's URI in addition to
-// every private key associated with a verification method.
-func BearerDIDFromKeys(portableDID PortableDID) (BearerDID, error) {
-	didURI, err := Parse(portableDID.URI)
+// FromPortableDID inflates a BearerDID from a portable format.
+func FromPortableDID(portableDID PortableDID) (BearerDID, error) {
+	did, err := Parse(portableDID.URI)
 	if err != nil {
 		return BearerDID{}, err
 	}
 
 	keyManager := crypto.NewLocalKeyManager()
-	for _, vm := range portableDID.VerificationMethod {
-		keyManager.ImportKey(vm.PrivateKeyJWK)
+	for _, key := range portableDID.PrivateKeys {
+		keyManager.ImportKey(key)
 	}
 
 	return BearerDID{
-		DID:        didURI,
+		DID:        did,
 		KeyManager: keyManager,
+		Document:   portableDID.Document,
 	}, nil
-}
-
-// PortableDID is a serializable BearerDID. VerificationMethod contains the private key
-// of each verification method that the BearerDID's key manager contains
-type PortableDID struct {
-	URI                string                      `json:"uri"`
-	VerificationMethod []VerificationMethodKeyPair `json:"verificationMethod"`
-}
-
-// VerificationMethodKeyPair is a public/private keypair associated to a
-// BearerDID's verification method. Used in PortableDID
-type VerificationMethodKeyPair struct {
-	PublicKeyJWK  *jwk.JWK `json:"publicKeyJwk"`
-	PrivateKeyJWK jwk.JWK  `json:"privateKeyJwk"`
 }
