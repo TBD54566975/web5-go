@@ -5,7 +5,7 @@
 - [Features](#features)
 - [Usage](#usage)
   - [Signing:](#signing)
-  - [Detatched Content](#detatched-content)
+  - [Detached Content](#detached-content)
   - [Verifying](#verifying)
   - [Directory Structure](#directory-structure)
     - [Rationale](#rationale)
@@ -47,9 +47,9 @@ func main() {
 }
 ```
 
-## Detatched Content
+## Detached Content
 
-returning a JWS with detatched content can be done like so:
+returning a JWS with detached content can be done like so:
 
 ```go
 package main
@@ -69,7 +69,7 @@ func main() {
 
     payload := map[string]interface{}{"hello": "world"}
     
-    compactJWS, err := jws.Sign(payload, did, Detatched(true))
+    compactJWS, err := jws.Sign(payload, did, Detached(true))
     if err != nil {
         fmt.Printf("failed to sign: %v", err)
         return
