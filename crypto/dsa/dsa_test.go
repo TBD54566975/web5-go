@@ -129,7 +129,7 @@ func TestBytesToPublicKey_BadBytes(t *testing.T) {
 }
 
 func TestBytesToPublicKey_SECP256K1(t *testing.T) {
-	// vector taken from // vector taken from https://github.com/TBD54566975/web5-js/blob/dids-new-crypto/packages/crypto/tests/fixtures/test-vectors/secp256k1/bytes-to-public-key.json
+	// vector taken from https://github.com/TBD54566975/web5-js/blob/dids-new-crypto/packages/crypto/tests/fixtures/test-vectors/secp256k1/bytes-to-public-key.json
 	publicKeyHex := "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
 	pubKeyBytes, err := hex.DecodeString(publicKeyHex)
 	assert.NoError(t, err)
