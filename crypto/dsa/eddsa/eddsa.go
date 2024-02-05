@@ -70,6 +70,15 @@ func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
 	}
 }
 
+func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
+	switch publicKey.CRV {
+	case ED25519JWACurve:
+		return ED25519PublicKeyToBytes(publicKey)
+	default:
+		return nil, fmt.Errorf("unsupported curve: %s", publicKey.CRV)
+	}
+}
+
 func SupportsAlgorithmID(id string) bool {
 	return algorithmIDs[id]
 }

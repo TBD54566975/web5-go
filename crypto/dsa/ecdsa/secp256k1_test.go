@@ -6,6 +6,7 @@ import (
 
 	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/crypto/dsa/ecdsa"
+	"github.com/tbd54566975/web5-go/jwk"
 )
 
 func TestSECP256K1GeneratePrivateKey(t *testing.T) {
@@ -37,4 +38,61 @@ func TestSECP256K1BytesToPublicKey_Uncompressed(t *testing.T) {
 	assert.Equal(t, jwk.KTY, ecdsa.KeyType)
 	assert.Equal(t, jwk.X, "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g")
 	assert.Equal(t, jwk.Y, "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg")
+}
+
+func TestSECP256K1PublicKeyToBytes(t *testing.T) {
+	// vector taken from https://github.com/TBD54566975/web5-js/blob/dids-new-crypto/packages/crypto/tests/fixtures/test-vectors/secp256k1/bytes-to-public-key.json
+	jwk := jwk.JWK{
+		KTY: "EC",
+		CRV: ecdsa.SECP256K1JWACurve,
+		X:   "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g",
+		Y:   "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg",
+	}
+
+	pubKeyBytes, err := ecdsa.SECP256K1PublicKeyToBytes(jwk)
+	assert.NoError(t, err)
+
+	pubKeyHex := hex.EncodeToString(pubKeyBytes)
+	expected := "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
+
+	assert.Equal(t, pubKeyHex, expected)
+}
+
+func TestSECP256K1PublicKeyToBytes_Bad(t *testing.T) {
+	vectors := []jwk.JWK{
+		{
+			KTY: "EC",
+			CRV: ecdsa.SECP256K1JWACurve,
+			X:   "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g",
+		},
+		{
+			KTY: "EC",
+			CRV: ecdsa.SECP256K1JWACurve,
+			Y:   "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g",
+		},
+		{
+			KTY: "EC",
+			CRV: ecdsa.SECP256K1JWACurve,
+			X:   "=///",
+			Y:   "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg",
+		},
+		{
+			KTY: "EC",
+			CRV: ecdsa.SECP256K1JWACurve,
+			X:   "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g",
+			Y:   "=///",
+		},
+		{
+			KTY: "EC",
+			CRV: ecdsa.SECP256K1JWACurve,
+			X:   "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g",
+			Y:   "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg2",
+		},
+	}
+
+	for _, vec := range vectors {
+		pubKeyBytes, err := ecdsa.SECP256K1PublicKeyToBytes(vec)
+		assert.Error(t, err)
+		assert.Equal(t, pubKeyBytes, nil)
+	}
 }

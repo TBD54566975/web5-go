@@ -59,12 +59,10 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 
 	hash := sha256.Sum256(payload)
 
-	x, _ := base64.RawURLEncoding.DecodeString(publicKey.X)
-	y, _ := base64.RawURLEncoding.DecodeString(publicKey.Y)
-
-	keyBytes := []byte{0x04}
-	keyBytes = append(keyBytes, x...)
-	keyBytes = append(keyBytes, y...)
+	keyBytes, err := secp256k1PublicKeyToUncheckedBytes(publicKey)
+	if err != nil {
+		return false, fmt.Errorf("failed to convert public key to bytes: %w", err)
+	}
 
 	key, err := _secp256k1.ParsePubKey(keyBytes)
 	if err != nil {
@@ -87,7 +85,9 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 	return legit, nil
 }
 
-// SECP256K1BytesToPublicKey converts a secp256k1 public key to a JWK. Supports both Compressed and Uncompressed public keys described in https://www.secg.org/sec1-v2.pdf section 2.3.3
+// SECP256K1BytesToPublicKey converts a secp256k1 public key to a JWK.
+// Supports both Compressed and Uncompressed public keys described in
+// https://www.secg.org/sec1-v2.pdf section 2.3.3
 func SECP256K1BytesToPublicKey(input []byte) (jwk.JWK, error) {
 	pubKey, err := _secp256k1.ParsePubKey(input)
 	if err != nil {
@@ -100,4 +100,47 @@ func SECP256K1BytesToPublicKey(input []byte) (jwk.JWK, error) {
 		X:   base64.RawURLEncoding.EncodeToString(pubKey.X().Bytes()),
 		Y:   base64.RawURLEncoding.EncodeToString(pubKey.Y().Bytes()),
 	}, nil
+}
+
+// SECP256K1PublicKeyToBytes converts a secp256k1 public key JWK to bytes.
+// Note: this function returns the uncompressed public key. compressed is not
+// yet supported
+func SECP256K1PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
+	uncheckedBytes, err := secp256k1PublicKeyToUncheckedBytes(publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := _secp256k1.ParsePubKey(uncheckedBytes)
+	if err != nil {
+		return nil, fmt.Errorf("invalid public key: %w", err)
+	}
+
+	return key.SerializeUncompressed(), nil
+}
+
+func secp256k1PublicKeyToUncheckedBytes(publicKey jwk.JWK) ([]byte, error) {
+	if publicKey.X == "" || publicKey.Y == "" {
+		return nil, fmt.Errorf("x and y must be set")
+	}
+
+	x, err := base64.RawURLEncoding.DecodeString(publicKey.X)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode x: %w", err)
+	}
+
+	y, err := base64.RawURLEncoding.DecodeString(publicKey.Y)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode y: %w", err)
+	}
+
+	// Prepend 0x04 to indicate an uncompressed public key format for secp256k1.
+	// This byte is a prefix that distinguishes uncompressed keys, which include both X and Y coordinates,
+	// from compressed keys which only include one coordinate and an indication of the other's parity.
+	// The secp256k1 standard requires this prefix for uncompressed keys to ensure proper interpretation.
+	keyBytes := []byte{0x04}
+	keyBytes = append(keyBytes, x...)
+	keyBytes = append(keyBytes, y...)
+
+	return keyBytes, nil
 }
