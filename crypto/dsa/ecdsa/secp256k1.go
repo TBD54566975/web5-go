@@ -134,6 +134,10 @@ func secp256k1PublicKeyToUncheckedBytes(publicKey jwk.JWK) ([]byte, error) {
 		return nil, fmt.Errorf("failed to decode y: %w", err)
 	}
 
+	// Prepend 0x04 to indicate an uncompressed public key format for secp256k1.
+	// This byte is a prefix that distinguishes uncompressed keys, which include both X and Y coordinates,
+	// from compressed keys which only include one coordinate and an indication of the other's parity.
+	// The secp256k1 standard requires this prefix for uncompressed keys to ensure proper interpretation.
 	keyBytes := []byte{0x04}
 	keyBytes = append(keyBytes, x...)
 	keyBytes = append(keyBytes, y...)
