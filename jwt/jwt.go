@@ -171,3 +171,19 @@ func Verify(jwt string) (bool, error) {
 
 	return jws.Verify(jwt)
 }
+
+// DecodeJWTClaims decodes the base64url encoded JWT claims.
+func DecodeJWTClaims(base64UrlEncodedClaims string) (Claims, error) {
+	bytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedClaims)
+	if err != nil {
+		return Claims{}, err
+	}
+
+	var claims Claims
+	err = json.Unmarshal(bytes, &claims)
+	if err != nil {
+		return Claims{}, err
+	}
+
+	return claims, nil
+}
