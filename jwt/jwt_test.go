@@ -103,7 +103,7 @@ func TestDecodeJWTClaims(t *testing.T) {
 	assert.NoError(t, err)
 
 	parts := strings.Split(signedJwt, ".")
-	assert.Equal(t, len(parts), 3, "expected 3 parts in JWT")
+	assert.Equal(t, 3, len(parts), "expected 3 parts in JWT")
 	base64UrlEncodedClaims := parts[1]
 
 	decodedClaims, err := jwt.DecodeJWTClaims(base64UrlEncodedClaims)
