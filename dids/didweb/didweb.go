@@ -2,6 +2,8 @@ package didweb
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/tbd54566975/web5-go/crypto"
@@ -92,6 +94,7 @@ func Controllers(controllers ...string) CreateOption {
 // Create creates a new 'did:web' BearerDID with the given domain and options provided.
 // If no options are provided, a default key manager will be used to generate a single ED25519 key pair.
 // The resulting public key will be added to the DID Document as a VerificationMethod.
+// More information regarding did:web can be found here: https://w3c-ccg.github.io/did-method-web/
 func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 	options := &createOptions{
 		keyManager: crypto.NewLocalKeyManager(),
@@ -106,7 +109,31 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 		opt(options)
 	}
 
-	did, err := _did.Parse("did:web:" + domain)
+	// normalize domain by adding scheme if not present. otherwise [url.Parse] won't error but we also won't get
+	// necessary part separation.
+	var normalizedDomain string
+	if !strings.HasPrefix(domain, "http") {
+		normalizedDomain = "http://" + domain
+	} else {
+		normalizedDomain = domain
+	}
+
+	parsedDomain, err := url.Parse(normalizedDomain)
+	if err != nil {
+		return _did.BearerDID{}, fmt.Errorf("failed to parse domain: %w", err)
+	}
+
+	var methodSpecificID = parsedDomain.Hostname()
+	if parsedDomain.Port() != "" {
+		methodSpecificID = methodSpecificID + "%3A" + parsedDomain.Port()
+	}
+
+	if parsedDomain.Path != "" {
+		idPath := strings.ReplaceAll(parsedDomain.Path, "/", ":")
+		methodSpecificID = methodSpecificID + idPath
+	}
+
+	did, err := _did.Parse("did:web:" + methodSpecificID)
 	if err != nil {
 		return _did.BearerDID{}, fmt.Errorf("invalid domain: %w", err)
 	}
@@ -135,7 +162,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 		}
 
 		vm := didcore.VerificationMethod{
-			ID:           "#" + fmt.Sprint(idx),
+			ID:           "#" + strconv.Itoa(idx),
 			Type:         "JsonWebKey2020",
 			Controller:   did.URI,
 			PublicKeyJwk: &publicKeyJWK,

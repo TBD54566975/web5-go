@@ -14,6 +14,10 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, didcore.Document{}, bearerDID.Document)
+
+	document := bearerDID.Document
+	assert.Equal(t, "did:web:localhost%3A8080", document.ID)
+	assert.Equal(t, 1, len(document.VerificationMethod))
 }
 
 func TestCreate_WithOptions(t *testing.T) {
