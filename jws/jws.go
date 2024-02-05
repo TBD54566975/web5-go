@@ -26,8 +26,10 @@ type Header struct {
 	//
 	// [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.1
 	ALG string `json:"alg,omitempty"`
-	// Key ID Header Parameter
+	// Key ID Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.4
 	KID string `json:"kid,omitempty"`
+	// Type Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.9
+	Type string `json:"typ,omitempty"`
 }
 
 type JWSPayload any
