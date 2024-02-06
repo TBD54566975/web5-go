@@ -40,8 +40,8 @@ func (j Header) Base64UrlEncode() string {
 	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 
-// DecodeJWSHeader decodes the base64url encoded JWS header.
-func DecodeJWSHeader(base64UrlEncodedHeader string) (Header, error) {
+// DecodeHeader decodes the base64url encoded JWS header.
+func DecodeHeader(base64UrlEncodedHeader string) (Header, error) {
 	bytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedHeader)
 	if err != nil {
 		return Header{}, err
@@ -171,7 +171,7 @@ func Verify(compactJWS string) (bool, error) {
 	}
 
 	base64UrlEncodedHeader := parts[0]
-	header, err := DecodeJWSHeader(base64UrlEncodedHeader)
+	header, err := DecodeHeader(base64UrlEncodedHeader)
 	if err != nil {
 		return false, fmt.Errorf("malformed JWS. Failed to decode header: %s", err.Error())
 	}

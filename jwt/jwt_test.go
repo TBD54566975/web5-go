@@ -89,7 +89,7 @@ func TestVerify_BadClaims(t *testing.T) {
 	assert.False(t, verified, "expected !verified")
 }
 
-func TestDecodeJWTClaims(t *testing.T) {
+func TestDecodeClaims(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
@@ -106,7 +106,7 @@ func TestDecodeJWTClaims(t *testing.T) {
 	assert.Equal(t, 3, len(parts), "expected 3 parts in JWT")
 	base64UrlEncodedClaims := parts[1]
 
-	decodedClaims, err := jwt.DecodeJWTClaims(base64UrlEncodedClaims)
+	decodedClaims, err := jwt.DecodeClaims(base64UrlEncodedClaims)
 	assert.NoError(t, err)
 	assert.Equal(t, claims.Issuer, decodedClaims.Issuer)
 	assert.Equal(t, claims.Misc["c_nonce"], decodedClaims.Misc["c_nonce"])
