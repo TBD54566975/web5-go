@@ -8,7 +8,149 @@ import (
 
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/didcore"
+	"golang.org/x/net/dns/dnsmessage"
 )
+
+// MarshalDIDDocument packs a DID document into a TXT DNS resource records and adds to the DNS message Answers
+func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
+
+	// create root record
+
+	// get sorted VM IDs
+	sortedIDs := pluckSort(d.VerificationMethod)
+	vmIDToK := map[string]string{}
+
+	vmBep44Keys := []string{}
+	for k, id := range sortedIDs {
+		_k := fmt.Sprintf("k%d", k)
+		vmIndex := id[strings.LastIndex(id, "#"):]
+		vmIDToK[vmIndex] = _k
+		vmBep44Keys = append(vmBep44Keys, _k)
+	}
+
+	sToK := map[string]string{}
+	sKeys := []string{}
+	for k, v := range d.Service {
+		_k := fmt.Sprintf("s%d", k)
+		sToK[v.ID] = _k
+		sKeys = append(sKeys, _k)
+	}
+
+	rootProps := map[string][]string{
+		"v":    {"1"},
+		"id":   {d.ID},
+		"vm":   vmBep44Keys,
+		"auth": methodsToKeys(d.Authentication, vmIDToK),
+		"asm":  methodsToKeys(d.AssertionMethod, vmIDToK),
+		"agm":  methodsToKeys(d.KeyAgreement, vmIDToK),
+		"inv":  methodsToKeys(d.CapabilityInvocation, vmIDToK),
+		"del":  methodsToKeys(d.CapabilityDelegation, vmIDToK),
+		"srv":  sKeys,
+		"cnt":  d.Controller,
+		"aka":  d.AlsoKnownAs,
+	}
+
+	rootRecordHeader := dnsmessage.ResourceHeader{
+		Name: dnsmessage.MustNewName("_did."),
+		Type: dnsmessage.TypeTXT,
+		TTL:  7200,
+	}
+
+	rootPropsSerialized := []string{}
+	for k, v := range rootProps {
+		if len(v) <= 0 {
+			continue
+		}
+		prop := fmt.Sprintf("%s=%s", k, strings.Join(v, ","))
+		rootPropsSerialized = append(rootPropsSerialized, prop)
+	}
+
+	rootTXTRes := dnsmessage.TXTResource{
+		TXT: []string{strings.Join(rootPropsSerialized, ";")},
+	}
+
+	msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: rootRecordHeader, Body: &rootTXTRes})
+
+	// add verification methods to dns message
+	for _, v := range d.VerificationMethod {
+		// look for the key after the # in the verification method ID
+		key, ok := vmIDToK[v.ID[strings.LastIndex(v.ID, "#"):]]
+		if !ok {
+			// TODO handle error
+			continue
+		}
+		if err := MarshalVerificationMethod(key, &v, msg); err != nil {
+			return err
+		}
+	}
+
+	// add services to dns message
+	for _, s := range d.Service {
+		key, ok := sToK[s.ID]
+		if !ok {
+			// TODO handle error
+			continue
+		}
+		if err := MarshalService(key, s, msg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// MarshalVerificationMethod packs a verification method into a TXT DNS resource record and adds to the DNS message Answers
+func MarshalVerificationMethod(dhtDNSkey string, vm *didcore.VerificationMethod, msg *dnsmessage.Message) error {
+	keyBytes, err := dsa.PublicKeyToBytes(*vm.PublicKeyJwk)
+	if err != nil {
+		return err
+	}
+
+	// TODO this doesn't seem legit.  We should be using the alg from the JWK
+	t, ok := algToDhtIndex[vm.PublicKeyJwk.CRV]
+	if !ok {
+		return fmt.Errorf("unsupported verification method type: %s", vm.Type)
+	}
+	dhtEncodedVM := fmt.Sprintf("id=%s;t=%s;k=%s", vm.ID, t, base64.RawURLEncoding.EncodeToString(keyBytes))
+
+	name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", dhtDNSkey))
+	if err != nil {
+		return err
+	}
+	header := dnsmessage.ResourceHeader{
+		Name: name,
+		Type: dnsmessage.TypeTXT,
+		TTL:  7200,
+	}
+
+	resource := dnsmessage.TXTResource{
+		TXT: []string{dhtEncodedVM},
+	}
+
+	msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: header, Body: &resource})
+
+	return nil
+}
+
+func MarshalService(dhtDNSkey string, s *didcore.Service, msg *dnsmessage.Message) error {
+	name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", dhtDNSkey))
+	if err != nil {
+		return err
+	}
+	header := dnsmessage.ResourceHeader{
+		Name: name,
+		Type: dnsmessage.TypeTXT,
+		TTL:  7200,
+	}
+
+	rawData := fmt.Sprintf("id=%s;t=%s;se=%s", s.ID, s.Type, s.ServiceEndpoint)
+	resource := dnsmessage.TXTResource{
+		TXT: []string{rawData},
+	}
+
+	msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: header, Body: &resource})
+	return nil
+}
 
 // UnmarshalVerificationMethod unpacks the TXT DNS resource encoded verification method
 func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) error {
