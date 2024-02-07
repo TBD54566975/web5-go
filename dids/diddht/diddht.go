@@ -97,7 +97,7 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 			)
 		case strings.HasPrefix(name, "_s"):
 			s := UnmarshalService(data)
-			document.AddService(s)
+			document.AddService(*s)
 		case strings.HasPrefix(name, "_cnt"):
 			// TODO add controller https://did-dht.com/#controller
 			// optional field

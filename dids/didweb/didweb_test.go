@@ -47,13 +47,13 @@ func TestCreate_WithOptions(t *testing.T) {
 	fmt.Printf("%s", string(b))
 
 	pfisvc := document.Service[0]
-	assert.NotEqual(t, didcore.Service{}, *pfisvc)
+	assert.NotEqual(t, didcore.Service{}, pfisvc)
 	assert.Equal(t, "#pfi", pfisvc.ID)
 	assert.Equal(t, "PFI", pfisvc.Type)
 	assert.Equal(t, "http://localhost:8080/tbdex", pfisvc.ServiceEndpoint)
 
 	idvsvc := document.Service[1]
-	assert.NotEqual(t, didcore.Service{}, *idvsvc)
+	assert.NotEqual(t, didcore.Service{}, idvsvc)
 	assert.Equal(t, "#idv", idvsvc.ID)
 	assert.Equal(t, "IDV", idvsvc.Type)
 	assert.Equal(t, "http://localhost:8080/idv", idvsvc.ServiceEndpoint)
