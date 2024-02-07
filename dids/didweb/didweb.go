@@ -18,7 +18,7 @@ type CreateOption func(*createOptions)
 // createOptions is a struct to hold options for creating a new 'did:web' BearerDID.
 // Each option has a corresponding function that can be used by the caller to set the value of the option.
 type createOptions struct {
-	services    []didcore.Service
+	services    []*didcore.Service
 	privateKeys []privateKeyOption
 	keyManager  crypto.KeyManager
 	alsoKnownAs []string
@@ -46,10 +46,11 @@ func Service(id string, svcType string, endpoint string) CreateOption {
 
 		svc := didcore.Service{ID: svcID, Type: svcType, ServiceEndpoint: endpoint}
 		if o.services == nil {
-			o.services = make([]didcore.Service, 0)
+
+			o.services = make([]*didcore.Service, 0)
 		}
 
-		o.services = append(o.services, svc)
+		o.services = append(o.services, &svc)
 	}
 }
 
@@ -173,7 +174,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 	}
 
 	for _, svc := range options.services {
-		document.AddService(&svc)
+		document.AddService(svc)
 	}
 
 	return _did.BearerDID{

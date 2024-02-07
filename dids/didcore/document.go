@@ -1,6 +1,8 @@
 package didcore
 
-import "github.com/tbd54566975/web5-go/jwk"
+import (
+	"github.com/tbd54566975/web5-go/jwk"
+)
 
 // Document represents a set of data describing the DID subject including mechanisms such as:
 //   - cryptographic public keys - used to authenticate itself and prove
