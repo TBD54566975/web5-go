@@ -79,7 +79,7 @@ func TestDHTResolve(t *testing.T) {
 				WithDNSRecord("_did.", "vm=k0,k1,k2;auth=k0;asm=k1;inv=k2;del=k0"),
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 				WithDNSRecord("_k2._did.", fmt.Sprintf("id=2;t=1;k=%s", base64EncodedSecp256k)),
-				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=2;k=%s", base64EncodedSecp256k)),
+				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=1;k=%s", base64EncodedSecp256k)),
 			),
 
 			assertResult: func(t *testing.T, d *didcore.Document) {
