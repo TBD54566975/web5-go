@@ -40,6 +40,7 @@ func (rec *Decoder) DIDDocument(didURI string) (*didcore.Document, error) {
 				continue
 			}
 
+			// TODO somehow we need to keep track of the order - verification method index should keep entryId order
 			// extracting kN from _kN._did
 			entryID := strings.Split(name, ".")[0][1:]
 			relationships, ok := relationshipMap[entryID]
@@ -110,9 +111,9 @@ func parseDNSDID(data []byte) (*Decoder, error) {
 		}
 
 		value, err := p.TXTResource()
-		if err != nil { 
+		if err != nil {
 			// TODO check what kind of error and see if this should fail
-			fmt.Println("TODO semantic description %w", err)
+			return nil, err
 		}
 
 		name := h.Name.String()
@@ -123,7 +124,7 @@ func parseDNSDID(data []byte) (*Decoder, error) {
 		}
 
 		if _, ok := didRecord.records[h.Name.String()]; !ok {
-			fmt.Println("TODO semantic description")
+			// TODO handle error
 		}
 		didRecord.records[h.Name.String()] = fullTxtRecord
 	}

@@ -10,6 +10,13 @@ require (
 )
 
 require (
+	github.com/anacrolix/missinggo v1.3.0 // indirect
+	github.com/anacrolix/missinggo/v2 v2.7.2-0.20230527121029-a582b4f397b9 // indirect
+	github.com/huandu/xstrings v1.3.2 // indirect
+)
+
+require (
 	github.com/alecthomas/repr v0.3.0 // indirect
+	github.com/anacrolix/torrent v1.53.3
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 )

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/tbd54566975/web5-go/crypto/dsa"
@@ -106,10 +107,14 @@ func MarshalVerificationMethod(dhtDNSkey string, vm *didcore.VerificationMethod,
 		return err
 	}
 
-	// TODO this doesn't seem legit.  We should be using the alg from the JWK
-	t, ok := algToDhtIndex[vm.PublicKeyJwk.CRV]
+	// TODO this doesn'algID seem legit.  We should be using the alg from the JWK
+	algID, err := dsa.AlgorithmID(vm.PublicKeyJwk)
+	if err != nil {
+		return err
+	}
+	t, ok := algToDhtIndex[algID]
 	if !ok {
-		return fmt.Errorf("unsupported verification method type: %s", vm.Type)
+		return fmt.Errorf("unsupported algorithm")
 	}
 	dhtEncodedVM := fmt.Sprintf("id=%s;t=%s;k=%s", vm.ID, t, base64.RawURLEncoding.EncodeToString(keyBytes))
 
@@ -235,4 +240,25 @@ func UnmarshalService(data string, s *didcore.Service) error {
 	}
 
 	return nil
+}
+
+func pluckSort(hayStack []didcore.VerificationMethod) []string {
+	ids := []string{}
+	for _, v := range hayStack {
+		ids = append(ids, v.ID)
+	}
+	sort.Strings(ids)
+	return ids
+}
+
+// methodsToKeys takes a list of method indices and returns the corresonding verification method _kN keys
+func methodsToKeys(methods []string, idToKey map[string]string) []string {
+	keys := []string{}
+	for _, v := range methods {
+		k, ok := idToKey[v]
+		if ok {
+			keys = append(keys, k)
+		}
+	}
+	return keys
 }

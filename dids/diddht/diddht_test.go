@@ -17,9 +17,9 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-type bep44TXTResourceOpt func() dnsmessage.Resource
+type DHTTXTResourceOpt func() dnsmessage.Resource
 
-func WithDNSRecord(name, body string) bep44TXTResourceOpt { //nolint:revive
+func WithDNSRecord(name, body string) DHTTXTResourceOpt {
 	return func() dnsmessage.Resource {
 		return dnsmessage.Resource{
 			Header: dnsmessage.ResourceHeader{
@@ -35,7 +35,7 @@ func WithDNSRecord(name, body string) bep44TXTResourceOpt { //nolint:revive
 		}
 	}
 }
-func makeDNSMessage(answersOpt ...bep44TXTResourceOpt) dnsmessage.Message {
+func makeDNSMessage(answersOpt ...DHTTXTResourceOpt) dnsmessage.Message {
 
 	answers := []dnsmessage.Resource{}
 	for _, a := range answersOpt {
