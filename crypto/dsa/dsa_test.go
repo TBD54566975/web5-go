@@ -15,8 +15,8 @@ func TestGeneratePrivateKeySECP256K1(t *testing.T) {
 	privateJwk, err := dsa.GeneratePrivateKey(dsa.AlgorithmIDSECP256K1)
 
 	assert.NoError(t, err)
-	assert.Equal[string](t, privateJwk.CRV, ecdsa.SECP256K1JWACurve)
-	assert.Equal[string](t, privateJwk.KTY, ecdsa.KeyType)
+	assert.Equal[string](t, ecdsa.SECP256K1JWACurve, privateJwk.CRV)
+	assert.Equal[string](t, ecdsa.KeyType, privateJwk.KTY)
 	assert.True(t, privateJwk.D != "", "privateJwk.D is empty")
 	assert.True(t, privateJwk.X != "", "privateJwk.X is empty")
 	assert.True(t, privateJwk.Y != "", "privateJwk.Y is empty")
@@ -29,8 +29,8 @@ func TestGeneratePrivateKeyED25519(t *testing.T) {
 	}
 
 	assert.NoError(t, err)
-	assert.Equal[string](t, privateJwk.CRV, eddsa.ED25519JWACurve)
-	assert.Equal[string](t, privateJwk.KTY, eddsa.KeyType)
+	assert.Equal[string](t, eddsa.ED25519JWACurve, privateJwk.CRV)
+	assert.Equal[string](t, eddsa.KeyType, privateJwk.KTY)
 	assert.True(t, privateJwk.D != "", "privateJwk.D is empty")
 	assert.True(t, privateJwk.X != "", "privateJwk.X is empty")
 }
@@ -137,10 +137,10 @@ func TestBytesToPublicKey_SECP256K1(t *testing.T) {
 	jwk, err := dsa.BytesToPublicKey(dsa.AlgorithmIDSECP256K1, pubKeyBytes)
 	assert.NoError(t, err)
 
-	assert.Equal(t, jwk.CRV, ecdsa.SECP256K1JWACurve)
-	assert.Equal(t, jwk.KTY, ecdsa.KeyType)
-	assert.Equal(t, jwk.X, "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g")
-	assert.Equal(t, jwk.Y, "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg")
+	assert.Equal(t, ecdsa.SECP256K1JWACurve, jwk.CRV)
+	assert.Equal(t, ecdsa.KeyType, jwk.KTY)
+	assert.Equal(t, "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g", jwk.X)
+	assert.Equal(t, "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg", jwk.Y)
 }
 
 func TestPublicKeyToBytes_UnsupportedKTY(t *testing.T) {

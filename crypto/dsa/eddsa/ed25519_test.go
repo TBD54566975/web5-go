@@ -25,9 +25,9 @@ func TestED25519BytesToPublicKey_Good(t *testing.T) {
 	jwk, err := eddsa.ED25519BytesToPublicKey(pubKeyBytes)
 	assert.NoError(t, err)
 
-	assert.Equal(t, jwk.KTY, eddsa.KeyType)
-	assert.Equal(t, jwk.CRV, eddsa.ED25519JWACurve)
-	assert.Equal(t, jwk.X, "fU0Of2FTpptiQrUiq77mhf2kQg-INLEIw72uNp71Sfo")
+	assert.Equal(t, eddsa.KeyType, jwk.KTY)
+	assert.Equal(t, eddsa.ED25519JWACurve, jwk.CRV)
+	assert.Equal(t, "fU0Of2FTpptiQrUiq77mhf2kQg-INLEIw72uNp71Sfo", jwk.X)
 }
 
 func TestED25519PublicKeyToBytes(t *testing.T) {

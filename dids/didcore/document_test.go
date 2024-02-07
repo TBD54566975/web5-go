@@ -20,7 +20,7 @@ func TestAddVerificationMethod(t *testing.T) {
 
 	doc.AddVerificationMethod(vm, Purposes("authentication"))
 
-	assert.Equal(t, len(doc.VerificationMethod), 1)
-	assert.Equal(t, len(doc.Authentication), 1)
-	assert.Equal(t, doc.Authentication[0], vm.ID)
+	assert.Equal(t, 1, len(doc.VerificationMethod))
+	assert.Equal(t, 1, len(doc.Authentication))
+	assert.Equal(t, vm.ID, doc.Authentication[0])
 }
