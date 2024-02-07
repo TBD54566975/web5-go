@@ -3,6 +3,7 @@ package jwt_test
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -86,4 +87,27 @@ func TestVerify_BadClaims(t *testing.T) {
 	verified, err := jwt.Verify(input)
 	assert.Error(t, err)
 	assert.False(t, verified, "expected !verified")
+}
+
+func TestDecodeClaims(t *testing.T) {
+	did, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	nonce := "abcd123"
+	claims := jwt.Claims{
+		Issuer: did.ID,
+		Misc:   map[string]interface{}{"c_nonce": nonce},
+	}
+
+	signedJwt, err := jwt.Sign(claims, did)
+	assert.NoError(t, err)
+
+	parts := strings.Split(signedJwt, ".")
+	assert.Equal(t, 3, len(parts), "expected 3 parts in JWT")
+	base64UrlEncodedClaims := parts[1]
+
+	decodedClaims, err := jwt.DecodeClaims(base64UrlEncodedClaims)
+	assert.NoError(t, err)
+	assert.Equal(t, claims.Issuer, decodedClaims.Issuer)
+	assert.Equal(t, claims.Misc["c_nonce"], decodedClaims.Misc["c_nonce"])
 }
