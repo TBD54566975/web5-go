@@ -23,7 +23,8 @@ func TestCreate(t *testing.T) {
 func TestCreate_WithOptions(t *testing.T) {
 	bearerDID, err := didweb.Create(
 		"localhost:8080",
-		didweb.Service("pfi", "PFI", "http://localhost:8080"),
+		didweb.Service("pfi", "PFI", "http://localhost:8080/tbdex"),
+		didweb.Service("idv", "IDV", "http://localhost:8080/idv"),
 		didweb.AlsoKnownAs("did:example:123"),
 		didweb.Controllers("did:example:123"),
 	)
@@ -32,13 +33,19 @@ func TestCreate_WithOptions(t *testing.T) {
 	assert.NotEqual(t, did.BearerDID{}, bearerDID)
 
 	document := bearerDID.Document
-	assert.Equal(t, 1, len(document.Service))
+	assert.Equal(t, 2, len(document.Service))
 
-	svc := document.Service[0]
-	assert.NotEqual(t, didcore.Service{}, *svc)
-	assert.Equal(t, "#pfi", svc.ID)
-	assert.Equal(t, "PFI", svc.Type)
-	assert.Equal(t, "http://localhost:8080", svc.ServiceEndpoint)
+	pfisvc := document.Service[0]
+	assert.NotEqual(t, didcore.Service{}, *pfisvc)
+	assert.Equal(t, "#pfi", pfisvc.ID)
+	assert.Equal(t, "PFI", pfisvc.Type)
+	assert.Equal(t, "http://localhost:8080/tbdex", pfisvc.ServiceEndpoint)
+
+	idvsvc := document.Service[1]
+	assert.NotEqual(t, didcore.Service{}, *idvsvc)
+	assert.Equal(t, "#idv", idvsvc.ID)
+	assert.Equal(t, "IDV", idvsvc.Type)
+	assert.Equal(t, "http://localhost:8080/idv", idvsvc.ServiceEndpoint)
 
 	assert.Equal(t, "did:example:123", document.AlsoKnownAs[0])
 	assert.Equal(t, "did:example:123", document.Controller[0])

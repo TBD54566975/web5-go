@@ -1,6 +1,6 @@
 module github.com/tbd54566975/web5-go
 
-go 1.21.6
+go 1.22.0
 
 require (
 	github.com/alecthomas/assert/v2 v2.5.0
