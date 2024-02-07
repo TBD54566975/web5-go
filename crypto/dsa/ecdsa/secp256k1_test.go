@@ -34,10 +34,10 @@ func TestSECP256K1BytesToPublicKey_Uncompressed(t *testing.T) {
 	jwk, err := ecdsa.SECP256K1BytesToPublicKey(pubKeyBytes)
 	assert.NoError(t, err)
 
-	assert.Equal(t, jwk.CRV, ecdsa.SECP256K1JWACurve)
-	assert.Equal(t, jwk.KTY, ecdsa.KeyType)
-	assert.Equal(t, jwk.X, "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g")
-	assert.Equal(t, jwk.Y, "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg")
+	assert.Equal(t, ecdsa.SECP256K1JWACurve, jwk.CRV)
+	assert.Equal(t, ecdsa.KeyType, jwk.KTY)
+	assert.Equal(t, "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g", jwk.X)
+	assert.Equal(t, "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg", jwk.Y)
 }
 
 func TestSECP256K1PublicKeyToBytes(t *testing.T) {
@@ -55,7 +55,7 @@ func TestSECP256K1PublicKeyToBytes(t *testing.T) {
 	pubKeyHex := hex.EncodeToString(pubKeyBytes)
 	expected := "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
 
-	assert.Equal(t, pubKeyHex, expected)
+	assert.Equal(t, expected, pubKeyHex)
 }
 
 func TestSECP256K1PublicKeyToBytes_Bad(t *testing.T) {
@@ -93,6 +93,6 @@ func TestSECP256K1PublicKeyToBytes_Bad(t *testing.T) {
 	for _, vec := range vectors {
 		pubKeyBytes, err := ecdsa.SECP256K1PublicKeyToBytes(vec)
 		assert.Error(t, err)
-		assert.Equal(t, pubKeyBytes, nil)
+		assert.Equal(t, nil, pubKeyBytes)
 	}
 }

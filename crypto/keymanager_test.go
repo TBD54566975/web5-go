@@ -29,7 +29,7 @@ func TestGetPublicKey(t *testing.T) {
 	thumbprint, err := publicKey.ComputeThumbprint()
 	assert.NoError(t, err)
 
-	assert.Equal[string](t, thumbprint, keyID, "unexpected keyID")
+	assert.Equal[string](t, keyID, thumbprint, "unexpected keyID")
 }
 
 func TestSign(t *testing.T) {

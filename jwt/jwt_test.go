@@ -23,7 +23,7 @@ func TestClaims_MarshalJSON(t *testing.T) {
 	obj := make(map[string]interface{})
 	json.Unmarshal(b, &obj)
 
-	assert.Equal(t, obj["iss"], "issuer")
+	assert.Equal(t, "issuer", obj["iss"])
 	assert.False(t, obj["foo"] == nil)
 }
 

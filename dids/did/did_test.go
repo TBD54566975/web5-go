@@ -94,24 +94,24 @@ func TestParse(t *testing.T) {
 			continue
 		}
 
-		assert.Equal[interface{}](t, did.Method, v.output["method"])
-		assert.Equal[interface{}](t, did.ID, v.output["id"])
+		assert.Equal[interface{}](t, v.output["method"], did.Method)
+		assert.Equal[interface{}](t, v.output["id"], did.ID)
 
 		if v.output["params"] != nil {
 			params, ok := v.output["params"].(map[string]string)
 			assert.True(t, ok, "expected params to be map[string]string")
 
 			for k, v := range params {
-				assert.Equal[interface{}](t, did.Params[k], v)
+				assert.Equal[interface{}](t, v, did.Params[k])
 			}
 		}
 
 		if v.output["query"] != nil {
-			assert.Equal[interface{}](t, did.Query, v.output["query"])
+			assert.Equal[interface{}](t, v.output["query"], did.Query)
 		}
 
 		if v.output["fragment"] != nil {
-			assert.Equal[interface{}](t, did.Fragment, v.output["fragment"])
+			assert.Equal[interface{}](t, v.output["fragment"], did.Fragment)
 		}
 	}
 }

@@ -23,7 +23,7 @@ func TestSign(t *testing.T) {
 	assert.True(t, compactJWS != "", "expected signature to be non-empty")
 
 	parts := strings.Split(compactJWS, ".")
-	assert.Equal(t, len(parts), 3, "expected 3 parts in compact JWS")
+	assert.Equal(t, 3, len(parts), "expected 3 parts in compact JWS")
 }
 
 func TestVerify_bad(t *testing.T) {

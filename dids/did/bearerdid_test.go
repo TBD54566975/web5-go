@@ -22,7 +22,7 @@ func TestToPortableDID(t *testing.T) {
 
 	key := portableDID.PrivateKeys[0]
 
-	assert.NotEqual(t, key, jwk.JWK{}, "expected key to not be empty")
+	assert.NotEqual(t, jwk.JWK{}, key, "expected key to not be empty")
 }
 
 func TestFromPortableDID(t *testing.T) {
