@@ -131,7 +131,7 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 		verificationMethodID = verificationMethod.ID
 	}
 
-	jwa, err := dsa.GetJWA(*verificationMethod.PublicKeyJwk)
+	jwa, err := dsa.GetJWA(verificationMethod.PublicKeyJwk)
 	if err != nil {
 		return "", fmt.Errorf("failed to determine alg: %s", err.Error())
 	}
@@ -228,7 +228,7 @@ func Verify(compactJWS string) (bool, error) {
 		return false, fmt.Errorf("no verification method found that matches kid: %s", verificationMethodID)
 	}
 
-	verified, err := dsa.Verify(toVerifyBytes, signature, *verificationMethod.PublicKeyJwk)
+	verified, err := dsa.Verify(toVerifyBytes, signature, verificationMethod.PublicKeyJwk)
 	if err != nil {
 		return false, fmt.Errorf("failed to verify signature: %s", err.Error())
 	}

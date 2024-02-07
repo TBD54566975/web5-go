@@ -166,7 +166,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 			ID:           "#" + strconv.Itoa(idx),
 			Type:         "JsonWebKey2020",
 			Controller:   did.URI,
-			PublicKeyJwk: &publicKeyJWK,
+			PublicKeyJwk: publicKeyJWK,
 		}
 
 		document.AddVerificationMethod(vm, didcore.Purposes(keyOpts.purposes...))

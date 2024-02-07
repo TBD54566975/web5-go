@@ -13,6 +13,7 @@ import (
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
+	"github.com/tbd54566975/web5-go/jwk"
 	"github.com/tv42/zbase32"
 )
 
@@ -97,7 +98,7 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 			)
 		case strings.HasPrefix(name, "_s"):
 			s := UnmarshalService(data)
-			document.AddService(*s)
+			document.AddService(s)
 		case strings.HasPrefix(name, "_cnt"):
 			// TODO add controller https://did-dht.com/#controller
 			// optional field
@@ -293,20 +294,20 @@ func UnmarshalVerificationMethod(data string) (*didcore.VerificationMethod, erro
 	if err != nil {
 		return nil, err
 	}
-	vm.PublicKeyJwk = &j
+	vm.PublicKeyJwk = j
 
 	// validate all the parts exist
-	if len(vm.ID) <= 0 || vm.PublicKeyJwk == nil {
+	if (len(vm.ID) <= 0 || vm.PublicKeyJwk == jwk.JWK{}) {
 		return nil, fmt.Errorf("malformed verification method representation")
 	}
 
 	return vm, nil
 }
 
-func UnmarshalService(data string) *didcore.Service {
+func UnmarshalService(data string) didcore.Service {
 	propertyMap := parseTXTRecordData(data)
 
-	s := &didcore.Service{}
+	s := didcore.Service{}
 	for property, v := range propertyMap {
 		switch property {
 		case "id":

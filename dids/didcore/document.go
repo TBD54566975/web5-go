@@ -188,5 +188,5 @@ type VerificationMethod struct {
 	// a value that conforms to the rules in DID Syntax: https://www.w3.org/TR/did-core/#did-syntax
 	Controller string `json:"controller"`
 	// specification reference: https://www.w3.org/TR/did-core/#dfn-publickeyjwk
-	PublicKeyJwk *jwk.JWK `json:"publicKeyJwk,omitempty"`
+	PublicKeyJwk jwk.JWK `json:"publicKeyJwk,omitempty"`
 }

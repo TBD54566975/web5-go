@@ -29,7 +29,7 @@ func TestResolveDIDJWK(t *testing.T) {
 
 	vm := result.Document.VerificationMethod[0]
 	assert.True(t, vm != didcore.VerificationMethod{}, "expected verification method to be non-empty")
-	assert.NotEqual[jwk.JWK](t, *vm.PublicKeyJwk, jwk.JWK{}, "expected publicKeyJwk to be non-empty")
+	assert.NotEqual[jwk.JWK](t, vm.PublicKeyJwk, jwk.JWK{}, "expected publicKeyJwk to be non-empty")
 
 	assert.Equal(t, 1, len(result.Document.Authentication))
 	assert.Equal(t, 1, len(result.Document.AssertionMethod))

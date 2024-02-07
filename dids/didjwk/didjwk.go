@@ -120,7 +120,7 @@ func createDocument(did _did.DID, publicKey jwk.JWK) didcore.Document {
 		ID:           did.URI + "#0",
 		Type:         "JsonWebKey2020",
 		Controller:   did.URI,
-		PublicKeyJwk: &publicKey,
+		PublicKeyJwk: publicKey,
 	}
 
 	doc.AddVerificationMethod(
