@@ -116,7 +116,18 @@ func MarshalVerificationMethod(dhtDNSkey string, vm *didcore.VerificationMethod,
 	if !ok {
 		return fmt.Errorf("unsupported algorithm")
 	}
-	dhtEncodedVM := fmt.Sprintf("id=%s;t=%s;k=%s", vm.ID, t, base64.RawURLEncoding.EncodeToString(keyBytes))
+
+	props := []string{
+		"id=" + vm.ID,
+		"t=" + t,
+		"k=" + base64.RawURLEncoding.EncodeToString(keyBytes),
+	}
+
+	if len(vm.Controller) > 0 {
+		props = append(props, "c="+vm.Controller)
+	}
+
+	dhtEncodedVM := strings.Join(props, ";")
 
 	name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", dhtDNSkey))
 	if err != nil {
