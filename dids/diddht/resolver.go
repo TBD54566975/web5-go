@@ -71,6 +71,9 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	document := didRecord.DIDDocument(uri)
+	document, err := didRecord.DIDDocument(uri)
+	if err != nil {
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+	}
 	return didcore.ResolutionResultWithDocument(*document), nil
 }

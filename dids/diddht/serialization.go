@@ -12,7 +12,10 @@ import (
 
 // UnmarshalVerificationMethod unpacks the TXT DNS resource encoded verification method
 func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) error {
-	propertyMap := parseTXTRecordData(data)
+	propertyMap, err := parseTXTRecordData(data)
+	if err != nil {
+		return err
+	}
 
 	vm.Type = "JsonWebKey2020"
 
@@ -65,8 +68,10 @@ func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) er
 
 // UnmarshalService unpacks the TXT DNS resource encoded service
 func UnmarshalService(data string, s *didcore.Service) error {
-	propertyMap := parseTXTRecordData(data)
-
+	propertyMap, err := parseTXTRecordData(data)
+	if err != nil {
+		return err
+	}
 	for property, v := range propertyMap {
 		switch property {
 		case "id":

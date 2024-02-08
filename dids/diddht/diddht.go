@@ -1,6 +1,7 @@
 package diddht
 
 import (
+	"fmt"
 	"strings"
 
 	"golang.org/x/net/dns/dnsmessage"
@@ -8,14 +9,20 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
-// dhtDIDRecord is used to structure the DNS representation of a DID
-type dhtDIDRecord struct {
+// Decoder is used to structure the DNS representation of a DID
+type Decoder struct {
 	rootRecord string
 	records    map[string]string
 }
 
-func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
-	relationshipMap := parseVerificationRelationships(rec.rootRecord)
+func (rec *Decoder) DIDDocument(didURI string) (*didcore.Document, error) {
+	if len(rec.rootRecord) == 0 {
+		return nil, fmt.Errorf("no root record found")
+	}
+	relationshipMap, err := parseVerificationRelationships(rec.rootRecord)
+	if err != nil {
+		return nil, err
+	}
 
 	// Now we have a did in a dns record. yay
 	document := &didcore.Document{
@@ -24,7 +31,6 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 
 	// Now create the did document
 	for name, data := range rec.records {
-
 		switch {
 		case strings.HasPrefix(name, "_k"):
 			var vMethod didcore.VerificationMethod
@@ -72,18 +78,18 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 		}
 	}
 
-	return document
+	return document, nil
 }
 
 // parseDNSDID takes the bytes of the DNS representation of a DID and creates an internal representation
 // used to create a DID document
-func parseDNSDID(data []byte) (*dhtDIDRecord, error) {
+func parseDNSDID(data []byte) (*Decoder, error) {
 	var p dnsmessage.Parser
 	if _, err := p.Start(data); err != nil {
 		return nil, err
 	}
 
-	didRecord := dhtDIDRecord{
+	didRecord := Decoder{
 		records: make(map[string]string),
 	}
 
@@ -124,9 +130,11 @@ func parseDNSDID(data []byte) (*dhtDIDRecord, error) {
 }
 
 // TODO on the diddhtrecord we should validate the minimum reqs for a valid did
-func parseVerificationRelationships(rootRecord string) map[string][]string {
-	rootRecordProps := parseTXTRecordData(rootRecord)
-
+func parseVerificationRelationships(rootRecord string) (map[string][]string, error) {
+	rootRecordProps, err := parseTXTRecordData(rootRecord)
+	if err != nil {
+		return nil, err
+	}
 	// reverse the map to get the relationships
 	relationshipMap := map[string][]string{}
 	for k, values := range rootRecordProps {
@@ -139,14 +147,20 @@ func parseVerificationRelationships(rootRecord string) map[string][]string {
 		relationshipMap[v] = rel
 	}
 
-	return relationshipMap
+	return relationshipMap, nil
 }
 
-func parseTXTRecordData(data string) map[string][]string {
+func parseTXTRecordData(data string) (map[string][]string, error) {
 	result := map[string][]string{}
 	fields := strings.Split(data, ";")
+	if len(fields) == 0 {
+		return nil, fmt.Errorf("no fields found")
+	}
 	for _, field := range fields {
 		kv := strings.Split(field, "=")
+		if len(kv) != 2 {
+			return nil, fmt.Errorf("malformed field %s", field)
+		}
 		k, v := kv[0], strings.Split(kv[1], ",")
 		current, ok := result[k]
 		if ok {
@@ -155,5 +169,5 @@ func parseTXTRecordData(data string) map[string][]string {
 		result[k] = v
 	}
 
-	return result
+	return result, nil
 }

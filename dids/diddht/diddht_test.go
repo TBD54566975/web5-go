@@ -93,7 +93,7 @@ func TestDHTResolve(t *testing.T) {
 			msg: makeDNSMessage(
 				WithDNSRecord("_did.", "vm=k0;auth=k0;asm=k0;inv=k0;del=k0;srv=s0,s1"),
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
-				WithDNSRecord("_s0._did.", "id=domain;t=LinkedDomains;se=foo.com"),
+				WithDNSRecord("_s0._did.", "id=domain;t=LinkedDomains;se=http://foo.com"),
 				WithDNSRecord("_s1._did.", "id=dwn;t=DecentralizedWebNode;se=https://dwn.tbddev.org/dwn5"),
 			),
 
@@ -131,14 +131,14 @@ func Test_parseDNSDID(t *testing.T) {
 	tests := map[string]struct {
 		msg           dnsmessage.Message
 		expectedError string
-		assertResult  func(t *testing.T, d *dhtDIDRecord)
+		assertResult  func(t *testing.T, d *Decoder)
 	}{
 		"basic did with key": {
 			msg: makeDNSMessage(
 				WithDNSRecord("_did.", "vm=k0;auth=k0;asm=k0;inv=k0;del=k0"),
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 			),
-			assertResult: func(t *testing.T, d *dhtDIDRecord) {
+			assertResult: func(t *testing.T, d *Decoder) {
 				assert.False(t, d == nil)
 				expectedRecords := map[string]string{
 					"_k0._did.": "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE",
