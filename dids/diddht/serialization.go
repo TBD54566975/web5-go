@@ -80,9 +80,26 @@ func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
 			// TODO handle error
 			continue
 		}
-		if err := MarshalVerificationMethod(key, &v, msg); err != nil {
+		buf, err := MarshalVerificationMethod(&v)
+		if err != nil {
 			return err
 		}
+
+		name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", key))
+		if err != nil {
+			return err
+		}
+		header := dnsmessage.ResourceHeader{
+			Name: name,
+			Type: dnsmessage.TypeTXT,
+			TTL:  7200,
+		}
+
+		resource := dnsmessage.TXTResource{
+			TXT: []string{buf},
+		}
+
+		msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: header, Body: &resource})
 	}
 
 	// add services to dns message
@@ -101,20 +118,20 @@ func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
 }
 
 // MarshalVerificationMethod packs a verification method into a TXT DNS resource record and adds to the DNS message Answers
-func MarshalVerificationMethod(dhtDNSkey string, vm *didcore.VerificationMethod, msg *dnsmessage.Message) error {
+func MarshalVerificationMethod(vm *didcore.VerificationMethod) (string, error) {
 	keyBytes, err := dsa.PublicKeyToBytes(*vm.PublicKeyJwk)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// TODO this doesn'algID seem legit.  We should be using the alg from the JWK
 	algID, err := dsa.AlgorithmID(vm.PublicKeyJwk)
 	if err != nil {
-		return err
+		return "", err
 	}
 	t, ok := algToDhtIndex[algID]
 	if !ok {
-		return fmt.Errorf("unsupported algorithm")
+		return "", fmt.Errorf("unsupported algorithm")
 	}
 
 	props := []string{
@@ -129,23 +146,8 @@ func MarshalVerificationMethod(dhtDNSkey string, vm *didcore.VerificationMethod,
 
 	dhtEncodedVM := strings.Join(props, ";")
 
-	name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", dhtDNSkey))
-	if err != nil {
-		return err
-	}
-	header := dnsmessage.ResourceHeader{
-		Name: name,
-		Type: dnsmessage.TypeTXT,
-		TTL:  7200,
-	}
+	return dhtEncodedVM, nil
 
-	resource := dnsmessage.TXTResource{
-		TXT: []string{dhtEncodedVM},
-	}
-
-	msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: header, Body: &resource})
-
-	return nil
 }
 
 func MarshalService(dhtDNSkey string, s *didcore.Service, msg *dnsmessage.Message) error {
