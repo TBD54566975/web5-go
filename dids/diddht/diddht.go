@@ -25,12 +25,12 @@ var txtEntityNames = map[string]struct{}{
 	"del":  {},
 }
 
-var relationshipDNStoDID = map[string]string{
-	"auth": "authentication",
-	"asm":  "assertionMethod",
-	"agm":  "keyAgreement",
-	"inv":  "capabilityInvocation",
-	"del":  "capabilityDelegation",
+var relationshipDNStoDID = map[string]didcore.Purpose{
+	"auth": didcore.PurposeAuthentication,
+	"asm":  didcore.PurposeAssertion,
+	"agm":  didcore.PurposeKeyAgreement,
+	"inv":  didcore.PurposeKeyAgreement,
+	"del":  didcore.PurposeCapabilityDelegation,
 }
 
 var keyTypes = map[string]string{
@@ -84,7 +84,7 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 				continue
 			}
 
-			opts := []string{}
+			opts := []didcore.Purpose{}
 			for _, r := range relationships {
 				if o, ok := relationshipDNStoDID[r]; ok {
 					opts = append(opts, o)

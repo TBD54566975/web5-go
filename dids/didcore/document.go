@@ -6,6 +6,14 @@ import (
 	"github.com/tbd54566975/web5-go/jwk"
 )
 
+const (
+	PurposeAssertion            Purpose = "assertionMethod"
+	PurposeAuthentication       Purpose = "authentication"
+	PurposeCapabilityDelegation Purpose = "capabilityDelegation"
+	PurposeCapabilityInvocation Purpose = "capabilityInvocation"
+	PurposeKeyAgreement         Purpose = "keyAgreement"
+)
+
 // Document represents a set of data describing the DID subject including mechanisms such as:
 //   - cryptographic public keys - used to authenticate itself and prove
 //     association with the DID
@@ -64,12 +72,12 @@ type Document struct {
 }
 
 type addVMOptions struct {
-	purposes []string
+	purposes []Purpose
 }
 
 type AddVMOption func(o *addVMOptions)
 
-func Purposes(p ...string) AddVMOption {
+func Purposes(p ...Purpose) AddVMOption {
 	return func(o *addVMOptions) {
 		o.purposes = p
 	}
@@ -78,7 +86,7 @@ func Purposes(p ...string) AddVMOption {
 // AddVerificationMethod adds a verification method to the document. if Purposes are provided,
 // the verification method's ID will be added to the corresponding list of purposes.
 func (d *Document) AddVerificationMethod(method VerificationMethod, opts ...AddVMOption) {
-	o := &addVMOptions{purposes: []string{}}
+	o := &addVMOptions{purposes: []Purpose{}}
 	for _, opt := range opts {
 		opt(o)
 	}
@@ -87,15 +95,15 @@ func (d *Document) AddVerificationMethod(method VerificationMethod, opts ...AddV
 
 	for _, p := range o.purposes {
 		switch p {
-		case "assertionMethod":
+		case PurposeAssertion:
 			d.AssertionMethod = append(d.AssertionMethod, method.ID)
-		case "authentication":
+		case PurposeAuthentication:
 			d.Authentication = append(d.Authentication, method.ID)
-		case "keyAgreement":
+		case PurposeKeyAgreement:
 			d.KeyAgreement = append(d.KeyAgreement, method.ID)
-		case "capabilityDelegation":
+		case PurposeCapabilityDelegation:
 			d.CapabilityDelegation = append(d.CapabilityDelegation, method.ID)
-		case "capabilityInvocation":
+		case PurposeCapabilityInvocation:
 			d.CapabilityInvocation = append(d.CapabilityInvocation, method.ID)
 		}
 	}
@@ -136,31 +144,31 @@ func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMe
 	switch s := selector.(type) {
 	case Purpose:
 		switch purpose := Purpose(s); purpose {
-		case "assertionMethod":
+		case PurposeAssertion:
 			if len(d.AssertionMethod) == 0 {
 				return VerificationMethod{}, fmt.Errorf("no verification method found for purpose: %s", purpose)
 			}
 
 			vmID = d.AssertionMethod[0]
-		case "authentication":
+		case PurposeAuthentication:
 			if len(d.Authentication) == 0 {
 				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
 			}
 
 			vmID = d.Authentication[0]
-		case "capabilityDelegation":
+		case PurposeCapabilityDelegation:
 			if len(d.CapabilityDelegation) == 0 {
 				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
 			}
 
 			vmID = d.CapabilityDelegation[0]
-		case "capabilityInvocation":
+		case PurposeCapabilityInvocation:
 			if len(d.CapabilityInvocation) == 0 {
 				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
 			}
 
 			vmID = d.CapabilityInvocation[0]
-		case "keyAgreement":
+		case PurposeKeyAgreement:
 			if len(d.KeyAgreement) == 0 {
 				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
 			}
