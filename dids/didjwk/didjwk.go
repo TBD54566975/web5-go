@@ -20,14 +20,14 @@ type createOptions struct {
 
 type CreateOption func(o *createOptions)
 
-// KeyManager is an option that can be passed to NewDIDJWK to provide a KeyManager
+// KeyManager is an option that can be passed to Create to provide a KeyManager
 func KeyManager(k crypto.KeyManager) CreateOption {
 	return func(o *createOptions) {
 		o.keyManager = k
 	}
 }
 
-// AlgorithmID is an option that can be passed to NewDIDJWK to specify a specific
+// AlgorithmID is an option that can be passed to Create to specify a specific
 // cryptographic algorithm to use to generate the private key
 func AlgorithmID(id string) CreateOption {
 	return func(o *createOptions) {

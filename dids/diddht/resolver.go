@@ -1,7 +1,6 @@
 package diddht
 
 import (
-	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -121,7 +120,7 @@ func (r *Resolver) put(did *did.BearerDID, msg *bep44Message) error {
 	body = append(body, buf...)
 	body = append(body, msg.v...)
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, pkarrUrl, strings.NewReader(string(body)))
+	req, err := http.NewRequest(http.MethodPut, pkarrUrl, strings.NewReader(string(body)))
 	if err != nil {
 		// TODO log err
 		return err
