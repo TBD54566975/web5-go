@@ -66,3 +66,5 @@ This repo uses [`just`](https://github.com/casey/just) as a command runner. Belo
 
 ### Contributing
 Each package's README contains in-depth information about the package's structure and suggestions on how add features specific to that package
+
+You can develop web5-go on [Replit](https://replit.com/github/TBD54566975/web5-go).
