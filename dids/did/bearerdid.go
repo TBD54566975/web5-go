@@ -55,12 +55,12 @@ func (d *BearerDID) ToPortableDID() (PortableDID, error) {
 
 // GetSigner returns a sign method that can be used to sign a payload using a key associated to the DID.
 // This function also returns the verification method needed to verify the signature.
-
+//
 // Providing the verification method allows the caller to provide the signature's recipient
 // with a reference to the verification method needed to verify the payload. This is often done
 // by including the verification method id either alongside the signature or as part of the header
 // in the case of JSON Web Signatures.
-
+//
 // The verifier can dereference the verification method id to obtain the public key needed to verify the signature.
 //
 // This function takes a Verification Method selector that can be used to select a specific verification method
