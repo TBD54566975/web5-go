@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/tbd54566975/web5-go/dids/did"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/jws"
 )
 
@@ -121,16 +122,18 @@ func (c *Claims) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type signOpts struct{ purpose string }
+type signOpts struct{ selector didcore.VMSelector }
 
 // SignOpt is a type returned by all individual Sign Options.
 type SignOpt func(opts *signOpts)
 
 // Purpose is an option that can be provided to Sign to specify that a key from
 // a given DID Document Verification Relationship should be used (e.g. authentication)
-func Purpose(purpose string) SignOpt {
-	return func(opt *signOpts) {
-		opt.purpose = purpose
+// Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// It is used to select the appropriate key to sign with
+func Purpose(p string) SignOpt {
+	return func(opts *signOpts) {
+		opts.selector = didcore.Purpose(p)
 	}
 }
 
@@ -139,12 +142,12 @@ func Purpose(purpose string) SignOpt {
 // DID Document Verification Relationship should be used (e.g. authentication).
 // defaults to using assertionMethod
 func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
-	o := signOpts{purpose: "assertionMethod"}
+	o := signOpts{selector: nil}
 	for _, opt := range opts {
 		opt(&o)
 	}
 
-	return jws.Sign(claims, did, jws.Purpose(o.purpose))
+	return jws.Sign(claims, did, jws.VMSelector(o.selector))
 }
 
 // Verify verifies a JWT (JSON Web Token)

@@ -60,7 +60,7 @@ func DecodeHeader(base64UrlEncodedHeader string) (Header, error) {
 
 // options that sign function can take
 type signOpts struct {
-	purpose  string
+	selector didcore.VMSelector
 	detached bool
 }
 
@@ -69,9 +69,21 @@ type SignOpts func(opts *signOpts)
 
 // Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
 // It is used to select the appropriate key to sign with
-func Purpose(purpose string) SignOpts {
+func Purpose(p string) SignOpts {
 	return func(opts *signOpts) {
-		opts.purpose = purpose
+		opts.selector = didcore.Purpose(p)
+	}
+}
+
+func VerificationMethod(id string) SignOpts {
+	return func(opts *signOpts) {
+		opts.selector = didcore.ID(id)
+	}
+}
+
+func VMSelector(selector didcore.VMSelector) SignOpts {
+	return func(opts *signOpts) {
+		opts.selector = selector
 	}
 }
 
@@ -89,46 +101,14 @@ func DetachedPayload(detached bool) SignOpts {
 // if no purpose is provided, the default is "assertionMethod". Passing Detached(true)
 // will return a compact JWS with detached content
 func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, error) {
-	o := signOpts{purpose: "assertionMethod", detached: false}
+	o := signOpts{selector: nil, detached: false}
 	for _, opt := range opts {
 		opt(&o)
 	}
 
-	var verificationMethodID string
-	switch o.purpose {
-	case "assertionMethod":
-		verificationMethodID = did.Document.AssertionMethod[0]
-	case "authentication":
-		verificationMethodID = did.Document.Authentication[0]
-	default:
-		return "", fmt.Errorf("unsupported purpose: %s", o.purpose)
-	}
-
-	if verificationMethodID == "" {
-		return "", fmt.Errorf("no verification method found for purpose: %s", o.purpose)
-	}
-
-	var verificationMethod didcore.VerificationMethod
-	for _, vm := range did.Document.VerificationMethod {
-		if vm.ID == verificationMethodID {
-			verificationMethod = vm
-			break
-		}
-	}
-
-	if verificationMethod == (didcore.VerificationMethod{}) {
-		return "", fmt.Errorf("no verification method found for purpose: %s", o.purpose)
-	}
-
-	keyAlias, err := verificationMethod.PublicKeyJwk.ComputeThumbprint()
+	sign, verificationMethod, err := did.GetSigner(o.selector)
 	if err != nil {
-		return "", fmt.Errorf("failed to compute key alias: %s", err.Error())
-	}
-
-	if verificationMethod.ID[0] == '#' {
-		verificationMethodID = did.URI + verificationMethod.ID
-	} else {
-		verificationMethodID = verificationMethod.ID
+		return "", fmt.Errorf("failed to get signer: %s", err.Error())
 	}
 
 	jwa, err := dsa.GetJWA(*verificationMethod.PublicKeyJwk)
@@ -136,7 +116,7 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 		return "", fmt.Errorf("failed to determine alg: %s", err.Error())
 	}
 
-	header := Header{ALG: jwa, KID: verificationMethodID}
+	header := Header{ALG: jwa, KID: verificationMethod.ID}
 	base64UrlEncodedHeader := header.Base64UrlEncode()
 
 	payloadBytes, err := json.Marshal(payload)
@@ -149,7 +129,7 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 	toSign := base64UrlEncodedHeader + "." + base64UrlEncodedPayload
 	toSignBytes := []byte(toSign)
 
-	signature, err := did.Sign(keyAlias, toSignBytes)
+	signature, err := sign(toSignBytes)
 	if err != nil {
 		return "", fmt.Errorf("failed to compute signature: %s", err.Error())
 	}
@@ -158,7 +138,7 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 
 	var compactJWS string
 	if o.detached {
-		compactJWS = base64UrlEncodedHeader + "." + base64UrlEncodedSignature
+		compactJWS = base64UrlEncodedHeader + "." + "." + base64UrlEncodedSignature
 	} else {
 		compactJWS = toSign + "." + base64UrlEncodedSignature
 	}
