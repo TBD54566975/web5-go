@@ -129,7 +129,7 @@ func (i ID) selector() {}
 // method from the DID Document. If a nil selector is provided, the first verification method
 // is returned
 //
-// The selector can either be an ID or a Purpose. If a Purpose is provided, the first verification
+// The selector can either be an ID, Purpose, or nil. If a Purpose is provided, the first verification
 // method in the DID Document that has the provided purpose will be used to sign the payload.
 func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMethod, error) {
 	if len(d.VerificationMethod) == 0 {
