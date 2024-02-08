@@ -26,6 +26,24 @@ func TestSign(t *testing.T) {
 	assert.Equal(t, 3, len(parts), "expected 3 parts in compact JWS")
 }
 
+func TestSign_Detached(t *testing.T) {
+	did, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	payload := map[string]interface{}{"hello": "world"}
+
+	compactJWS, err := jws.Sign(payload, did, jws.DetachedPayload(true))
+	assert.NoError(t, err)
+
+	assert.True(t, compactJWS != "", "expected signature to be non-empty")
+
+	parts := strings.Split(compactJWS, ".")
+	assert.Equal(t, 3, len(parts), "expected 3 parts in compact JWS")
+
+	assert.Equal(t, parts[1], "", "expected empty payload")
+
+}
+
 func TestVerify_bad(t *testing.T) {
 	badHeader := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
 	okHeader := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()

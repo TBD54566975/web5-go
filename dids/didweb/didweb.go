@@ -28,7 +28,7 @@ type createOptions struct {
 // privateKeyOption is a struct to hold options for creating a new private key.
 type privateKeyOption struct {
 	algorithmID string
-	purposes    []string
+	purposes    []didcore.Purpose
 }
 
 // Service is used to add a service to the DID being created with the [Create] function.
@@ -56,7 +56,7 @@ func Service(id string, svcType string, endpoint string) CreateOption {
 // PrivateKey is used to add a private key to the DID being created with the [Create] function.
 // Each PrivateKey provided will be used to generate a private key in the key manager and then
 // added to the DID Document as a VerificationMethod.
-func PrivateKey(algorithmID string, purposes ...string) CreateOption {
+func PrivateKey(algorithmID string, purposes ...didcore.Purpose) CreateOption {
 	return func(o *createOptions) {
 		keyOpts := privateKeyOption{algorithmID: algorithmID, purposes: purposes}
 
