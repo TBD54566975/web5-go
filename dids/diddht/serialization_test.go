@@ -31,16 +31,16 @@ func Test_MarshalDIDDocument(t *testing.T) {
 		}
 		],
 		"authentication": [
-		"#0"
+		"did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy#0"
 		],
 		"assertionMethod": [
-		"#0"
+		"did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy#0"
 		],
 		"capabilityInvocation": [
-		"#0"
+		"did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy#0"
 		],
 		"capabilityDelegation": [
-		"#0"
+		"did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy#0"
 		]
 	}
 	`), &didDoc))
@@ -54,7 +54,8 @@ func Test_MarshalDIDDocument(t *testing.T) {
 	buf, _ := msg.Pack()
 	rec, _ := parseDNSDID(buf)
 	fmt.Println(rec)
-	reParsedDoc := rec.DIDDocument("did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy")
+	reParsedDoc, err := rec.DIDDocument("did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy")
+	assert.NoError(t, err)
 	assert.NotZero(t, reParsedDoc)
 	assert.Equal(t, &didDoc, reParsedDoc)
 }

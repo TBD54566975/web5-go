@@ -24,8 +24,7 @@ func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
 	vmBep44Keys := []string{}
 	for k, id := range sortedIDs {
 		_k := fmt.Sprintf("k%d", k)
-		vmIndex := id[strings.LastIndex(id, "#"):]
-		vmIDToK[vmIndex] = _k
+		vmIDToK[id] = _k
 		vmBep44Keys = append(vmBep44Keys, _k)
 	}
 
@@ -75,7 +74,7 @@ func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
 	// add verification methods to dns message
 	for _, v := range d.VerificationMethod {
 		// look for the key after the # in the verification method ID
-		key, ok := vmIDToK[v.ID[strings.LastIndex(v.ID, "#"):]]
+		key, ok := vmIDToK[v.ID]
 		if !ok {
 			// TODO handle error
 			continue
