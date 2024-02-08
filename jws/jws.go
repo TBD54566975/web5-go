@@ -36,8 +36,7 @@ type JWSPayload any
 
 // Base64UrlEncode returns the base64url encoded header.
 func (j Header) Base64UrlEncode() (string, error) {
-	jsonHeader := map[string]string{"alg": j.ALG, "kid": j.KID}
-	bytes, err := json.Marshal(jsonHeader)
+	bytes, err := json.Marshal(j)
 	if err != nil {
 		return "", err
 	}
@@ -65,6 +64,7 @@ func DecodeHeader(base64UrlEncodedHeader string) (Header, error) {
 type signOpts struct {
 	selector didcore.VMSelector
 	detached bool
+	typ      string
 }
 
 // SignOpts is a type that represents an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
@@ -97,6 +97,14 @@ func VMSelector(selector didcore.VMSelector) SignOpts {
 func DetachedPayload(detached bool) SignOpts {
 	return func(opts *signOpts) {
 		opts.detached = detached
+	}
+}
+
+// Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// It is used to select the appropriate key to sign with
+func Type(typ string) SignOpts {
+	return func(opts *signOpts) {
+		opts.typ = typ
 	}
 }
 
