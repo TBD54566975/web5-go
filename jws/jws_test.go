@@ -59,7 +59,7 @@ func TestSign_CustomType(t *testing.T) {
 	payload := map[string]interface{}{"hello": "world"}
 	customType := "openid4vci-proof+jwt"
 
-	compactJWS, err := jws.Sign(payload, did, jws.Type(customType))
+	compactJWS, err := jws.Sign(payload, did, jws.TYP(customType))
 	assert.NoError(t, err)
 
 	parts := strings.Split(compactJWS, ".")
@@ -67,7 +67,7 @@ func TestSign_CustomType(t *testing.T) {
 	header, err := jws.DecodeHeader(encodedHeader)
 	assert.NoError(t, err)
 
-	assert.Equal(t, customType, header.Type)
+	assert.Equal(t, customType, header.TYP)
 }
 
 func TestVerify_bad(t *testing.T) {

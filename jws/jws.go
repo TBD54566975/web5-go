@@ -29,7 +29,7 @@ type Header struct {
 	// Key ID Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.4
 	KID string `json:"kid,omitempty"`
 	// Type Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.9
-	Type string `json:"typ,omitempty"`
+	TYP string `json:"typ,omitempty"`
 }
 
 type JWSPayload any
@@ -102,7 +102,7 @@ func DetachedPayload(detached bool) SignOpts {
 
 // Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
 // It is used to select the appropriate key to sign with
-func Type(typ string) SignOpts {
+func TYP(typ string) SignOpts {
 	return func(opts *signOpts) {
 		opts.typ = typ
 	}
@@ -128,7 +128,7 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 	}
 
 	keyID := did.Document.GetAbsoluteResourceID(verificationMethod.ID)
-	header := Header{ALG: jwa, KID: keyID}
+	header := Header{ALG: jwa, KID: keyID, TYP: o.typ}
 	base64UrlEncodedHeader, err := header.Base64UrlEncode()
 	if err != nil {
 		return "", fmt.Errorf("failed to base64 url encode header: %s", err.Error())
