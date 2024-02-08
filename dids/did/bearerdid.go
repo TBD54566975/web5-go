@@ -17,6 +17,8 @@ type BearerDID struct {
 	Document didcore.Document
 }
 
+// DIDSigner is a function returned by GetSigner that can be used to sign a payload with a key
+// associated to a BearerDID.
 type DIDSigner func(payload []byte) ([]byte, error)
 
 // ToPortableDID exports a BearerDID to a portable format

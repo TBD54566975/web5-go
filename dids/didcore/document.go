@@ -117,8 +117,8 @@ type ID string
 
 func (i ID) selector() {}
 
-// SelectVerificationMethod takes a Verification Method selector that can be used to select a specific
-// verification method from the DID Document if desired. If no selector is provided, the first verification method
+// SelectVerificationMethod takes a selector that can be used to select a specific verification
+// method from the DID Document. If no selector is provided, the first verification method
 // is returned
 //
 // The selector can either be an ID or a Purpose. If a Purpose is provided, the first verification
