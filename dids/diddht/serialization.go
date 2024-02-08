@@ -11,10 +11,11 @@ import (
 )
 
 // UnmarshalVerificationMethod unpacks the TXT DNS resource encoded verification method
-func UnmarshalVerificationMethod(data string) (*didcore.VerificationMethod, error) {
+func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) error {
 	propertyMap := parseTXTRecordData(data)
 
-	vm := &didcore.VerificationMethod{}
+	vm.Type = "JsonWebKey2020"
+
 	var key string
 	var algorithmID string
 	for property, v := range propertyMap {
@@ -34,39 +35,38 @@ func UnmarshalVerificationMethod(data string) (*didcore.VerificationMethod, erro
 	}
 
 	if len(key) <= 0 || len(algorithmID) <= 0 {
-		return nil, fmt.Errorf("unable to parse public key")
+		return fmt.Errorf("unable to parse public key")
 	}
 
 	// RawURLEncoding is the same as URLEncoding but omits padding.
 	// Decoding and reencoding to make sure there is no padding
 	keyBytes, err := base64.RawURLEncoding.DecodeString(key)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if len(keyBytes) <= 0 {
-		return nil, fmt.Errorf("empty key")
+		return fmt.Errorf("malformed public key")
 	}
 
 	j, err := dsa.BytesToPublicKey(algorithmID, keyBytes)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	vm.PublicKeyJwk = &j
 
 	// validate all the parts exist
 	if len(vm.ID) <= 0 || vm.PublicKeyJwk == nil {
-		return nil, fmt.Errorf("malformed verification method representation")
+		return fmt.Errorf("malformed verification method representation")
 	}
 
-	return vm, nil
+	return nil
 }
 
 // UnmarshalService unpacks the TXT DNS resource encoded service
-func UnmarshalService(data string) *didcore.Service {
+func UnmarshalService(data string, s *didcore.Service) error {
 	propertyMap := parseTXTRecordData(data)
 
-	s := &didcore.Service{}
 	for property, v := range propertyMap {
 		switch property {
 		case "id":
@@ -77,8 +77,9 @@ func UnmarshalService(data string) *didcore.Service {
 			validEndpoints := []string{}
 			for _, uri := range v {
 				if _, err := url.ParseRequestURI(uri); err != nil {
-					validEndpoints = append(validEndpoints, uri)
+					return fmt.Errorf("invalid service endpoint")
 				}
+				validEndpoints = append(validEndpoints, uri)
 			}
 			s.ServiceEndpoint = strings.Join(validEndpoints, ",")
 		default:
@@ -86,5 +87,5 @@ func UnmarshalService(data string) *didcore.Service {
 		}
 	}
 
-	return s
+	return nil
 }

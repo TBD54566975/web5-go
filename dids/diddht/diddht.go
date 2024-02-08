@@ -27,8 +27,8 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 
 		switch {
 		case strings.HasPrefix(name, "_k"):
-			vMethod, err := UnmarshalVerificationMethod(data)
-			if err != nil {
+			var vMethod didcore.VerificationMethod
+			if err := UnmarshalVerificationMethod(data, &vMethod); err != nil {
 				// TODO handle error
 				continue
 			}
@@ -50,12 +50,16 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 			}
 
 			document.AddVerificationMethod(
-				*vMethod,
+				vMethod,
 				didcore.Purposes(opts...),
 			)
 		case strings.HasPrefix(name, "_s"):
-			s := UnmarshalService(data)
-			document.AddService(s)
+			var s didcore.Service
+			if err := UnmarshalService(data, &s); err != nil {
+				// TODO handle error
+				continue
+			}
+			document.AddService(&s)
 		case strings.HasPrefix(name, "_cnt"):
 			// TODO add controller https://did-dht.com/#controller
 			// optional field
