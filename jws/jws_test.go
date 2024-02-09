@@ -54,7 +54,8 @@ func TestSign_Detached(t *testing.T) {
 
 func TestVerify_bad(t *testing.T) {
 	badHeader := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
-	okHeader := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
+	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
+	assert.NoError(t, err)
 
 	okPayloadJSON := map[string]interface{}{"hello": "world"}
 	okPayloadBytes, _ := json.Marshal(okPayloadJSON)
