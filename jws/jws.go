@@ -102,7 +102,7 @@ func DetachedPayload(detached bool) SignOpts {
 
 // Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
 // It is used to select the appropriate key to sign with
-func TYP(typ string) SignOpts {
+func Type(typ string) SignOpts {
 	return func(opts *signOpts) {
 		opts.typ = typ
 	}

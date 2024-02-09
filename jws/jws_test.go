@@ -59,7 +59,7 @@ func TestSign_CustomType(t *testing.T) {
 	payload := map[string]interface{}{"hello": "world"}
 	customType := "openid4vci-proof+jwt"
 
-	compactJWS, err := jws.Sign(payload, did, jws.TYP(customType))
+	compactJWS, err := jws.Sign(payload, did, jws.Type(customType))
 	assert.NoError(t, err)
 
 	parts := strings.Split(compactJWS, ".")
