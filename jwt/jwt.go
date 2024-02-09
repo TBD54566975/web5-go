@@ -63,6 +63,12 @@ type Claims struct {
 	Misc map[string]interface{} `json:"-"`
 }
 
+type DecodedJWT struct {
+	Header Header
+	Claims Claims
+	Signature string
+}
+
 // cpy is a copy of Claims that is used to marshal/unmarshal the claims without infinitely looping
 type cpy Claims
 
@@ -152,27 +158,12 @@ func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
 
 // Verify verifies a JWT (JSON Web Token)
 func Verify(jwt string) (bool, error) {
-	parts := strings.Split(jwt, ".")
-	if len(parts) != 3 {
-		return false, fmt.Errorf("malformed JWT. Expected 3 parts, got %d", len(parts))
-	}
-
-	b64urlClaims := parts[1]
-	claimsBytes, err := base64.RawURLEncoding.DecodeString(b64urlClaims)
+	decodedJWT, err := Decode(jwt)
 	if err != nil {
-		return false, fmt.Errorf("malformed JWT claims. %w", err)
+		return false, err
 	}
 
-	var claims Claims
-	if err := json.Unmarshal(claimsBytes, &claims); err != nil {
-		return false, fmt.Errorf("malformed JWT claims. %w", err)
-	}
-
-	if claims.Expiration != 0 && time.Now().Unix() > int64(claims.Expiration) {
-		return false, fmt.Errorf("JWT has expired")
-	}
-
-	return jws.Verify(jwt)
+	return decodedJWT.Verify()
 }
 
 // DecodeClaims decodes the base64url encoded JWT claims.
@@ -189,4 +180,37 @@ func DecodeClaims(base64UrlEncodedClaims string) (Claims, error) {
 	}
 
 	return claims, nil
+}
+
+// Decode decodes the 3-part base64url encoded jwt into it's relevant parts
+func Decode(jwt string) (DecodedJWT, error) {
+	parts := strings.Split(jwt, ".")
+	if len(parts) != 3 {
+		return DecodedJWT{}, fmt.Errorf("malformed JWT. Expected 3 parts, got %d", len(parts))
+	}
+
+	base64UrlEncodedHeader := parts[0]
+	base64UrlEncodedClaims := parts[1]
+	signature := parts[2]
+
+	header, err := jws.DecodeHeader(base64UrlEncodedHeader)
+	if err != nil {
+		return DecodedJWT{}, err
+	}
+
+	claims, err := DecodeClaims(base64UrlEncodedClaims)
+	if err != nil {
+		return DecodedJWT{}, err
+	}
+
+	return DecodedJWT{Header: header, Claims: claims, Signature: signature}, nil
+}
+
+// Verify verifies a JWT (JSON Web Token)
+func (jwt DecodedJWT) Verify() (bool, error) {
+	if jwt.Claims.Expiration != 0 && time.Now().Unix() > int64(jwt.Claims.Expiration) {
+		return false, fmt.Errorf("JWT has expired")
+	}
+
+	return jws.Verify(jwt) // todo
 }
