@@ -1,6 +1,18 @@
 package didcore
 
-import "github.com/tbd54566975/web5-go/jwk"
+import (
+	"fmt"
+
+	"github.com/tbd54566975/web5-go/jwk"
+)
+
+const (
+	PurposeAssertion            Purpose = "assertionMethod"
+	PurposeAuthentication       Purpose = "authentication"
+	PurposeCapabilityDelegation Purpose = "capabilityDelegation"
+	PurposeCapabilityInvocation Purpose = "capabilityInvocation"
+	PurposeKeyAgreement         Purpose = "keyAgreement"
+)
 
 // Document represents a set of data describing the DID subject including mechanisms such as:
 //   - cryptographic public keys - used to authenticate itself and prove
@@ -60,21 +72,21 @@ type Document struct {
 }
 
 type addVMOptions struct {
-	purposes []string
+	purposes []Purpose
 }
 
 type AddVMOption func(o *addVMOptions)
 
-func Purposes(r ...string) AddVMOption {
+func Purposes(p ...Purpose) AddVMOption {
 	return func(o *addVMOptions) {
-		o.purposes = r
+		o.purposes = p
 	}
 }
 
 // AddVerificationMethod adds a verification method to the document. if Purposes are provided,
 // the verification method's ID will be added to the corresponding list of purposes.
 func (d *Document) AddVerificationMethod(method VerificationMethod, opts ...AddVMOption) {
-	o := &addVMOptions{purposes: []string{}}
+	o := &addVMOptions{purposes: []Purpose{}}
 	for _, opt := range opts {
 		opt(o)
 	}
@@ -83,18 +95,99 @@ func (d *Document) AddVerificationMethod(method VerificationMethod, opts ...AddV
 
 	for _, p := range o.purposes {
 		switch p {
-		case "assertionMethod":
+		case PurposeAssertion:
 			d.AssertionMethod = append(d.AssertionMethod, method.ID)
-		case "authentication":
+		case PurposeAuthentication:
 			d.Authentication = append(d.Authentication, method.ID)
-		case "keyAgreement":
+		case PurposeKeyAgreement:
 			d.KeyAgreement = append(d.KeyAgreement, method.ID)
-		case "capabilityDelegation":
+		case PurposeCapabilityDelegation:
 			d.CapabilityDelegation = append(d.CapabilityDelegation, method.ID)
-		case "capabilityInvocation":
+		case PurposeCapabilityInvocation:
 			d.CapabilityInvocation = append(d.CapabilityInvocation, method.ID)
 		}
 	}
+}
+
+// VMSelector is an interface that can be implemented to provide a means to select
+// a specific verification method from a DID Document.
+type VMSelector interface {
+	selector()
+}
+
+// Purpose can be used to select a verification method with a specific purpose.
+type Purpose string
+
+func (p Purpose) selector() {}
+
+// ID can be used to select a verification method by its ID.
+type ID string
+
+func (i ID) selector() {}
+
+// SelectVerificationMethod takes a selector that can be used to select a specific verification
+// method from the DID Document. If a nil selector is provided, the first verification method
+// is returned
+//
+// The selector can either be an ID, Purpose, or nil. If a Purpose is provided, the first verification
+// method in the DID Document that has the provided purpose will be returned.
+func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMethod, error) {
+	if len(d.VerificationMethod) == 0 {
+		return VerificationMethod{}, fmt.Errorf("no verification methods found")
+	}
+
+	if selector == nil {
+		return d.VerificationMethod[0], nil
+	}
+
+	var vmID string
+	switch s := selector.(type) {
+	case Purpose:
+		switch purpose := Purpose(s); purpose {
+		case PurposeAssertion:
+			if len(d.AssertionMethod) == 0 {
+				return VerificationMethod{}, fmt.Errorf("no verification method found for purpose: %s", purpose)
+			}
+
+			vmID = d.AssertionMethod[0]
+		case PurposeAuthentication:
+			if len(d.Authentication) == 0 {
+				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
+			}
+
+			vmID = d.Authentication[0]
+		case PurposeCapabilityDelegation:
+			if len(d.CapabilityDelegation) == 0 {
+				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
+			}
+
+			vmID = d.CapabilityDelegation[0]
+		case PurposeCapabilityInvocation:
+			if len(d.CapabilityInvocation) == 0 {
+				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
+			}
+
+			vmID = d.CapabilityInvocation[0]
+		case PurposeKeyAgreement:
+			if len(d.KeyAgreement) == 0 {
+				return VerificationMethod{}, fmt.Errorf("no %s verification method found", s)
+			}
+
+			vmID = d.KeyAgreement[0]
+		default:
+			return VerificationMethod{}, fmt.Errorf("unsupported purpose: %s", purpose)
+		}
+	case ID:
+		vmID = string(s)
+	}
+
+	for _, vm := range d.VerificationMethod {
+		if vm.ID == vmID {
+			return vm, nil
+		}
+	}
+
+	return VerificationMethod{}, fmt.Errorf("no verification method found for id: %s", vmID)
 }
 
 func (d *Document) AddService(service *Service) {
