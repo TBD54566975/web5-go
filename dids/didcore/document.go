@@ -194,6 +194,17 @@ func (d *Document) AddService(service *Service) {
 	d.Service = append(d.Service, service)
 }
 
+// GetAbsoluteResourceID returns a fully qualified ID for a document resource (e.g. service, verification method)
+// Document Resource IDs are allowed to be relative DID URLs as a means to reduce storage size of DID Documents.
+// More info here: https://www.w3.org/TR/did-core/#relative-did-urls
+func (d *Document) GetAbsoluteResourceID(id string) string {
+	if id[0] == '#' {
+		return d.ID + id
+	} else {
+		return id
+	}
+}
+
 // DocumentMetadata contains metadata about the DID Document
 // This metadata typically does not change between invocations of
 // the resolve and resolveRepresentation functions unless the DID document

@@ -116,15 +116,7 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 		return "", fmt.Errorf("failed to determine alg: %s", err.Error())
 	}
 
-	// TODO: consider putting this logic into did.getSigner and returning just the verification method id instead of the
-	//       entire verification method. this is very esoteric did spec detail
-	var keyID string
-	if verificationMethod.ID[0] == '#' {
-		keyID = did.URI + verificationMethod.ID
-	} else {
-		keyID = verificationMethod.ID
-	}
-
+	keyID := did.Document.GetAbsoluteResourceID(verificationMethod.ID)
 	header := Header{ALG: jwa, KID: keyID}
 	base64UrlEncodedHeader := header.Base64UrlEncode()
 
