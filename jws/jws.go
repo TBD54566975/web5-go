@@ -29,17 +29,19 @@ type Header struct {
 	// Key ID Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.4
 	KID string `json:"kid,omitempty"`
 	// Type Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.9
-	Type string `json:"typ,omitempty"`
+	TYP string `json:"typ,omitempty"`
 }
 
 type JWSPayload any
 
 // Base64UrlEncode returns the base64url encoded header.
-func (j Header) Base64UrlEncode() string {
-	jsonHeader := map[string]string{"alg": j.ALG, "kid": j.KID}
-	bytes, _ := json.Marshal(jsonHeader)
+func (j Header) Base64UrlEncode() (string, error) {
+	bytes, err := json.Marshal(j)
+	if err != nil {
+		return "", err
+	}
 
-	return base64.RawURLEncoding.EncodeToString(bytes)
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
 
 // DecodeHeader decodes the base64url encoded JWS header.
@@ -62,6 +64,7 @@ func DecodeHeader(base64UrlEncodedHeader string) (Header, error) {
 type signOpts struct {
 	selector didcore.VMSelector
 	detached bool
+	typ      string
 }
 
 // SignOpts is a type that represents an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
@@ -97,6 +100,14 @@ func DetachedPayload(detached bool) SignOpts {
 	}
 }
 
+// Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// It is used to select the appropriate key to sign with
+func Type(typ string) SignOpts {
+	return func(opts *signOpts) {
+		opts.typ = typ
+	}
+}
+
 // Sign signs the provided payload with a key associated to the provided DID.
 // if no purpose is provided, the default is "assertionMethod". Passing Detached(true)
 // will return a compact JWS with detached content
@@ -117,8 +128,11 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 	}
 
 	keyID := did.Document.GetAbsoluteResourceID(verificationMethod.ID)
-	header := Header{ALG: jwa, KID: keyID}
-	base64UrlEncodedHeader := header.Base64UrlEncode()
+	header := Header{ALG: jwa, KID: keyID, TYP: o.typ}
+	base64UrlEncodedHeader, err := header.Base64UrlEncode()
+	if err != nil {
+		return "", fmt.Errorf("failed to base64 url encode header: %s", err.Error())
+	}
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
