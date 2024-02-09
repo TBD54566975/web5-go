@@ -64,8 +64,8 @@ type Claims struct {
 }
 
 type DecodedJWT struct {
-	Header Header
-	Claims Claims
+	Header    Header
+	Claims    Claims
 	Signature string
 }
 
