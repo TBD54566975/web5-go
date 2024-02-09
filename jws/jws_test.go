@@ -52,6 +52,24 @@ func TestSign_Detached(t *testing.T) {
 
 }
 
+func TestSign_CustomType(t *testing.T) {
+	did, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	payload := map[string]interface{}{"hello": "world"}
+	customType := "openid4vci-proof+jwt"
+
+	compactJWS, err := jws.Sign(payload, did, jws.Type(customType))
+	assert.NoError(t, err)
+
+	parts := strings.Split(compactJWS, ".")
+	encodedHeader := parts[0]
+	header, err := jws.DecodeHeader(encodedHeader)
+	assert.NoError(t, err)
+
+	assert.Equal(t, customType, header.TYP)
+}
+
 func TestVerify_bad(t *testing.T) {
 	badHeader := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
 	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
