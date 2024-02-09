@@ -35,11 +35,14 @@ type Header struct {
 type JWSPayload any
 
 // Base64UrlEncode returns the base64url encoded header.
-func (j Header) Base64UrlEncode() string {
+func (j Header) Base64UrlEncode() (string, error) {
 	jsonHeader := map[string]string{"alg": j.ALG, "kid": j.KID}
-	bytes, _ := json.Marshal(jsonHeader)
+	bytes, err := json.Marshal(jsonHeader)
+	if err != nil {
+		return "", err
+	}
 
-	return base64.RawURLEncoding.EncodeToString(bytes)
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
 
 // DecodeHeader decodes the base64url encoded JWS header.
@@ -118,7 +121,10 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 
 	keyID := did.Document.GetAbsoluteResourceID(verificationMethod.ID)
 	header := Header{ALG: jwa, KID: keyID}
-	base64UrlEncodedHeader := header.Base64UrlEncode()
+	base64UrlEncodedHeader, err := header.Base64UrlEncode()
+	if err != nil {
+		return "", fmt.Errorf("failed to base64 url encode header: %s", err.Error())
+	}
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
