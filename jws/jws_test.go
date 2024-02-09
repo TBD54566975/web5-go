@@ -9,11 +9,12 @@ import (
 
 	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/dids/didjwk"
+	"github.com/tbd54566975/web5-go/dids/didweb"
 	"github.com/tbd54566975/web5-go/jws"
 )
 
 func TestSign(t *testing.T) {
-	did, err := didjwk.Create()
+	did, err := didweb.Create("localhost:8080")
 	assert.NoError(t, err)
 
 	payload := map[string]interface{}{"hello": "world"}
@@ -24,6 +25,13 @@ func TestSign(t *testing.T) {
 
 	parts := strings.Split(compactJWS, ".")
 	assert.Equal(t, 3, len(parts), "expected 3 parts in compact JWS")
+
+	header, err := jws.DecodeHeader(parts[0])
+	assert.NoError(t, err)
+
+	assert.NotZero(t, header.ALG, "expected alg to be set in jws header")
+	assert.NotZero(t, header.KID, "expected kid to be set in jws header")
+	assert.Contains(t, header.KID, did.URI, "expected kid to match did key id")
 }
 
 func TestSign_Detached(t *testing.T) {

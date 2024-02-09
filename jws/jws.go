@@ -116,7 +116,8 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 		return "", fmt.Errorf("failed to determine alg: %s", err.Error())
 	}
 
-	header := Header{ALG: jwa, KID: verificationMethod.ID}
+	keyID := did.Document.GetAbsoluteResourceID(verificationMethod.ID)
+	header := Header{ALG: jwa, KID: keyID}
 	base64UrlEncodedHeader := header.Base64UrlEncode()
 
 	payloadBytes, err := json.Marshal(payload)
