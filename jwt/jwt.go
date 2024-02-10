@@ -172,8 +172,6 @@ func (jwt DecodedJWT) Verify() (bool, error) {
 		return false, fmt.Errorf("JWT has expired")
 	}
 
-	
-
 	return jws.Verify(jwt) // todo
 }
 
