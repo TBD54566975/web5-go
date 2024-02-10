@@ -4,11 +4,14 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"io"
 
 	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/crypto"
@@ -200,6 +203,100 @@ func Test_parseDNSDID(t *testing.T) {
 
 			assert.Equal(t, "vm=k0;auth=k0;asm=k0;inv=k0;del=k0", dhtDidRecord.rootRecord)
 
+		})
+	}
+}
+
+func Test_Create(t *testing.T) {
+	tests := map[string]struct {
+		didURI         string
+		expectedResult string
+		didDocData     string
+	}{
+		"": {
+			didURI:         "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+			expectedResult: "1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+			didDocData: `{
+				"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+				"verificationMethod": [
+				  {
+					"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0",
+					"type": "JsonWebKey",
+					"controller": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+					"publicKeyJwk": {
+					  "kty": "OKP",
+					  "crv": "Ed25519",
+					  "x": "lSuMYhg12IMawqFut-2URA212Nqe8-WEB7OBlam5oBU",
+					  "kid": "2Jr7faCpoEgHvy5HXH32z-MH_0CRToO9NllZtemVvNo"
+					}
+				  }
+				],
+				"service": [
+				  {
+					"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#dwn",
+					"type": "DecentralizedWebNode",
+					"serviceEndpoint": "https://example.com/dwn"
+				  }
+				],
+				"authentication": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				],
+				"assertionMethod": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				],
+				"capabilityDelegation": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				],
+				"capabilityInvocation": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				]
+			  }`,
+		},
+	}
+
+	// setting up a fake relay that stores did documents on publish, and responds with the bencoded did document on resolve
+	mockedRes := map[string][]byte{}
+	relay := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		did := fmt.Sprintf("did:dht:%s", r.URL.Path[1:])
+		defer r.Body.Close()
+		if r.Method != http.MethodGet {
+			packagedDid, err := io.ReadAll(r.Body)
+			assert.NoError(t, err)
+			mockedRes[did] = packagedDid
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		expectedBuf, ok := mockedRes[did]
+		if !ok {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+		w.Write(expectedBuf)
+	}))
+
+	defer relay.Close()
+	relayClient := NewPkarrRelay(relay.URL, http.DefaultClient)
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			var didDoc didcore.Document
+			assert.NoError(t, json.Unmarshal([]byte(test.didDocData), &didDoc))
+			keyMgr := crypto.NewLocalKeyManager()
+			_, err := keyMgr.ImportKey(*didDoc.VerificationMethod[0].PublicKeyJwk)
+			assert.NoError(t, err)
+			assert.NoError(t, err)
+			did, err := Create(
+				WithVerificationMethods(didDoc.VerificationMethod...),
+				WithServices(didDoc.Service...),
+				WithRelay(relayClient),
+				WithKeyManager(keyMgr),
+			)
+			assert.NoError(t, err)
+			resolver := NewResolver(relay.URL, http.DefaultClient)
+			result, err := resolver.Resolve(did.URI)
+			assert.NoError(t, err)
+			assert.Equal(t, didDoc, result.Document)
+			assert.Equal(t, test.expectedResult, did.ID)
 		})
 	}
 }

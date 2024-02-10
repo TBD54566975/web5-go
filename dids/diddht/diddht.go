@@ -190,16 +190,16 @@ type relay interface {
 type DHTDidOptions struct {
 	algorithmID        string
 	keyManager         crypto.KeyManager
-	services           []didcore.Service
+	services           []*didcore.Service
 	verificationMethod []didcore.VerificationMethod
 	relay              relay
 }
 
 type DHTDidOption func(o *DHTDidOptions)
 
-func WithServices(services ...didcore.Service) DHTDidOption {
+func WithServices(services ...*didcore.Service) DHTDidOption {
 	return func(o *DHTDidOptions) {
-		o.services = append(o.services)
+		o.services = append(o.services, services...)
 	}
 }
 
@@ -235,7 +235,7 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 	o := DHTDidOptions{
 		algorithmID:        dsa.AlgorithmIDED25519,
 		verificationMethod: []didcore.VerificationMethod{},
-		services:           []didcore.Service{},
+		services:           []*didcore.Service{},
 		keyManager:         crypto.NewLocalKeyManager(),
 		relay:              getDefaultRelay(),
 	}
@@ -287,7 +287,7 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 	}
 
 	for _, s := range o.services {
-		document.AddService(&s)
+		document.AddService(s)
 	}
 
 	// 5. Map the output DID Document to a DNS packet
