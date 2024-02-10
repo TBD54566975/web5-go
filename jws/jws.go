@@ -12,36 +12,42 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
-// Header represents a JWS (JSON Web Signature) header. See [Specification] for more details.
-// [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#section-4
-type Header struct {
-	// Ide	ntifies the cryptographic algorithm used to secure the JWS. The JWS Signature value is not
-	// valid if the "alg" value does not represent a supported algorithm or if there is not a key for
-	// use with that algorithm associated with the party that digitally signed or MACed the content.
-	//
-	// "alg" values should either be registered in the IANA "JSON Web Signature and Encryption
-	// Algorithms" registry or be a value that contains a Collision-Resistant Name. The "alg" value is
-	// a case-sensitive ASCII string.  This Header Parameter MUST be present and MUST be understood
-	// and processed by implementations.
-	//
-	// [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.1
-	ALG string `json:"alg,omitempty"`
-	// Key ID Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.4
-	KID string `json:"kid,omitempty"`
-	// Type Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.9
-	TYP string `json:"typ,omitempty"`
-}
-
-type JWSPayload any
-
-// Base64UrlEncode returns the base64url encoded header.
-func (j Header) Base64UrlEncode() (string, error) {
-	bytes, err := json.Marshal(j)
-	if err != nil {
-		return "", err
+func Decode(jws string) (Decoded, error) {
+	parts := strings.Split(jws, ".")
+	if len(parts) != 3 {
+		return Decoded{}, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
 	}
 
-	return base64.RawURLEncoding.EncodeToString(bytes), nil
+	base64UrlEncodedHeader := parts[0]
+	header, err := DecodeHeader(base64UrlEncodedHeader)
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode header: %w", err)
+	}
+
+	base64UrlEncodedPayload := parts[1]
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedPayload)
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %s", err.Error())
+	}
+
+	var payload Payload
+	err = json.Unmarshal(payloadBytes, &payload)
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %s", err.Error())
+	}
+
+	base64UrlEncodedSignature := parts[2]
+	signature, err := DecodeSignature(base64UrlEncodedSignature)
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %s", err.Error())
+	}
+
+	return Decoded{
+		Header:    header,
+		Payload:   payload,
+		Signature: signature,
+		Parts:     parts,
+	}, nil
 }
 
 // DecodeHeader decodes the base64url encoded JWS header.
@@ -60,6 +66,15 @@ func DecodeHeader(base64UrlEncodedHeader string) (Header, error) {
 	return header, nil
 }
 
+func DecodeSignature(base64UrlEncodedSignature string) ([]byte, error) {
+	signature, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	return signature, nil
+}
+
 // options that sign function can take
 type signOpts struct {
 	selector didcore.VMSelector
@@ -67,24 +82,24 @@ type signOpts struct {
 	typ      string
 }
 
-// SignOpts is a type that represents an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
-type SignOpts func(opts *signOpts)
+// SignOpt is a type that represents an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+type SignOpt func(opts *signOpts)
 
 // Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
 // It is used to select the appropriate key to sign with
-func Purpose(p string) SignOpts {
+func Purpose(p string) SignOpt {
 	return func(opts *signOpts) {
 		opts.selector = didcore.Purpose(p)
 	}
 }
 
-func VerificationMethod(id string) SignOpts {
+func VerificationMethod(id string) SignOpt {
 	return func(opts *signOpts) {
 		opts.selector = didcore.ID(id)
 	}
 }
 
-func VMSelector(selector didcore.VMSelector) SignOpts {
+func VMSelector(selector didcore.VMSelector) SignOpt {
 	return func(opts *signOpts) {
 		opts.selector = selector
 	}
@@ -94,7 +109,7 @@ func VMSelector(selector didcore.VMSelector) SignOpts {
 // It is used to indicate whether the payload should be included in the signature.
 // More details can be found in [Specification].
 // [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#appendix-F
-func DetachedPayload(detached bool) SignOpts {
+func DetachedPayload(detached bool) SignOpt {
 	return func(opts *signOpts) {
 		opts.detached = detached
 	}
@@ -102,7 +117,7 @@ func DetachedPayload(detached bool) SignOpts {
 
 // Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
 // It is used to select the appropriate key to sign with
-func Type(typ string) SignOpts {
+func Type(typ string) SignOpt {
 	return func(opts *signOpts) {
 		opts.typ = typ
 	}
@@ -111,7 +126,7 @@ func Type(typ string) SignOpts {
 // Sign signs the provided payload with a key associated to the provided DID.
 // if no purpose is provided, the default is "assertionMethod". Passing Detached(true)
 // will return a compact JWS with detached content
-func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, error) {
+func Sign(payload Payload, did did.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{selector: nil, detached: false}
 	for _, opt := range opts {
 		opt(&o)
@@ -161,72 +176,88 @@ func Sign(payload JWSPayload, did did.BearerDID, opts ...SignOpts) (string, erro
 	return compactJWS, nil
 }
 
-func Verify(compactJWS string) (bool, error) {
-	parts := strings.Split(compactJWS, ".")
-	if len(parts) != 3 {
-		return false, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
-	}
-
-	base64UrlEncodedHeader := parts[0]
-	header, err := DecodeHeader(base64UrlEncodedHeader)
+func Verify(compactJWS string) (Decoded, error) {
+	decodedJWS, err := Decode(compactJWS)
 	if err != nil {
-		return false, fmt.Errorf("malformed JWS. Failed to decode header: %s", err.Error())
+		return decodedJWS, fmt.Errorf("signature verification failed: %w", err)
 	}
 
-	if header.ALG == "" || header.KID == "" {
-		return false, fmt.Errorf("malformed JWS header. alg and kid are required")
+	err = decodedJWS.Verify()
+
+	return decodedJWS, err
+}
+
+type Decoded struct {
+	Header    Header
+	Payload   Payload
+	Signature []byte
+	Parts     []string
+}
+
+func (jws Decoded) Verify() error {
+	if jws.Header.ALG == "" || jws.Header.KID == "" {
+		return fmt.Errorf("malformed JWS header. alg and kid are required")
 	}
 
-	verificationMethodID := header.KID
+	verificationMethodID := jws.Header.KID
 	verificationMethodIDParts := strings.Split(verificationMethodID, "#")
 	if len(verificationMethodIDParts) != 2 {
-		return false, fmt.Errorf("malformed JWS header. kid must be a DID URL")
+		return fmt.Errorf("malformed JWS header. kid must be a DID URL")
 	}
-
-	base64UrlEncodedPayload := parts[1]
-	payloadBytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedPayload)
-	if err != nil {
-		return false, fmt.Errorf("malformed JWS. Failed to decode payload: %s", err.Error())
-	}
-
-	var payload JWSPayload
-	err = json.Unmarshal(payloadBytes, &payload)
-	if err != nil {
-		return false, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %s", err.Error())
-	}
-
-	base64UrlEncodedSignature := parts[2]
-	signature, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedSignature)
-	if err != nil {
-		return false, fmt.Errorf("malformed JWS. Failed to decode signature: %s", err.Error())
-	}
-
-	toVerify := base64UrlEncodedHeader + "." + base64UrlEncodedPayload
-	toVerifyBytes := []byte(toVerify)
 
 	var didURI = verificationMethodIDParts[0]
 
 	resolutionResult, err := dids.Resolve(didURI)
 	if err != nil {
-		return false, fmt.Errorf("failed to resolve DID: %w", err)
+		return fmt.Errorf("failed to resolve DID: %w", err)
 	}
 
-	var verificationMethod didcore.VerificationMethod
-	for _, vm := range resolutionResult.Document.VerificationMethod {
-		if vm.ID == verificationMethodID {
-			verificationMethod = vm
-			break
-		}
-	}
-
-	if verificationMethod == (didcore.VerificationMethod{}) {
-		return false, fmt.Errorf("no verification method found that matches kid: %s", verificationMethodID)
-	}
-
-	verified, err := dsa.Verify(toVerifyBytes, signature, *verificationMethod.PublicKeyJwk)
+	verificationMethod, err := resolutionResult.Document.SelectVerificationMethod(didcore.ID(verificationMethodID))
 	if err != nil {
-		return false, fmt.Errorf("failed to verify signature: %s", err.Error())
+		return fmt.Errorf("kid does not match any verification method %w", err)
 	}
 
-	return verified, nil
+	toVerify := jws.Parts[0] + "." + jws.Parts[1]
+	verified, err := dsa.Verify([]byte(toVerify), jws.Signature, *verificationMethod.PublicKeyJwk)
+	if err != nil {
+		return fmt.Errorf("failed to verify signature: %w", err)
+	}
+
+	if !verified {
+		return fmt.Errorf("invalid signature")
+	}
+
+	return nil
 }
+
+// Header represents a JWS (JSON Web Signature) header. See [Specification] for more details.
+// [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#section-4
+type Header struct {
+	// Ide	ntifies the cryptographic algorithm used to secure the JWS. The JWS Signature value is not
+	// valid if the "alg" value does not represent a supported algorithm or if there is not a key for
+	// use with that algorithm associated with the party that digitally signed or MACed the content.
+	//
+	// "alg" values should either be registered in the IANA "JSON Web Signature and Encryption
+	// Algorithms" registry or be a value that contains a Collision-Resistant Name. The "alg" value is
+	// a case-sensitive ASCII string.  This Header Parameter MUST be present and MUST be understood
+	// and processed by implementations.
+	//
+	// [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.1
+	ALG string `json:"alg,omitempty"`
+	// Key ID Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.4
+	KID string `json:"kid,omitempty"`
+	// Type Header Parameter https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.9
+	TYP string `json:"typ,omitempty"`
+}
+
+// Base64UrlEncode returns the base64url encoded header.
+func (j Header) Base64UrlEncode() (string, error) {
+	bytes, err := json.Marshal(j)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
+}
+
+type Payload any
