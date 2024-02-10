@@ -222,8 +222,8 @@ func DecodeClaims(base64UrlEncodedClaims string) (Claims, error) {
 }
 
 // Decode decodes the 3-part base64url encoded jwt into it's relevant parts
-func Decode(jwt string) (DecodedJWT, error) {
-	parts := strings.Split(jwt, ".")
+func Decode(encodedJWT string) (DecodedJWT, error) {
+	parts := strings.Split(encodedJWT, ".")
 	if len(parts) != 3 {
 		return DecodedJWT{}, fmt.Errorf("malformed JWT. Expected 3 parts, got %d", len(parts))
 	}
