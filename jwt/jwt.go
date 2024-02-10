@@ -172,7 +172,37 @@ func (jwt DecodedJWT) Verify() (bool, error) {
 		return false, fmt.Errorf("JWT has expired")
 	}
 
-	return jws.Verify(jwt) // todo
+	// todo rather than having to encode this here, could we augment the jws.Verify function signatures?
+	encodedJWT, err := jwt.Encode()
+	if err != nil {
+		return false, err
+	}
+
+	return jws.Verify(encodedJWT)
+}
+
+func (jwt DecodedJWT) Encode() (string, error) {
+	base64UrlEncodedHeader, err := jwt.Header.Base64UrlEncode()
+	if err != nil {
+		return "", err
+	}
+
+	base64UrlEncodedClaims, err := jwt.Claims.Base64UrlEncode()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s.%s.%s", base64UrlEncodedHeader, base64UrlEncodedClaims, jwt.Signature), nil
+}
+
+// Base64UrlEncode returns the base64url encoded header.
+func (claims Claims) Base64UrlEncode() (string, error) {
+	bytes, err := claims.MarshalJSON()
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
 
 // DecodeClaims decodes the base64url encoded JWT claims.
