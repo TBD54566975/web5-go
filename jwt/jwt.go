@@ -166,6 +166,17 @@ func Verify(jwt string) (bool, error) {
 	return decodedJWT.Verify()
 }
 
+// Verify verifies a JWT (JSON Web Token)
+func (jwt DecodedJWT) Verify() (bool, error) {
+	if jwt.Claims.Expiration != 0 && time.Now().Unix() > int64(jwt.Claims.Expiration) {
+		return false, fmt.Errorf("JWT has expired")
+	}
+
+	
+
+	return jws.Verify(jwt) // todo
+}
+
 // DecodeClaims decodes the base64url encoded JWT claims.
 func DecodeClaims(base64UrlEncodedClaims string) (Claims, error) {
 	bytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedClaims)
@@ -204,13 +215,4 @@ func Decode(jwt string) (DecodedJWT, error) {
 	}
 
 	return DecodedJWT{Header: header, Claims: claims, Signature: signature}, nil
-}
-
-// Verify verifies a JWT (JSON Web Token)
-func (jwt DecodedJWT) Verify() (bool, error) {
-	if jwt.Claims.Expiration != 0 && time.Now().Unix() > int64(jwt.Claims.Expiration) {
-		return false, fmt.Errorf("JWT has expired")
-	}
-
-	return jws.Verify(jwt) // todo
 }
