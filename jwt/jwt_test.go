@@ -79,7 +79,7 @@ func TestVerify(t *testing.T) {
 }
 
 func TestVerify_BadClaims(t *testing.T) {
-	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
+	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Encode()
 	assert.NoError(t, err)
 
 	input := fmt.Sprintf("%s.%s.%s", okHeader, "hehe", "hehe")

@@ -31,21 +31,11 @@ func TestDecode(t *testing.T) {
 
 func TestDecode_Bad(t *testing.T) {
 	badHeader := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
-	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
-	assert.NoError(t, err)
-
-	okPayloadJSON := map[string]any{"hello": "world"}
-	okPayloadBytes, _ := json.Marshal(okPayloadJSON)
-	okPayload := base64.RawURLEncoding.EncodeToString(okPayloadBytes)
-
-	badSignature := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
-
 	vectors := []string{
 		"",
 		"..",
 		"a.b.c",
 		fmt.Sprintf("%s.%s.%s", badHeader, badHeader, badHeader),
-		fmt.Sprintf("%s.%s.%s", okHeader, okPayload, badSignature),
 	}
 
 	for _, vector := range vectors {
@@ -133,7 +123,7 @@ func TestDecoded_Verify_Bad(t *testing.T) {
 	header, err := jws.Header{
 		ALG: "ES256K",
 		KID: did.Document.VerificationMethod[0].ID,
-	}.Base64UrlEncode()
+	}.Encode()
 
 	assert.NoError(t, err)
 

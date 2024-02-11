@@ -18,14 +18,12 @@ func Decode(jws string) (Decoded, error) {
 		return Decoded{}, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
 	}
 
-	base64UrlEncodedHeader := parts[0]
-	header, err := DecodeHeader(base64UrlEncodedHeader)
+	header, err := DecodeHeader(parts[0])
 	if err != nil {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode header: %w", err)
 	}
 
-	base64UrlEncodedPayload := parts[1]
-	payloadBytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedPayload)
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %s", err.Error())
 	}
@@ -36,8 +34,7 @@ func Decode(jws string) (Decoded, error) {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %s", err.Error())
 	}
 
-	base64UrlEncodedSignature := parts[2]
-	signature, err := DecodeSignature(base64UrlEncodedSignature)
+	signature, err := DecodeSignature(parts[2])
 	if err != nil {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %s", err.Error())
 	}
@@ -144,7 +141,7 @@ func Sign(payload Payload, did did.BearerDID, opts ...SignOpt) (string, error) {
 
 	keyID := did.Document.GetAbsoluteResourceID(verificationMethod.ID)
 	header := Header{ALG: jwa, KID: keyID, TYP: o.typ}
-	base64UrlEncodedHeader, err := header.Base64UrlEncode()
+	base64UrlEncodedHeader, err := header.Encode()
 	if err != nil {
 		return "", fmt.Errorf("failed to base64 url encode header: %s", err.Error())
 	}
@@ -250,8 +247,8 @@ type Header struct {
 	TYP string `json:"typ,omitempty"`
 }
 
-// Base64UrlEncode returns the base64url encoded header.
-func (j Header) Base64UrlEncode() (string, error) {
+// Encode returns the base64url encoded header.
+func (j Header) Encode() (string, error) {
 	bytes, err := json.Marshal(j)
 	if err != nil {
 		return "", err
