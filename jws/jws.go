@@ -25,18 +25,18 @@ func Decode(jws string) (Decoded, error) {
 
 	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %s", err.Error())
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
 	}
 
 	var payload Payload
 	err = json.Unmarshal(payloadBytes, &payload)
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %s", err.Error())
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %w", err)
 	}
 
 	signature, err := DecodeSignature(parts[2])
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %s", err.Error())
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %w", err)
 	}
 
 	return Decoded{
@@ -131,24 +131,24 @@ func Sign(payload Payload, did did.BearerDID, opts ...SignOpt) (string, error) {
 
 	sign, verificationMethod, err := did.GetSigner(o.selector)
 	if err != nil {
-		return "", fmt.Errorf("failed to get signer: %s", err.Error())
+		return "", fmt.Errorf("failed to get signer: %w", err)
 	}
 
 	jwa, err := dsa.GetJWA(*verificationMethod.PublicKeyJwk)
 	if err != nil {
-		return "", fmt.Errorf("failed to determine alg: %s", err.Error())
+		return "", fmt.Errorf("failed to determine alg: %w", err)
 	}
 
 	keyID := did.Document.GetAbsoluteResourceID(verificationMethod.ID)
 	header := Header{ALG: jwa, KID: keyID, TYP: o.typ}
 	base64UrlEncodedHeader, err := header.Encode()
 	if err != nil {
-		return "", fmt.Errorf("failed to base64 url encode header: %s", err.Error())
+		return "", fmt.Errorf("failed to base64 url encode header: %w", err)
 	}
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal payload: %s", err.Error())
+		return "", fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
 	base64UrlEncodedPayload := base64.RawURLEncoding.EncodeToString(payloadBytes)
@@ -158,7 +158,7 @@ func Sign(payload Payload, did did.BearerDID, opts ...SignOpt) (string, error) {
 
 	signature, err := sign(toSignBytes)
 	if err != nil {
-		return "", fmt.Errorf("failed to compute signature: %s", err.Error())
+		return "", fmt.Errorf("failed to compute signature: %w", err)
 	}
 
 	base64UrlEncodedSignature := base64.RawURLEncoding.EncodeToString(signature)
