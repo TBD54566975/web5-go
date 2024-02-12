@@ -42,7 +42,7 @@ func Decode(jwt string) (Decoded, error) {
 
 	return Decoded{
 		Header:    header,
-		Payload:    claims,
+		Payload:   claims,
 		Signature: signature,
 		Parts:     parts,
 	}, nil
