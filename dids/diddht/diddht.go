@@ -1,64 +1,28 @@
 package diddht
 
 import (
-	"encoding/base64"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"strings"
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/tbd54566975/web5-go/crypto/dsa"
-	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
-	"github.com/tv42/zbase32"
 )
 
-var txtEntityNames = map[string]struct{}{
-	"vm":   {},
-	"auth": {},
-	"asm":  {},
-	"agm":  {},
-	"inv":  {},
-	"del":  {},
-}
-
-var relationshipDNStoDID = map[string]didcore.Purpose{
-	"auth": didcore.PurposeAuthentication,
-	"asm":  didcore.PurposeAssertion,
-	"agm":  didcore.PurposeKeyAgreement,
-	"inv":  didcore.PurposeKeyAgreement,
-	"del":  didcore.PurposeCapabilityDelegation,
-}
-
-var keyTypes = map[string]string{
-	"0": dsa.AlgorithmIDED25519,
-	"1": dsa.AlgorithmIDSECP256K1,
-	"2": dsa.AlgorithmIDSECP256K1,
-}
-
-type Resolver struct {
-	relay  string
-	client *http.Client
-}
-
-func NewResolver(relay string, client *http.Client) *Resolver {
-	return &Resolver{
-		relay:  relay,
-		client: client,
-	}
-}
-
-// dhtDIDRecord is used to structure the DNS representation of a DID
-type dhtDIDRecord struct {
+// Decoder is used to structure the DNS representation of a DID
+type Decoder struct {
 	rootRecord string
 	records    map[string]string
 }
 
-func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
-	relationshipMap := parseVerificationRelationships(rec.rootRecord)
+func (rec *Decoder) DIDDocument(didURI string) (*didcore.Document, error) {
+	if len(rec.rootRecord) == 0 {
+		return nil, fmt.Errorf("no root record found")
+	}
+	relationshipMap, err := parseVerificationRelationships(rec.rootRecord)
+	if err != nil {
+		return nil, err
+	}
 
 	// Now we have a did in a dns record. yay
 	document := &didcore.Document{
@@ -67,12 +31,12 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 
 	// Now create the did document
 	for name, data := range rec.records {
-
 		switch {
 		case strings.HasPrefix(name, "_k"):
-			vMethod, err := UnmarshalVerificationMethod(data)
-			if err != nil {
+			var vMethod didcore.VerificationMethod
+			if err := UnmarshalVerificationMethod(data, &vMethod); err != nil {
 				// TODO handle error
+				continue
 			}
 
 			// extracting kN from _kN._did
@@ -86,18 +50,22 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 
 			opts := []didcore.Purpose{}
 			for _, r := range relationships {
-				if o, ok := relationshipDNStoDID[r]; ok {
-					opts = append(opts, o)
+				if o, ok := vmPurposeDNStoDID[r]; ok {
+					opts = append(opts, didcore.Purpose(o))
 				}
 			}
 
 			document.AddVerificationMethod(
-				*vMethod,
+				vMethod,
 				didcore.Purposes(opts...),
 			)
 		case strings.HasPrefix(name, "_s"):
-			s := UnmarshalService(data)
-			document.AddService(s)
+			var s didcore.Service
+			if err := UnmarshalService(data, &s); err != nil {
+				// TODO handle error
+				continue
+			}
+			document.AddService(&s)
 		case strings.HasPrefix(name, "_cnt"):
 			// TODO add controller https://did-dht.com/#controller
 			// optional field
@@ -110,69 +78,18 @@ func (rec *dhtDIDRecord) DIDDocument(didURI string) *didcore.Document {
 		}
 	}
 
-	return document
-}
-
-// Resolve resolves a DID using the DHT method
-func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
-
-	// 1. Parse URI and make sure it's a DHT method
-	did, err := did.Parse(uri)
-	if err != nil {
-		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-
-	if did.Method != "dht" {
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-
-	// 2. ensure did ID is zbase32
-	identifier, err := zbase32.DecodeString(did.ID)
-	if err != nil {
-		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-
-	if len(identifier) <= 0 {
-		// return nil, fmt.Errorf("no bytes decoded from zbase32 identifier %s", did.ID)
-		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-
-	// 3. fetch bep44 encoded did document
-	res, err := r.client.Get(fmt.Sprintf("%s/%s", r.relay, did.ID))
-	if err != nil {
-		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-
-	didRecord, err := parseDNSDID(data)
-	if err != nil {
-		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-
-	document := didRecord.DIDDocument(uri)
-	return didcore.ResolutionResultWithDocument(*document), nil
+	return document, nil
 }
 
 // parseDNSDID takes the bytes of the DNS representation of a DID and creates an internal representation
 // used to create a DID document
-func parseDNSDID(data []byte) (*dhtDIDRecord, error) {
+func parseDNSDID(data []byte) (*Decoder, error) {
 	var p dnsmessage.Parser
 	if _, err := p.Start(data); err != nil {
 		return nil, err
 	}
 
-	didRecord := dhtDIDRecord{
+	didRecord := Decoder{
 		records: make(map[string]string),
 	}
 
@@ -213,9 +130,11 @@ func parseDNSDID(data []byte) (*dhtDIDRecord, error) {
 }
 
 // TODO on the diddhtrecord we should validate the minimum reqs for a valid did
-func parseVerificationRelationships(rootRecord string) map[string][]string {
-	rootRecordProps := parseTXTRecordData(rootRecord)
-
+func parseVerificationRelationships(rootRecord string) (map[string][]string, error) {
+	rootRecordProps, err := parseTXTRecordData(rootRecord)
+	if err != nil {
+		return nil, err
+	}
 	// reverse the map to get the relationships
 	relationshipMap := map[string][]string{}
 	for k, values := range rootRecordProps {
@@ -228,14 +147,20 @@ func parseVerificationRelationships(rootRecord string) map[string][]string {
 		relationshipMap[v] = rel
 	}
 
-	return relationshipMap
+	return relationshipMap, nil
 }
 
-func parseTXTRecordData(data string) map[string][]string {
+func parseTXTRecordData(data string) (map[string][]string, error) {
 	result := map[string][]string{}
 	fields := strings.Split(data, ";")
+	if len(fields) == 0 {
+		return nil, fmt.Errorf("no fields found")
+	}
 	for _, field := range fields {
 		kv := strings.Split(field, "=")
+		if len(kv) != 2 {
+			return nil, fmt.Errorf("malformed field %s", field)
+		}
 		k, v := kv[0], strings.Split(kv[1], ",")
 		current, ok := result[k]
 		if ok {
@@ -244,87 +169,5 @@ func parseTXTRecordData(data string) map[string][]string {
 		result[k] = v
 	}
 
-	return result
-}
-
-func Create(did *didcore.Document) {
-
-}
-
-// UnmarshalVerificationMethod unpacks the TXT DNS resource encoded verification method
-func UnmarshalVerificationMethod(data string) (*didcore.VerificationMethod, error) {
-	propertyMap := parseTXTRecordData(data)
-
-	vm := &didcore.VerificationMethod{}
-	var key string
-	var algorithmID string
-	for property, v := range propertyMap {
-		switch property {
-		// According to https://did-dht.com/#verification-methods, this should not be a list
-		case "id":
-			vm.ID = strings.Join(v, "")
-		case "t": // Index of the key type https://did-dht.com/registry/index.html#key-type-index
-			algorithmID, _ = keyTypes[strings.Join(v, "")]
-		case "k": // unpadded base64URL representation of the public key
-			key = strings.Join(v, "")
-		case "c": // the controller is optional
-			vm.Controller = strings.Join(v, "")
-		default:
-			continue
-		}
-	}
-
-	if len(key) <= 0 || len(algorithmID) <= 0 {
-		return nil, fmt.Errorf("unable to parse public key")
-	}
-
-	// RawURLEncoding is the same as URLEncoding but omits padding.
-	// Decoding and reencoding to make sure there is no padding
-	keyBytes, err := base64.RawURLEncoding.DecodeString(key)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(keyBytes) <= 0 {
-		return nil, fmt.Errorf("empty key")
-	}
-
-	j, err := dsa.BytesToPublicKey(algorithmID, keyBytes)
-	if err != nil {
-		return nil, err
-	}
-	vm.PublicKeyJwk = &j
-
-	// validate all the parts exist
-	if len(vm.ID) <= 0 || vm.PublicKeyJwk == nil {
-		return nil, fmt.Errorf("malformed verification method representation")
-	}
-
-	return vm, nil
-}
-
-func UnmarshalService(data string) *didcore.Service {
-	propertyMap := parseTXTRecordData(data)
-
-	s := &didcore.Service{}
-	for property, v := range propertyMap {
-		switch property {
-		case "id":
-			s.ID = strings.Join(v, "")
-		case "t":
-			s.Type = strings.Join(v, "")
-		case "se":
-			validEndpoints := []string{}
-			for _, uri := range v {
-				if _, err := url.ParseRequestURI(uri); err != nil {
-					validEndpoints = append(validEndpoints, uri)
-				}
-			}
-			s.ServiceEndpoint = strings.Join(validEndpoints, ",")
-		default:
-			continue
-		}
-	}
-
-	return s
+	return result, nil
 }
