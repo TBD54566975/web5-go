@@ -2,6 +2,7 @@ package diddht
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -10,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
+	"github.com/tbd54566975/web5-go/crypto"
+	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"golang.org/x/net/dns/dnsmessage"
 )
@@ -54,11 +57,16 @@ func TestDHTResolve(t *testing.T) {
 	assert.NoError(t, err)
 	base64EncodedSecp256k := base64.RawURLEncoding.EncodeToString(pubKeyBytesSecp256k1)
 
+	keyManager := crypto.NewLocalKeyManager()
+	privateKeyID, err := keyManager.GeneratePrivateKey(dsa.AlgorithmIDED25519)
+	assert.NoError(t, err)
+
 	tests := map[string]struct {
 		didURI               string
 		msg                  dnsmessage.Message
 		expectedErrorMessage string
 		assertResult         func(t *testing.T, d *didcore.Document)
+		signer               signer
 	}{
 		"did with valid key and no service": {
 			didURI: "did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy",
@@ -71,6 +79,9 @@ func TestDHTResolve(t *testing.T) {
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
+			},
+			signer: func(payload []byte) ([]byte, error) {
+				return keyManager.Sign(privateKeyID, payload)
 			},
 		},
 		"did with multiple valid keys and no service - out of order verification methods": {
@@ -86,6 +97,9 @@ func TestDHTResolve(t *testing.T) {
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.Equal[int](t, 3, len(d.VerificationMethod), "Expected 3 verification methods")
+			},
+			signer: func(payload []byte) ([]byte, error) {
+				return keyManager.Sign(privateKeyID, payload)
 			},
 		},
 		"did with key controller and services": {
@@ -103,6 +117,9 @@ func TestDHTResolve(t *testing.T) {
 				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
 				assert.Equal[int](t, 2, len(d.Service), "Expected 2 services")
 			},
+			signer: func(payload []byte) ([]byte, error) {
+				return keyManager.Sign(privateKeyID, payload)
+			},
 		},
 	}
 
@@ -112,7 +129,27 @@ func TestDHTResolve(t *testing.T) {
 			assert.NoError(t, err)
 			// test setup
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				_, err := w.Write(buf)
+				pkey, err := keyManager.GetPublicKey(privateKeyID)
+				assert.NoError(t, err)
+				publicKeyBytes, err := dsa.PublicKeyToBytes(pkey)
+				assert.NoError(t, err)
+				// create signed bep44 message
+				msg, err := newSignedBEP44Message(buf, 0, publicKeyBytes, test.signer)
+				assert.NoError(t, err)
+
+				// Construct the body of the request according to the Pkarr relay specification.
+				body := make([]byte, 0, len(msg.v)+72)
+				body = append(body, msg.sig...)
+				var seqUint64 uint64 = uint64(msg.seq)
+
+				// Convert the sequence number to a big-endian byte array.
+				buf := make([]byte, 8) // uint64 is 8 bytes
+				binary.BigEndian.PutUint64(buf, seqUint64)
+				body = append(body, buf...)
+				body = append(body, msg.v...)
+
+				// send signed bep44 message
+				_, err = w.Write(body)
 				assert.NoError(t, err)
 			}))
 			defer ts.Close()
