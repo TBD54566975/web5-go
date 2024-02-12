@@ -21,7 +21,7 @@ func TestDecode(t *testing.T) {
 	compactJWS, err := jws.Sign(payloadJSON, did)
 	assert.NoError(t, err)
 
-	decoded, err := jws.Decode(compactJWS)
+	decoded, err := jws.Decode[any](compactJWS)
 	assert.NoError(t, err)
 
 	payload, ok := decoded.Payload.(map[string]any)
@@ -39,10 +39,10 @@ func TestDecode_Bad(t *testing.T) {
 	}
 
 	for _, vector := range vectors {
-		decoded, err := jws.Decode(vector)
+		decoded, err := jws.Decode[any](vector)
 
 		assert.Error(t, err, "expected verification error. vector: %s", vector)
-		assert.Equal(t, jws.Decoded{}, decoded, "expected empty DecodedJWS")
+		assert.Equal(t, jws.Decoded[any]{}, decoded, "expected empty DecodedJWS")
 	}
 }
 
@@ -109,9 +109,9 @@ func TestDecoded_Verify(t *testing.T) {
 	compactJWS, err := jws.Sign(payloadJSON, did)
 	assert.NoError(t, err)
 
-	decoded, err := jws.Decode(compactJWS)
+	decoded, err := jws.Decode[any](compactJWS)
 	assert.NoError(t, err)
-	assert.NotEqual(t, jws.Decoded{}, decoded, "expected decoded to not be empty")
+	assert.NotEqual(t, jws.Decoded[any]{}, decoded, "expected decoded to not be empty")
 }
 
 func TestDecoded_Verify_Bad(t *testing.T) {
@@ -130,7 +130,7 @@ func TestDecoded_Verify_Bad(t *testing.T) {
 
 	compactJWS := fmt.Sprintf("%s.%s.%s", header, payload, payload)
 
-	_, err = jws.Verify(compactJWS)
+	_, err = jws.Verify[any](compactJWS)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "signature")
 }
@@ -143,6 +143,6 @@ func TestVerify(t *testing.T) {
 	compactJWS, err := jws.Sign(payloadJSON, did)
 	assert.NoError(t, err)
 
-	_, err = jws.Verify(compactJWS)
+	_, err = jws.Verify[any](compactJWS)
 	assert.NoError(t, err)
 }

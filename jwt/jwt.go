@@ -42,7 +42,7 @@ func Decode(jwt string) (Decoded, error) {
 
 	return Decoded{
 		Header:    header,
-		Claims:    claims,
+		Payload:    claims,
 		Signature: signature,
 		Parts:     parts,
 	}, nil
@@ -96,22 +96,17 @@ func Verify(jwt string) (Decoded, error) {
 type Header = jws.Header
 
 // Decoded represents a JWT Decoded into it's relevant parts
-type Decoded struct {
-	Header    Header
-	Claims    Claims
-	Signature []byte
-	Parts     []string
-}
+type Decoded jws.Decoded[Claims]
 
 // Verify verifies a JWT (JSON Web Token)
 func (jwt Decoded) Verify() error {
-	if jwt.Claims.Expiration != 0 && time.Now().Unix() > int64(jwt.Claims.Expiration) {
+	if jwt.Payload.Expiration != 0 && time.Now().Unix() > int64(jwt.Payload.Expiration) {
 		return fmt.Errorf("JWT has expired")
 	}
 
-	decodedJWS := jws.Decoded{
+	decodedJWS := jws.Decoded[Claims]{
 		Header:    jwt.Header,
-		Payload:   jwt.Claims,
+		Payload:   jwt.Payload,
 		Signature: jwt.Signature,
 		Parts:     jwt.Parts,
 	}

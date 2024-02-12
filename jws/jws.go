@@ -12,34 +12,34 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
-func Decode(jws string) (Decoded, error) {
+func Decode[T any](jws string) (Decoded[T], error) {
 	parts := strings.Split(jws, ".")
 	if len(parts) != 3 {
-		return Decoded{}, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
+		return Decoded[T]{}, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
 	}
 
 	header, err := DecodeHeader(parts[0])
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode header: %w", err)
+		return Decoded[T]{}, fmt.Errorf("malformed JWS. Failed to decode header: %w", err)
 	}
 
 	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
+		return Decoded[T]{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
 	}
 
-	var payload Payload
+	var payload T
 	err = json.Unmarshal(payloadBytes, &payload)
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %w", err)
+		return Decoded[T]{}, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %w", err)
 	}
 
 	signature, err := DecodeSignature(parts[2])
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %w", err)
+		return Decoded[T]{}, fmt.Errorf("malformed JWS. Failed to decode signature: %w", err)
 	}
 
-	return Decoded{
+	return Decoded[T]{
 		Header:    header,
 		Payload:   payload,
 		Signature: signature,
@@ -123,7 +123,7 @@ func Type(typ string) SignOpt {
 // Sign signs the provided payload with a key associated to the provided DID.
 // if no purpose is provided, the default is "assertionMethod". Passing Detached(true)
 // will return a compact JWS with detached content
-func Sign(payload Payload, did did.BearerDID, opts ...SignOpt) (string, error) {
+func Sign[T any](payload T, did did.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{selector: nil, detached: false}
 	for _, opt := range opts {
 		opt(&o)
@@ -173,8 +173,8 @@ func Sign(payload Payload, did did.BearerDID, opts ...SignOpt) (string, error) {
 	return compactJWS, nil
 }
 
-func Verify(compactJWS string) (Decoded, error) {
-	decodedJWS, err := Decode(compactJWS)
+func Verify[T any](compactJWS string) (Decoded[T], error) {
+	decodedJWS, err := Decode[T](compactJWS)
 	if err != nil {
 		return decodedJWS, fmt.Errorf("signature verification failed: %w", err)
 	}
@@ -184,14 +184,14 @@ func Verify(compactJWS string) (Decoded, error) {
 	return decodedJWS, err
 }
 
-type Decoded struct {
+type Decoded[T any] struct {
 	Header    Header
-	Payload   Payload
+	Payload   T
 	Signature []byte
 	Parts     []string
 }
 
-func (jws Decoded) Verify() error {
+func (jws Decoded[T]) Verify() error {
 	if jws.Header.ALG == "" || jws.Header.KID == "" {
 		return fmt.Errorf("malformed JWS header. alg and kid are required")
 	}
@@ -256,5 +256,3 @@ func (j Header) Encode() (string, error) {
 
 	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
-
-type Payload any
