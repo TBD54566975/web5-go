@@ -26,7 +26,7 @@ func TestDecode(t *testing.T) {
 
 	payload, ok := decoded.Payload.(map[string]any)
 	assert.True(t, ok)
-	assert.Equal(t, payload["hello"], "world")
+	assert.Equal(t, "world", payload["hello"])
 }
 
 func TestDecode_Bad(t *testing.T) {
@@ -81,7 +81,6 @@ func TestSign_Detached(t *testing.T) {
 	parts := strings.Split(compactJWS, ".")
 	assert.Equal(t, 3, len(parts), "expected 3 parts in compact JWS")
 	assert.Equal(t, parts[1], "", "expected empty payload")
-
 }
 
 func TestSign_CustomType(t *testing.T) {
@@ -108,7 +107,6 @@ func TestDecoded_Verify(t *testing.T) {
 
 	payloadJSON := map[string]any{"hello": "world"}
 	compactJWS, err := jws.Sign(payloadJSON, did)
-
 	assert.NoError(t, err)
 
 	decoded, err := jws.Decode(compactJWS)
@@ -124,7 +122,6 @@ func TestDecoded_Verify_Bad(t *testing.T) {
 		ALG: "ES256K",
 		KID: did.Document.VerificationMethod[0].ID,
 	}.Encode()
-
 	assert.NoError(t, err)
 
 	payloadJSON := map[string]any{"hello": "world"}
