@@ -12,9 +12,117 @@ import (
 	"github.com/tbd54566975/web5-go/jws"
 )
 
+// Decode decodes the 3-part base64url encoded jwt into it's relevant parts
+func Decode(jwt string) (Decoded, error) {
+	parts := strings.Split(jwt, ".")
+	if len(parts) != 3 {
+		return Decoded{}, fmt.Errorf("malformed JWT. Expected 3 parts, got %d", len(parts))
+	}
+
+	header, err := jws.DecodeHeader(parts[0])
+	if err != nil {
+		return Decoded{}, err
+	}
+
+	claimsBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWT. Failed to decode claims: %w", err)
+	}
+
+	claims := Claims{}
+	err = json.Unmarshal(claimsBytes, &claims)
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWT. Failed to unmarshal claims: %w", err)
+	}
+
+	signature, err := jws.DecodeSignature(parts[2])
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWT. Failed to decode signature: %w", err)
+	}
+
+	return Decoded{
+		Header:    header,
+		Claims:    claims,
+		Signature: signature,
+		Parts:     parts,
+	}, nil
+}
+
+// signOpts is a type that holds all the options that can be passed to Sign
+type signOpts struct{ selector didcore.VMSelector }
+
+// SignOpt is a type returned by all individual Sign Options.
+type SignOpt func(opts *signOpts)
+
+// Purpose is an option that can be provided to Sign to specify that a key from
+// a given DID Document Verification Relationship should be used (e.g. authentication)
+// Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// It is used to select the appropriate key to sign with
+func Purpose(p string) SignOpt {
+	return func(opts *signOpts) {
+		opts.selector = didcore.Purpose(p)
+	}
+}
+
+// Sign signs the provided JWT Claims with the provided BearerDID.
+// The Purpose option can be provided to specify that a key from a given
+// DID Document Verification Relationship should be used (e.g. authentication).
+// defaults to using assertionMethod
+func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
+	o := signOpts{selector: nil}
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	return jws.Sign(claims, did, jws.VMSelector(o.selector))
+}
+
+// Verify verifies a JWT (JSON Web Token) as per the spec https://datatracker.ietf.org/doc/html/rfc7519
+// Successful verification means that the JWT has not expired and the signature's integrity is intact
+// Decoded JWT is returned if verification is successful
+func Verify(jwt string) (Decoded, error) {
+	decodedJWT, err := Decode(jwt)
+	if err != nil {
+		return Decoded{}, err
+	}
+
+	err = decodedJWT.Verify()
+
+	return decodedJWT, err
+}
+
 // Header are JWS Headers. type aliasing because this could cause confusion
 // for non-neckbeards
 type Header = jws.Header
+
+// Decoded represents a JWT Decoded into it's relevant parts
+type Decoded struct {
+	Header    Header
+	Claims    Claims
+	Signature []byte
+	Parts     []string
+}
+
+// Verify verifies a JWT (JSON Web Token)
+func (jwt Decoded) Verify() error {
+	if jwt.Claims.Expiration != 0 && time.Now().Unix() > int64(jwt.Claims.Expiration) {
+		return fmt.Errorf("JWT has expired")
+	}
+
+	decodedJWS := jws.Decoded{
+		Header:    jwt.Header,
+		Payload:   jwt.Claims,
+		Signature: jwt.Signature,
+		Parts:     jwt.Parts,
+	}
+
+	err := decodedJWS.Verify()
+	if err != nil {
+		return fmt.Errorf("JWT signature verification failed: %w", err)
+	}
+
+	return nil
+}
 
 // Claims represents JWT (JSON Web Token) Claims
 //
@@ -63,9 +171,6 @@ type Claims struct {
 	Misc map[string]interface{} `json:"-"`
 }
 
-// cpy is a copy of Claims that is used to marshal/unmarshal the claims without infinitely looping
-type cpy Claims
-
 // MarshalJSON overrides default json.Marshal behavior to include misc claims as flattened
 // properties of the top-level object
 func (c Claims) MarshalJSON() ([]byte, error) {
@@ -104,10 +209,10 @@ func (c *Claims) UnmarshalJSON(b []byte) error {
 		"jti": true,
 	}
 
-	private := make(map[string]interface{})
+	misc := make(map[string]any)
 	for key, value := range m {
 		if _, ok := registeredClaims[key]; !ok {
-			private[key] = value
+			misc[key] = value
 		}
 	}
 
@@ -116,77 +221,11 @@ func (c *Claims) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	claims.Misc = private
+	claims.Misc = misc
 	*c = Claims(claims)
 
 	return nil
 }
 
-type signOpts struct{ selector didcore.VMSelector }
-
-// SignOpt is a type returned by all individual Sign Options.
-type SignOpt func(opts *signOpts)
-
-// Purpose is an option that can be provided to Sign to specify that a key from
-// a given DID Document Verification Relationship should be used (e.g. authentication)
-// Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
-// It is used to select the appropriate key to sign with
-func Purpose(p string) SignOpt {
-	return func(opts *signOpts) {
-		opts.selector = didcore.Purpose(p)
-	}
-}
-
-// Sign signs the provided JWT Claims with the provided BearerDID.
-// The Purpose option can be provided to specify that a key from a given
-// DID Document Verification Relationship should be used (e.g. authentication).
-// defaults to using assertionMethod
-func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
-	o := signOpts{selector: nil}
-	for _, opt := range opts {
-		opt(&o)
-	}
-
-	return jws.Sign(claims, did, jws.VMSelector(o.selector))
-}
-
-// Verify verifies a JWT (JSON Web Token)
-func Verify(jwt string) (bool, error) {
-	parts := strings.Split(jwt, ".")
-	if len(parts) != 3 {
-		return false, fmt.Errorf("malformed JWT. Expected 3 parts, got %d", len(parts))
-	}
-
-	b64urlClaims := parts[1]
-	claimsBytes, err := base64.RawURLEncoding.DecodeString(b64urlClaims)
-	if err != nil {
-		return false, fmt.Errorf("malformed JWT claims. %w", err)
-	}
-
-	var claims Claims
-	if err := json.Unmarshal(claimsBytes, &claims); err != nil {
-		return false, fmt.Errorf("malformed JWT claims. %w", err)
-	}
-
-	if claims.Expiration != 0 && time.Now().Unix() > int64(claims.Expiration) {
-		return false, fmt.Errorf("JWT has expired")
-	}
-
-	return jws.Verify(jwt)
-}
-
-// DecodeClaims decodes the base64url encoded JWT claims.
-func DecodeClaims(base64UrlEncodedClaims string) (Claims, error) {
-	bytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedClaims)
-	if err != nil {
-		return Claims{}, err
-	}
-
-	var claims Claims
-	err = json.Unmarshal(bytes, &claims)
-	if err != nil {
-		return Claims{}, err
-	}
-
-	return claims, nil
-}
+// cpy is a copy of Claims that is used to marshal/unmarshal the claims without infinitely looping
+type cpy Claims

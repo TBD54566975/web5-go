@@ -3,7 +3,6 @@ package jwt_test
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -69,47 +68,23 @@ func TestVerify(t *testing.T) {
 		Misc:   map[string]interface{}{"c_nonce": "abcd123"},
 	}
 
-	signedJwt, err := jwt.Sign(claims, did)
+	signedJWT, err := jwt.Sign(claims, did)
 	assert.NoError(t, err)
 
-	assert.False(t, signedJwt == "", "expected jwt to not be empty")
+	assert.False(t, signedJWT == "", "expected jwt to not be empty")
 
-	verified, err := jwt.Verify(signedJwt)
+	decoded, err := jwt.Verify(signedJWT)
 	assert.NoError(t, err)
-
-	assert.True(t, verified, "expected verified")
+	assert.NotEqual(t, decoded, jwt.Decoded{}, "expected decoded to not be empty")
 }
 
 func TestVerify_BadClaims(t *testing.T) {
-	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
+	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Encode()
 	assert.NoError(t, err)
-	
+
 	input := fmt.Sprintf("%s.%s.%s", okHeader, "hehe", "hehe")
 
-	verified, err := jwt.Verify(input)
+	decoded, err := jwt.Verify(input)
 	assert.Error(t, err)
-	assert.False(t, verified, "expected !verified")
-}
-
-func TestDecodeClaims(t *testing.T) {
-	did, err := didjwk.Create()
-	assert.NoError(t, err)
-
-	nonce := "abcd123"
-	claims := jwt.Claims{
-		Issuer: did.ID,
-		Misc:   map[string]interface{}{"c_nonce": nonce},
-	}
-
-	signedJwt, err := jwt.Sign(claims, did)
-	assert.NoError(t, err)
-
-	parts := strings.Split(signedJwt, ".")
-	assert.Equal(t, 3, len(parts), "expected 3 parts in JWT")
-	base64UrlEncodedClaims := parts[1]
-
-	decodedClaims, err := jwt.DecodeClaims(base64UrlEncodedClaims)
-	assert.NoError(t, err)
-	assert.Equal(t, claims.Issuer, decodedClaims.Issuer)
-	assert.Equal(t, claims.Misc["c_nonce"], decodedClaims.Misc["c_nonce"])
+	assert.Equal(t, jwt.Decoded{}, decoded)
 }

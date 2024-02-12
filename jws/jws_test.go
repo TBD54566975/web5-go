@@ -13,6 +13,39 @@ import (
 	"github.com/tbd54566975/web5-go/jws"
 )
 
+func TestDecode(t *testing.T) {
+	did, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	payloadJSON := map[string]interface{}{"hello": "world"}
+	compactJWS, err := jws.Sign(payloadJSON, did)
+	assert.NoError(t, err)
+
+	decoded, err := jws.Decode(compactJWS)
+	assert.NoError(t, err)
+
+	payload, ok := decoded.Payload.(map[string]any)
+	assert.True(t, ok)
+	assert.Equal(t, "world", payload["hello"])
+}
+
+func TestDecode_Bad(t *testing.T) {
+	badHeader := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
+	vectors := []string{
+		"",
+		"..",
+		"a.b.c",
+		fmt.Sprintf("%s.%s.%s", badHeader, badHeader, badHeader),
+	}
+
+	for _, vector := range vectors {
+		decoded, err := jws.Decode(vector)
+
+		assert.Error(t, err, "expected verification error. vector: %s", vector)
+		assert.Equal(t, jws.Decoded{}, decoded, "expected empty DecodedJWS")
+	}
+}
+
 func TestSign(t *testing.T) {
 	did, err := didweb.Create("localhost:8080")
 	assert.NoError(t, err)
@@ -47,9 +80,7 @@ func TestSign_Detached(t *testing.T) {
 
 	parts := strings.Split(compactJWS, ".")
 	assert.Equal(t, 3, len(parts), "expected 3 parts in compact JWS")
-
 	assert.Equal(t, parts[1], "", "expected empty payload")
-
 }
 
 func TestSign_CustomType(t *testing.T) {
@@ -70,44 +101,48 @@ func TestSign_CustomType(t *testing.T) {
 	assert.Equal(t, customType, header.TYP)
 }
 
-func TestVerify_bad(t *testing.T) {
-	badHeader := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
-	okHeader, err := jws.Header{ALG: "ES256K", KID: "did:web:abc#key-1"}.Base64UrlEncode()
-	assert.NoError(t, err)
-
-	okPayloadJSON := map[string]interface{}{"hello": "world"}
-	okPayloadBytes, _ := json.Marshal(okPayloadJSON)
-	okPayload := base64.RawURLEncoding.EncodeToString(okPayloadBytes)
-
-	badSignature := base64.RawURLEncoding.EncodeToString([]byte("hehe"))
-
-	vectors := []string{
-		"",
-		"..",
-		"a.b.c",
-		fmt.Sprintf("%s.%s.%s", badHeader, badHeader, badHeader),
-		fmt.Sprintf("%s.%s.%s", okHeader, okPayload, badSignature),
-	}
-
-	for _, vector := range vectors {
-		ok, err := jws.Verify(vector)
-
-		assert.Error(t, err, "expected verification error. vector: %s", vector)
-		assert.False(t, ok, "expected verification !ok. vector %s", vector)
-	}
-}
-
-func TestVerify_ok(t *testing.T) {
+func TestDecoded_Verify(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	payloadJSON := map[string]interface{}{"hello": "world"}
+	payloadJSON := map[string]any{"hello": "world"}
 	compactJWS, err := jws.Sign(payloadJSON, did)
-
 	assert.NoError(t, err)
 
-	ok, err := jws.Verify(compactJWS)
+	decoded, err := jws.Decode(compactJWS)
+	assert.NoError(t, err)
+	assert.NotEqual(t, jws.Decoded{}, decoded, "expected decoded to not be empty")
+}
+
+func TestDecoded_Verify_Bad(t *testing.T) {
+	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	assert.True(t, ok, "expected verification ok")
+	header, err := jws.Header{
+		ALG: "ES256K",
+		KID: did.Document.VerificationMethod[0].ID,
+	}.Encode()
+	assert.NoError(t, err)
+
+	payloadJSON := map[string]any{"hello": "world"}
+	payloadBytes, _ := json.Marshal(payloadJSON)
+	payload := base64.RawURLEncoding.EncodeToString(payloadBytes)
+
+	compactJWS := fmt.Sprintf("%s.%s.%s", header, payload, payload)
+
+	_, err = jws.Verify(compactJWS)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "signature")
+}
+
+func TestVerify(t *testing.T) {
+	did, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	payloadJSON := map[string]any{"hello": "world"}
+	compactJWS, err := jws.Sign(payloadJSON, did)
+	assert.NoError(t, err)
+
+	_, err = jws.Verify(compactJWS)
+	assert.NoError(t, err)
 }
