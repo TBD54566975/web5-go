@@ -51,7 +51,7 @@ func (rec *Decoder) DIDDocument(didURI string) (*didcore.Document, error) {
 			opts := []didcore.Purpose{}
 			for _, r := range relationships {
 				if o, ok := vmPurposeDNStoDID[r]; ok {
-					opts = append(opts, o)
+					opts = append(opts, didcore.Purpose(o))
 				}
 			}
 
