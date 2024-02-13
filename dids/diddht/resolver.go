@@ -65,7 +65,18 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	didRecord, err := parseDNSDID(data)
+	bep44Message := bep44Message{}
+	if err := DecodeBEP44Message(data, &bep44Message); err != nil {
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+	}
+
+	bep44MessagePayload, err := bep44Message.DecodePayload()
+	if err != nil {
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+	}
+
+	didRecord, err := parseDNSDID(bep44MessagePayload)
+
 	if err != nil {
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
