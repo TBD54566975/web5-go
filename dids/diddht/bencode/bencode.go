@@ -97,7 +97,7 @@ func Unmarshal(input []byte, output any) error {
 	case *map[string]any:
 		_, err := unmarshalDict(input, *v)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal map: %w", err)
+			return fmt.Errorf("failed to unmarshal dict: %w", err)
 		}
 	default:
 		return fmt.Errorf("unsupported type: %T", output)
