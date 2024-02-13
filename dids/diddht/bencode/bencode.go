@@ -76,7 +76,7 @@ func Marshal(input any) ([]byte, error) {
 
 // Unmarshal decodes a Bencode formatted byte array into the the type of the provided output.
 // More information can be found at:
-// https://wiki.theory.org/BitTorrentSpecification#Dictionaries
+// https://wiki.theory.org/BitTorrentSpecification#Bencoding
 func Unmarshal(input []byte, output any) error {
 	switch v := output.(type) {
 	case *string:
@@ -95,7 +95,7 @@ func Unmarshal(input []byte, output any) error {
 			return fmt.Errorf("failed to unmarshal list: %w", err)
 		}
 	case *map[string]any:
-		_, err := unmarshalMap(input, *v)
+		_, err := unmarshalDict(input, *v)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal map: %w", err)
 		}
@@ -128,7 +128,7 @@ func unmarshalValue(input []byte) (any, int, error) {
 		return value, n, nil
 	case DictionaryPrefix:
 		value := make(map[string]any)
-		n, err := unmarshalMap(input, value)
+		n, err := unmarshalDict(input, value)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -224,9 +224,9 @@ func unmarshalList(input []byte, output *[]any) (int, error) {
 	return i, fmt.Errorf("unexpected end of input")
 }
 
-// unmarshalMap decodes a Bencode dictionary from a byte slice.
+// unmarshalDict decodes a Bencode dictionary from a byte slice.
 // It returns the total bytes processed, and an error if any.
-func unmarshalMap(input []byte, output map[string]any) (int, error) {
+func unmarshalDict(input []byte, output map[string]any) (int, error) {
 	if input[0] != DictionaryPrefix {
 		return 0, fmt.Errorf("input does not start with 'd'")
 	}
