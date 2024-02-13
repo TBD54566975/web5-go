@@ -88,3 +88,9 @@ func TestVerify_BadClaims(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, jwt.Decoded{}, decoded)
 }
+
+func Test_Decode_Empty(t *testing.T) {
+	decoded, err := jwt.Decode("")
+	assert.Error(t, err)
+	assert.Equal(t, jwt.Decoded{}, decoded)
+}
