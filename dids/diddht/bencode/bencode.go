@@ -14,6 +14,7 @@ const (
 )
 
 // Marshal encodes the given input into a Bencode formatted byte array.
+// Note: Does not support encoding structs at the moment.
 // More information about Bencode can be found at:
 // https://wiki.theory.org/BitTorrentSpecification#Bencoding
 func Marshal(input any) ([]byte, error) {
