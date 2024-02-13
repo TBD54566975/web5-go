@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/anacrolix/torrent/bencode"
+	"github.com/tbd54566975/web5-go/dids/diddht/bencode"
 )
 
 // Represents a BEP44 message, which is used for storing and retrieving data in the Mainline DHT
