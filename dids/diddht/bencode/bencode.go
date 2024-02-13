@@ -23,7 +23,7 @@ func Marshal(input any) ([]byte, error) {
 
 		return []byte(encoded), nil
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		encoded := fmt.Sprintf("%s%d%s", string(IntegerPrefix), v, string(EndSuffix))
+		encoded := fmt.Sprintf("%c%d%c", IntegerPrefix, v, EndSuffix)
 
 		return []byte(encoded), nil
 	case []byte:
