@@ -82,7 +82,7 @@ func Create(opts ...CreateOption) (did.BearerDID, error) {
 
 type Resolver struct{}
 
-// Resolves the provided DID URI (must be a did:jwk) as per the wee bit of detail provided in the
+// Resolve the provided DID URI (must be a did:jwk) as per the wee bit of detail provided in the
 // spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
 func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	did, err := did.Parse(uri)

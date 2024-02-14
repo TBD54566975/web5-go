@@ -144,10 +144,10 @@ func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMe
 	var vmID string
 	switch s := selector.(type) {
 	case Purpose:
-		switch purpose := s; purpose {
+		switch s {
 		case PurposeAssertion:
 			if len(d.AssertionMethod) == 0 {
-				return VerificationMethod{}, fmt.Errorf("no verification method found for purpose: %s", purpose)
+				return VerificationMethod{}, fmt.Errorf("no verification method found for purpose: %s", s)
 			}
 
 			vmID = d.AssertionMethod[0]
@@ -176,7 +176,7 @@ func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMe
 
 			vmID = d.KeyAgreement[0]
 		default:
-			return VerificationMethod{}, fmt.Errorf("unsupported purpose: %s", purpose)
+			return VerificationMethod{}, fmt.Errorf("unsupported purpose: %s", s)
 		}
 	case ID:
 		vmID = string(s)
