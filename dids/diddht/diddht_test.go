@@ -221,7 +221,7 @@ func Test_Create(t *testing.T) {
 				"verificationMethod": [
 				  {
 					"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0",
-					"type": "JsonWebKey",
+					"type": "JsonWebKey2020",
 					"controller": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
 					"publicKeyJwk": {
 					  "kty": "OKP",
