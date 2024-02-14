@@ -1,0 +1,20 @@
+name: Setup build environment
+description: Setup build environment
+runs:
+  using: "composite"
+  steps:
+    - uses: cashapp/activate-hermit@v1
+      with:
+        cache: true
+    - id: find-go-build-cache
+      shell: bash
+      run: echo "cache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+    - uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ${{ steps.find-go-build-cache.outputs.cache }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          ${{ runner.os }}-go-
