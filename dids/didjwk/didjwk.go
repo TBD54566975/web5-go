@@ -8,7 +8,6 @@ import (
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/did"
-	_did "github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/jwk"
 )
@@ -62,20 +61,20 @@ func Create(opts ...CreateOption) (did.BearerDID, error) {
 	publicJWK, _ := keyMgr.GetPublicKey(keyID)
 	bytes, err := json.Marshal(publicJWK)
 	if err != nil {
-		return _did.BearerDID{}, fmt.Errorf("failed to marshal public key: %w", err)
+		return did.BearerDID{}, fmt.Errorf("failed to marshal public key: %w", err)
 	}
 
 	id := base64.RawURLEncoding.EncodeToString(bytes)
-	did := _did.DID{
+	didJWK := did.DID{
 		Method: "jwk",
 		URI:    "did:jwk:" + id,
 		ID:     id,
 	}
 
-	bearerDID := _did.BearerDID{
-		DID:        did,
+	bearerDID := did.BearerDID{
+		DID:        didJWK,
 		KeyManager: keyMgr,
-		Document:   createDocument(did, publicJWK),
+		Document:   createDocument(didJWK, publicJWK),
 	}
 
 	return bearerDID, nil
@@ -86,7 +85,7 @@ type Resolver struct{}
 // Resolves the provided DID URI (must be a did:jwk) as per the wee bit of detail provided in the
 // spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
 func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
-	did, err := _did.Parse(uri)
+	did, err := did.Parse(uri)
 	if err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
@@ -110,7 +109,7 @@ func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	return didcore.ResolutionResultWithDocument(doc), nil
 }
 
-func createDocument(did _did.DID, publicKey jwk.JWK) didcore.Document {
+func createDocument(did did.DID, publicKey jwk.JWK) didcore.Document {
 	doc := didcore.Document{
 		Context: "https://www.w3.org/ns/did/v1",
 		ID:      did.URI,

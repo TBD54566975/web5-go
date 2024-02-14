@@ -130,7 +130,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 
 	if parsedDomain.Path != "" {
 		idPath := strings.ReplaceAll(parsedDomain.Path, "/", ":")
-		methodSpecificID = methodSpecificID + idPath
+		methodSpecificID += idPath
 	}
 
 	did, err := _did.Parse("did:web:" + methodSpecificID)

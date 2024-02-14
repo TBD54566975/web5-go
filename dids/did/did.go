@@ -1,7 +1,7 @@
 package did
 
 import (
-	"fmt"
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -85,7 +85,7 @@ func Parse(input string) (DID, error) {
 	match := didURIPattern.FindStringSubmatch(input)
 
 	if match == nil {
-		return DID{}, fmt.Errorf("invalid DID URI")
+		return DID{}, errors.New("invalid DID URI")
 	}
 
 	did := DID{

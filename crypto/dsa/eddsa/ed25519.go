@@ -4,6 +4,7 @@ import (
 	_ed25519 "crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/tbd54566975/web5-go/jwk"
@@ -53,7 +54,7 @@ func ED25519Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, e
 
 func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
 	if len(input) != _ed25519.PublicKeySize {
-		return jwk.JWK{}, fmt.Errorf("invalid public key")
+		return jwk.JWK{}, errors.New("invalid public key")
 	}
 
 	return jwk.JWK{
@@ -67,7 +68,7 @@ func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
 // ED25519PublicKeyToBytes converts the provided public key to bytes
 func ED25519PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 	if publicKey.X == "" {
-		return nil, fmt.Errorf("x must be set")
+		return nil, errors.New("x must be set")
 	}
 
 	publicKeyBytes, err := base64.RawURLEncoding.DecodeString(publicKey.X)

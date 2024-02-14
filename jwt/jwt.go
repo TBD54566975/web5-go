@@ -3,6 +3,7 @@ package jwt
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -106,7 +107,7 @@ type Decoded struct {
 // Verify verifies a JWT (JSON Web Token)
 func (jwt Decoded) Verify() error {
 	if jwt.Claims.Expiration != 0 && time.Now().Unix() > int64(jwt.Claims.Expiration) {
-		return fmt.Errorf("JWT has expired")
+		return errors.New("JWT has expired")
 	}
 
 	decodedJWS := jws.Decoded{

@@ -21,7 +21,8 @@ func TestClaims_MarshalJSON(t *testing.T) {
 	assert.NoError(t, err)
 
 	obj := make(map[string]interface{})
-	json.Unmarshal(b, &obj)
+	err = json.Unmarshal(b, &obj)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "issuer", obj["iss"])
 	assert.False(t, obj["foo"] == nil)
@@ -37,7 +38,8 @@ func TestClaims_UnmarshalJSON(t *testing.T) {
 	assert.NoError(t, err)
 
 	claimsAgane := jwt.Claims{}
-	json.Unmarshal(b, &claimsAgane)
+	err = json.Unmarshal(b, &claimsAgane)
+	assert.NoError(t, err)
 
 	assert.Equal(t, claims.Issuer, claimsAgane.Issuer)
 	assert.False(t, claimsAgane.Misc["foo"] == nil)
