@@ -3,6 +3,7 @@ package ecdsa
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -53,25 +54,25 @@ func SECP256K1Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	return signature, nil
 }
 
-func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
+func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) error {
 	if publicKey.X == "" || publicKey.Y == "" {
-		return false, fmt.Errorf("x and y must be set")
+		return fmt.Errorf("x and y must be set")
 	}
 
 	hash := sha256.Sum256(payload)
 
 	keyBytes, err := secp256k1PublicKeyToUncheckedBytes(publicKey)
 	if err != nil {
-		return false, fmt.Errorf("failed to convert public key to bytes: %w", err)
+		return fmt.Errorf("failed to convert public key to bytes: %w", err)
 	}
 
 	key, err := _secp256k1.ParsePubKey(keyBytes)
 	if err != nil {
-		return false, fmt.Errorf("failed to parse public key: %w", err)
+		return fmt.Errorf("failed to parse public key: %w", err)
 	}
 
 	if len(signature) != 64 {
-		return false, fmt.Errorf("signature must be 64 bytes")
+		return fmt.Errorf("signature must be 64 bytes")
 	}
 
 	r := new(_secp256k1.ModNScalar)
@@ -82,8 +83,11 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 
 	sig := ecdsa.NewSignature(r, s)
 	legit := sig.Verify(hash[:], key)
+	if !legit {
+		return errors.New("SECP256K1 verification failed")
+	}
 
-	return legit, nil
+	return nil
 }
 
 // SECP256K1BytesToPublicKey converts a secp256k1 public key to a JWK.

@@ -49,14 +49,14 @@ func Sign(payload []byte, jwk jwk.JWK) ([]byte, error) {
 }
 
 // Verify verifies the signature of the payload using the given public key.
-func Verify(payload []byte, signature []byte, jwk jwk.JWK) (bool, error) {
+func Verify(payload []byte, signature []byte, jwk jwk.JWK) error {
 	switch jwk.KTY {
 	case ecdsa.KeyType:
 		return ecdsa.Verify(payload, signature, jwk)
 	case eddsa.KeyType:
 		return eddsa.Verify(payload, signature, jwk)
 	default:
-		return false, fmt.Errorf("unsupported key type: %s", jwk.KTY)
+		return fmt.Errorf("unsupported key type: %s", jwk.KTY)
 	}
 }
 
