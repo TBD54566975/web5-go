@@ -1,25 +1,14 @@
-package diddht
+package pkarr
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
+
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
 )
-
-var defaultRelay *pkarrRelay
-var once sync.Once
-
-func getDefaultRelay() *pkarrRelay {
-	once.Do(func() {
-		defaultRelay = NewPkarrRelay("", http.DefaultClient)
-	})
-
-	return defaultRelay
-}
 
 type pkarrRelay struct {
 	relay  string
@@ -33,19 +22,19 @@ func NewPkarrRelay(relay string, client *http.Client) *pkarrRelay {
 	}
 }
 
-// put Publishes a signed BEP44 message to a Pkarr relay server.
+// Put Publishes a signed BEP44 message to a Pkarr relay server.
 // https://github.com/Nuhvi/pkarr/blob/main/design/relays.md
 //
 // didID - The DID identifier, used as the key in the DHT; it is the z-base-32 encoding of the Identity Key.
 // bep44Message - The BEP44 message to be published, containing the signed DNS packet.
 //
 // Returns an error if the request fails.
-func (r *pkarrRelay) put(didID string, msg *bep44Message) error {
-	return r.putWithContext(context.Background(), didID, msg)
+func (r *pkarrRelay) Put(didID string, msg *bep44.Message) error {
+	return r.PutWithContext(context.Background(), didID, msg)
 }
 
-// putWithContext same as put but with context
-func (r *pkarrRelay) putWithContext(ctx context.Context, didID string, msg *bep44Message) error {
+// PutWithContext same as put but with context
+func (r *pkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep44.Message) error {
 
 	// Concatenate the Pkarr relay URL with the identifier to form the full URL.
 	pkarrUrl, err := url.JoinPath(r.relay, didID)
@@ -54,16 +43,8 @@ func (r *pkarrRelay) putWithContext(ctx context.Context, didID string, msg *bep4
 		return err
 	}
 
-	// Construct the body of the request according to the Pkarr relay specification.
-	body := make([]byte, 0, len(msg.v)+72)
-	body = append(body, msg.sig...)
-	var seqUint64 uint64 = uint64(msg.seq)
-
-	// Convert the sequence number to a big-endian byte array.
-	buf := make([]byte, 8) // uint64 is 8 bytes
-	binary.BigEndian.PutUint64(buf, seqUint64)
-	body = append(body, buf...)
-	body = append(body, msg.v...)
+	// Serialize the BEP44 message to a byte slice.
+	body, _ := msg.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, pkarrUrl, strings.NewReader(string(body)))
 	if err != nil {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/dns/dnsmessage"
@@ -13,8 +15,28 @@ import (
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/pkarr"
 	"github.com/tv42/zbase32"
 )
+
+// relay is the internal interface used to publish Pakrr messages to the DHT
+type relay interface {
+	Put(string, *bep44.Message) error
+	PutWithContext(context.Context, string, *bep44.Message) error
+}
+
+var defaultRelay relay
+var once sync.Once
+
+// getDefaultRelay returns the default Pkarr relay client.
+func getDefaultRelay() relay {
+	once.Do(func() {
+		defaultRelay = pkarr.NewPkarrRelay("", http.DefaultClient)
+	})
+
+	return defaultRelay
+}
 
 // Decoder is used to structure the DNS representation of a DID
 type Decoder struct {
@@ -181,12 +203,6 @@ func parseTXTRecordData(data string) (map[string][]string, error) {
 	return result, nil
 }
 
-// relay is the internal interface used to publish Pakrr messages to the DHT
-type relay interface {
-	put(string, *bep44Message) error
-	putWithContext(context.Context, string, *bep44Message) error
-}
-
 type DHTDidOptions struct {
 	algorithmID         string
 	keyManager          crypto.KeyManager
@@ -319,7 +335,7 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 		return keyMgr.Sign(keyID, payload)
 	}
 
-	bep44Msg, err := newSignedBEP44Message(msgBytes, seq, publicKeyBytes, signer)
+	bep44Msg, err := bep44.NewSignedBEP44Message(msgBytes, seq, publicKeyBytes, signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create signed bep44 message: %w", err)
 	}
@@ -329,7 +345,7 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 	}
 
 	// 7. Submit the result of to the DHT via a Pkarr relay, or a Gateway, with the identifier created in step 1.
-	if err := o.relay.putWithContext(ctx, bdid.ID, bep44Msg); err != nil {
+	if err := o.relay.PutWithContext(ctx, bdid.ID, bep44Msg); err != nil {
 		return nil, fmt.Errorf("failed to punlish bep44 message to relay: %w", err)
 	}
 

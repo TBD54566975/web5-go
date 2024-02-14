@@ -2,7 +2,6 @@ package diddht
 
 import (
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -17,6 +16,8 @@ import (
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/didcore"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/pkarr"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -69,7 +70,7 @@ func TestDHTResolve(t *testing.T) {
 		msg                  dnsmessage.Message
 		expectedErrorMessage string
 		assertResult         func(t *testing.T, d *didcore.Document)
-		signer               signer
+		signer               bep44.Signer
 	}{
 		"did with valid key and no service": {
 			didURI: "did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy",
@@ -140,19 +141,10 @@ func TestDHTResolve(t *testing.T) {
 				publicKeyBytes, err := dsa.PublicKeyToBytes(pkey)
 				assert.NoError(t, err)
 				// create signed bep44 message
-				msg, err := newSignedBEP44Message(buf, 0, publicKeyBytes, test.signer)
+				msg, err := bep44.NewSignedBEP44Message(buf, 0, publicKeyBytes, test.signer)
 				assert.NoError(t, err)
 
-				// Construct the body of the request according to the Pkarr relay specification.
-				body := make([]byte, 0, len(msg.v)+72)
-				body = append(body, msg.sig...)
-				var seqUint64 = uint64(msg.seq)
-
-				// Convert the sequence number to a big-endian byte array.
-				buf := make([]byte, 8) // uint64 is 8 bytes
-				binary.BigEndian.PutUint64(buf, seqUint64)
-				body = append(body, buf...)
-				body = append(body, msg.v...)
+				body, _ := msg.Encode()
 
 				// send signed bep44 message
 				_, err = w.Write(body)
@@ -279,7 +271,7 @@ func Test_Create(t *testing.T) {
 	}))
 
 	defer relay.Close()
-	relayClient := NewPkarrRelay(relay.URL, http.DefaultClient)
+	relayClient := pkarr.NewPkarrRelay(relay.URL, http.DefaultClient)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			var didDoc didcore.Document
