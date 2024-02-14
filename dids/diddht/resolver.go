@@ -79,7 +79,6 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	}
 
 	didRecord, err := parseDNSDID(bep44MessagePayload)
-
 	if err != nil {
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}

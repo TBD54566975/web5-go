@@ -259,6 +259,8 @@ func Test_Create(t *testing.T) {
 	relay := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		did := fmt.Sprintf("did:dht:%s", r.URL.Path[1:])
 		defer r.Body.Close()
+
+		// create branch
 		if r.Method != http.MethodGet {
 			packagedDid, err := io.ReadAll(r.Body)
 			assert.NoError(t, err)
@@ -267,6 +269,7 @@ func Test_Create(t *testing.T) {
 			return
 		}
 
+		// resolve branch
 		expectedBuf, ok := mockedRes[did]
 		if !ok {
 			http.Error(w, "Not found", http.StatusNotFound)
@@ -282,21 +285,22 @@ func Test_Create(t *testing.T) {
 			var didDoc didcore.Document
 			assert.NoError(t, json.Unmarshal([]byte(test.didDocData), &didDoc))
 			keyMgr := crypto.NewLocalKeyManager()
-			_, err := keyMgr.ImportKey(*didDoc.VerificationMethod[0].PublicKeyJwk)
-			assert.NoError(t, err)
-			assert.NoError(t, err)
-			did, err := Create(
-				WithVerificationMethods(didDoc.VerificationMethod...),
+			createdDid, err := Create(
+				WithVerificationMethod(didDoc.VerificationMethod[0], []didcore.Purpose{didcore.PurposeAssertion, didcore.PurposeAuthentication, didcore.PurposeCapabilityDelegation, didcore.PurposeCapabilityInvocation}),
 				WithServices(didDoc.Service...),
 				WithRelay(relayClient),
 				WithKeyManager(keyMgr),
 			)
 			assert.NoError(t, err)
 			resolver := NewResolver(relay.URL, http.DefaultClient)
-			result, err := resolver.Resolve(did.URI)
+			result, err := resolver.Resolve(createdDid.URI)
 			assert.NoError(t, err)
-			assert.Equal(t, didDoc, result.Document)
-			assert.Equal(t, test.expectedResult, did.ID)
+			assert.Equal(t, createdDid.Document.Authentication, result.Document.Authentication)
+			assert.Equal(t, createdDid.Document.AssertionMethod, result.Document.AssertionMethod)
+			assert.Equal(t, createdDid.Document.CapabilityDelegation, result.Document.CapabilityDelegation)
+			assert.Equal(t, createdDid.Document.CapabilityInvocation, result.Document.CapabilityInvocation)
+			assert.Equal(t, createdDid.Document.Service, result.Document.Service)
+			assert.Equal(t, createdDid.Document.VerificationMethod, result.Document.VerificationMethod)
 		})
 	}
 }

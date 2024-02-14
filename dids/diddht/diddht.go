@@ -188,11 +188,12 @@ type relay interface {
 }
 
 type DHTDidOptions struct {
-	algorithmID        string
-	keyManager         crypto.KeyManager
-	services           []*didcore.Service
-	verificationMethod []didcore.VerificationMethod
-	relay              relay
+	algorithmID         string
+	keyManager          crypto.KeyManager
+	services            []*didcore.Service
+	verificationMethods []didcore.VerificationMethod
+	purposes            map[string][]didcore.Purpose
+	relay               relay
 }
 
 type DHTDidOption func(o *DHTDidOptions)
@@ -203,9 +204,15 @@ func WithServices(services ...*didcore.Service) DHTDidOption {
 	}
 }
 
-func WithVerificationMethods(methods ...didcore.VerificationMethod) DHTDidOption {
+func WithVerificationMethod(method didcore.VerificationMethod, purposes []didcore.Purpose) DHTDidOption {
 	return func(o *DHTDidOptions) {
-		o.verificationMethod = append(o.verificationMethod, methods...)
+		o.verificationMethods = append(o.verificationMethods, method)
+		for _, p := range purposes {
+			if _, ok := o.purposes[method.ID]; !ok {
+				o.purposes[method.ID] = []didcore.Purpose{}
+			}
+			o.purposes[method.ID] = append(o.purposes[method.ID], p)
+		}
 	}
 }
 
@@ -233,11 +240,12 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 
 	// 0. Set default options
 	o := DHTDidOptions{
-		algorithmID:        dsa.AlgorithmIDED25519,
-		verificationMethod: []didcore.VerificationMethod{},
-		services:           []*didcore.Service{},
-		keyManager:         crypto.NewLocalKeyManager(),
-		relay:              getDefaultRelay(),
+		algorithmID:         dsa.AlgorithmIDED25519,
+		verificationMethods: []didcore.VerificationMethod{},
+		services:            []*didcore.Service{},
+		keyManager:          crypto.NewLocalKeyManager(),
+		relay:               getDefaultRelay(),
+		purposes:            map[string][]didcore.Purpose{},
 	}
 
 	for _, opt := range opts {
@@ -282,8 +290,12 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 	}
 
 	// 4. Construct a conformant JSON representation of a DID Document.
-	for _, vm := range o.verificationMethod {
-		document.AddVerificationMethod(vm)
+	for _, vm := range o.verificationMethods {
+		purposes, ok := o.purposes[vm.ID]
+		if !ok {
+			purposes = []didcore.Purpose{}
+		}
+		document.AddVerificationMethod(vm, didcore.Purposes(purposes...))
 	}
 
 	for _, s := range o.services {
@@ -321,5 +333,6 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 		return nil, fmt.Errorf("failed to punlish bep44 message to relay: %w", err)
 	}
 
+	bdid.Document = document
 	return bdid, nil
 }

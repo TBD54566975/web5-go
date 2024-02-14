@@ -24,7 +24,6 @@ func Test_MarshalDIDDocument(t *testing.T) {
 			"publicKeyJwk": {
 			"crv": "Ed25519",
 			"kty": "OKP",
-			"alg": "EdDSA",
 			"kid": "0",
 			"x": "ZR8A7IHnJ5v9-TFcDzI8cZfhGJzSj29LYutpKTLwdoo"
 			}

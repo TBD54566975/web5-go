@@ -29,7 +29,6 @@ func SECP256K1GeneratePrivateKey() (jwk.JWK, error) {
 	yBytes := pubKey.Y().Bytes()
 
 	privateKey := jwk.JWK{
-		ALG: SECP256K1JWA,
 		KTY: KeyType,
 		CRV: SECP256K1JWACurve,
 		D:   base64.RawURLEncoding.EncodeToString(dBytes[:]),
@@ -97,7 +96,6 @@ func SECP256K1BytesToPublicKey(input []byte) (jwk.JWK, error) {
 	}
 
 	return jwk.JWK{
-		ALG: SECP256K1JWA,
 		KTY: KeyType,
 		CRV: SECP256K1JWACurve,
 		X:   base64.RawURLEncoding.EncodeToString(pubKey.X().Bytes()),
