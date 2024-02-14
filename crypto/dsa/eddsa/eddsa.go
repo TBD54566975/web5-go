@@ -48,12 +48,12 @@ func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	}
 }
 
-func Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
+func Verify(payload []byte, signature []byte, publicKey jwk.JWK) error {
 	switch publicKey.CRV {
 	case ED25519JWACurve:
 		return ED25519Verify(payload, signature, publicKey)
 	default:
-		return false, fmt.Errorf("unsupported curve: %s", publicKey.CRV)
+		return fmt.Errorf("unsupported curve: %s", publicKey.CRV)
 	}
 }
 
