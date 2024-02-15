@@ -5,3 +5,7 @@ lint:
 test:
     @echo "Running tests..."
     @go test -cover ./...
+
+build:
+    @echo "Building..."
+    @go build ./...
