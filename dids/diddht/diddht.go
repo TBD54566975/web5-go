@@ -1,6 +1,7 @@
 package diddht
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -17,7 +18,7 @@ type Decoder struct {
 
 func (rec *Decoder) DIDDocument(didURI string) (*didcore.Document, error) {
 	if len(rec.rootRecord) == 0 {
-		return nil, fmt.Errorf("no root record found")
+		return nil, errors.New("no root record found")
 	}
 	relationshipMap, err := parseVerificationRelationships(rec.rootRecord)
 	if err != nil {
@@ -40,8 +41,8 @@ func (rec *Decoder) DIDDocument(didURI string) (*didcore.Document, error) {
 			}
 
 			// extracting kN from _kN._did
-			entryId := strings.Split(name, ".")[0][1:]
-			relationships, ok := relationshipMap[entryId]
+			entryID := strings.Split(name, ".")[0][1:]
+			relationships, ok := relationshipMap[entryID]
 
 			if !ok {
 				// no relationships
@@ -100,7 +101,7 @@ func parseDNSDID(data []byte) (*Decoder, error) {
 
 	for {
 		h, err := p.AnswerHeader()
-		if err == dnsmessage.ErrSectionDone {
+		if errors.Is(err, dnsmessage.ErrSectionDone) {
 			break
 		}
 
@@ -109,8 +110,9 @@ func parseDNSDID(data []byte) (*Decoder, error) {
 		}
 
 		value, err := p.TXTResource()
-		if err != nil {
+		if err != nil { 
 			// TODO check what kind of error and see if this should fail
+			fmt.Println("TODO semantic description %w", err)
 		}
 
 		name := h.Name.String()
@@ -121,7 +123,7 @@ func parseDNSDID(data []byte) (*Decoder, error) {
 		}
 
 		if _, ok := didRecord.records[h.Name.String()]; !ok {
-
+			fmt.Println("TODO semantic description")
 		}
 		didRecord.records[h.Name.String()] = fullTxtRecord
 	}
@@ -154,7 +156,7 @@ func parseTXTRecordData(data string) (map[string][]string, error) {
 	result := map[string][]string{}
 	fields := strings.Split(data, ";")
 	if len(fields) == 0 {
-		return nil, fmt.Errorf("no fields found")
+		return nil, errors.New("no fields found")
 	}
 	for _, field := range fields {
 		kv := strings.Split(field, "=")

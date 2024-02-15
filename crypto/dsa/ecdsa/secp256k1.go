@@ -3,6 +3,7 @@ package ecdsa
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -55,7 +56,7 @@ func SECP256K1Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 
 func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
 	if publicKey.X == "" || publicKey.Y == "" {
-		return false, fmt.Errorf("x and y must be set")
+		return false, errors.New("x and y must be set")
 	}
 
 	hash := sha256.Sum256(payload)
@@ -71,7 +72,7 @@ func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool,
 	}
 
 	if len(signature) != 64 {
-		return false, fmt.Errorf("signature must be 64 bytes")
+		return false, errors.New("signature must be 64 bytes")
 	}
 
 	r := new(_secp256k1.ModNScalar)
@@ -123,7 +124,7 @@ func SECP256K1PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 
 func secp256k1PublicKeyToUncheckedBytes(publicKey jwk.JWK) ([]byte, error) {
 	if publicKey.X == "" || publicKey.Y == "" {
-		return nil, fmt.Errorf("x and y must be set")
+		return nil, errors.New("x and y must be set")
 	}
 
 	x, err := base64.RawURLEncoding.DecodeString(publicKey.X)

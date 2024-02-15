@@ -130,7 +130,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 
 	if parsedDomain.Path != "" {
 		idPath := strings.ReplaceAll(parsedDomain.Path, "/", ":")
-		methodSpecificID = methodSpecificID + idPath
+		methodSpecificID += idPath
 	}
 
 	did, err := _did.Parse("did:web:" + methodSpecificID)
@@ -173,7 +173,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 	}
 
 	for _, svc := range options.services {
-		document.AddService(&svc)
+		document.AddService(&svc) //nolint:gosec
 	}
 
 	return _did.BearerDID{

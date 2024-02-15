@@ -1,6 +1,7 @@
 package didcore
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/tbd54566975/web5-go/jwk"
@@ -133,7 +134,7 @@ func (i ID) selector() {}
 // method in the DID Document that has the provided purpose will be returned.
 func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMethod, error) {
 	if len(d.VerificationMethod) == 0 {
-		return VerificationMethod{}, fmt.Errorf("no verification methods found")
+		return VerificationMethod{}, errors.New("no verification methods found")
 	}
 
 	if selector == nil {
@@ -143,10 +144,10 @@ func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMe
 	var vmID string
 	switch s := selector.(type) {
 	case Purpose:
-		switch purpose := Purpose(s); purpose {
+		switch s {
 		case PurposeAssertion:
 			if len(d.AssertionMethod) == 0 {
-				return VerificationMethod{}, fmt.Errorf("no verification method found for purpose: %s", purpose)
+				return VerificationMethod{}, fmt.Errorf("no verification method found for purpose: %s", s)
 			}
 
 			vmID = d.AssertionMethod[0]
@@ -175,7 +176,7 @@ func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMe
 
 			vmID = d.KeyAgreement[0]
 		default:
-			return VerificationMethod{}, fmt.Errorf("unsupported purpose: %s", purpose)
+			return VerificationMethod{}, fmt.Errorf("unsupported purpose: %s", s)
 		}
 	case ID:
 		vmID = string(s)
@@ -200,9 +201,9 @@ func (d *Document) AddService(service *Service) {
 func (d *Document) GetAbsoluteResourceID(id string) string {
 	if id[0] == '#' {
 		return d.ID + id
-	} else {
-		return id
 	}
+
+	return id
 }
 
 // DocumentMetadata contains metadata about the DID Document

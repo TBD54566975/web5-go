@@ -1,6 +1,7 @@
 package ecdsa
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/tbd54566975/web5-go/jwk"
@@ -34,7 +35,7 @@ func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 
 func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	if privateKey.D == "" {
-		return nil, fmt.Errorf("d must be set")
+		return nil, errors.New("d must be set")
 	}
 
 	switch privateKey.CRV {

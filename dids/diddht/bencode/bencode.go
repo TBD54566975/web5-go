@@ -2,6 +2,7 @@ package bencode
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -152,7 +153,7 @@ func unmarshalString(input []byte, output *string) (int, error) {
 	// Find the colon index, which separates the length part from the data part.
 	colonIndex := bytes.IndexByte(input, ':')
 	if colonIndex == -1 {
-		return 0, fmt.Errorf("colon not found in input")
+		return 0, errors.New("colon not found in input")
 	}
 
 	// Extract the length part and convert it to an integer.
@@ -168,7 +169,7 @@ func unmarshalString(input []byte, output *string) (int, error) {
 
 	// Check if the calculated end exceeds the input length.
 	if end > len(input) {
-		return 0, fmt.Errorf("data length exceeds input length")
+		return 0, errors.New("data length exceeds input length")
 	}
 
 	// Extract and return the actual string data.
@@ -186,7 +187,7 @@ func unmarshalInt(input []byte, output *int) (int, error) {
 	// Find the suffix byte which marks the end of the integer.
 	endIndex := bytes.IndexByte(input, EndSuffix)
 	if endIndex == -1 {
-		return 0, fmt.Errorf("end byte not found in input")
+		return 0, errors.New("end byte not found in input")
 	}
 
 	// Extract the data between prefix and suffix bytes and convert it to an integer.
@@ -222,14 +223,14 @@ func unmarshalList(input []byte, output *[]any) (int, error) {
 		i += n
 	}
 
-	return i, fmt.Errorf("unexpected end of input")
+	return i, errors.New("unexpected end of input")
 }
 
 // unmarshalDict decodes a Bencode dictionary from a byte slice.
 // It returns the total bytes processed, and an error if any.
 func unmarshalDict(input []byte, output map[string]any) (int, error) {
 	if input[0] != DictionaryPrefix {
-		return 0, fmt.Errorf("input does not start with 'd'")
+		return 0, errors.New("input does not start with 'd'")
 	}
 
 	// Iterate over the input bytes and decode each key-value pair.
@@ -257,5 +258,5 @@ func unmarshalDict(input []byte, output map[string]any) (int, error) {
 		i += n
 	}
 
-	return i, fmt.Errorf("unexpected end of input")
+	return i, errors.New("unexpected end of input")
 }

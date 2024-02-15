@@ -3,6 +3,7 @@ package jws
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -112,8 +113,8 @@ func DetachedPayload(detached bool) SignOpt {
 	}
 }
 
-// Purpose is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
-// It is used to select the appropriate key to sign with
+// Type is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// It is used to set the `typ` JWS header value
 func Type(typ string) SignOpt {
 	return func(opts *signOpts) {
 		opts.typ = typ
@@ -193,13 +194,13 @@ type Decoded struct {
 
 func (jws Decoded) Verify() error {
 	if jws.Header.ALG == "" || jws.Header.KID == "" {
-		return fmt.Errorf("malformed JWS header. alg and kid are required")
+		return errors.New("malformed JWS header. alg and kid are required")
 	}
 
 	verificationMethodID := jws.Header.KID
 	verificationMethodIDParts := strings.Split(verificationMethodID, "#")
 	if len(verificationMethodIDParts) != 2 {
-		return fmt.Errorf("malformed JWS header. kid must be a DID URL")
+		return errors.New("malformed JWS header. kid must be a DID URL")
 	}
 
 	var didURI = verificationMethodIDParts[0]
@@ -221,7 +222,7 @@ func (jws Decoded) Verify() error {
 	}
 
 	if !verified {
-		return fmt.Errorf("invalid signature")
+		return errors.New("invalid signature")
 	}
 
 	return nil

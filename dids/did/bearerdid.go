@@ -98,7 +98,11 @@ func FromPortableDID(portableDID PortableDID) (BearerDID, error) {
 
 	keyManager := crypto.NewLocalKeyManager()
 	for _, key := range portableDID.PrivateKeys {
-		keyManager.ImportKey(key)
+		_, err := keyManager.ImportKey(key)
+		if err != nil {
+			// todo what should we do here?
+			return BearerDID{}, err
+		}
 	}
 
 	return BearerDID{

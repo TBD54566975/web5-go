@@ -19,9 +19,9 @@ func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 		return ecdsa.GeneratePrivateKey(algorithmID)
 	} else if eddsa.SupportsAlgorithmID(algorithmID) {
 		return eddsa.GeneratePrivateKey(algorithmID)
-	} else {
-		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 	}
+
+	return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 }
 
 // GetPublicKey returns the public key corresponding to the given private key.
@@ -78,9 +78,9 @@ func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
 		return ecdsa.BytesToPublicKey(algorithmID, input)
 	} else if eddsa.SupportsAlgorithmID(algorithmID) {
 		return eddsa.BytesToPublicKey(algorithmID, input)
-	} else {
-		return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 	}
+
+	return jwk.JWK{}, fmt.Errorf("unsupported algorithm: %s", algorithmID)
 }
 
 // PublicKeyToBytes converts the provided public key to bytes
