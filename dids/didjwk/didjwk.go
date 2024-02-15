@@ -1,6 +1,7 @@
 package didjwk
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -81,6 +82,10 @@ func Create(opts ...CreateOption) (did.BearerDID, error) {
 }
 
 type Resolver struct{}
+
+func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
+	return r.Resolve(uri)
+}
 
 // Resolve the provided DID URI (must be a did:jwk) as per the wee bit of detail provided in the
 // spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md

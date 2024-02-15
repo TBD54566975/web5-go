@@ -16,7 +16,6 @@ import (
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
-	"github.com/tbd54566975/web5-go/dids/diddht/internal/pkarr"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -234,7 +233,6 @@ func Test_Create(t *testing.T) {
 	}))
 
 	defer relay.Close()
-	relayClient := pkarr.NewPkarrRelay(relay.URL, http.DefaultClient)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			var didDoc didcore.Document
@@ -243,7 +241,7 @@ func Test_Create(t *testing.T) {
 			createdDid, err := Create(
 				WithVerificationMethod(didDoc.VerificationMethod[0], []didcore.Purpose{didcore.PurposeAssertion, didcore.PurposeAuthentication, didcore.PurposeCapabilityDelegation, didcore.PurposeCapabilityInvocation}),
 				WithServices(didDoc.Service...),
-				WithRelay(relayClient),
+				WithRelay(relay.URL, http.DefaultClient),
 				WithKeyManager(keyMgr),
 			)
 			assert.NoError(t, err)

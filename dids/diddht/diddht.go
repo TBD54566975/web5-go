@@ -50,12 +50,14 @@ type dHTDidOptions struct {
 
 type DHTDidOption func(o *dHTDidOptions)
 
+// WithServices adds the provided services to the DID document.
 func WithServices(services ...*didcore.Service) DHTDidOption {
 	return func(o *dHTDidOptions) {
 		o.services = append(o.services, services...)
 	}
 }
 
+// WithVerificationMethod adds the provided verification method to the DID document.
 func WithVerificationMethod(method didcore.VerificationMethod, purposes []didcore.Purpose) DHTDidOption {
 	return func(o *dHTDidOptions) {
 		o.verificationMethods = append(o.verificationMethods, method)
@@ -68,15 +70,17 @@ func WithVerificationMethod(method didcore.VerificationMethod, purposes []didcor
 	}
 }
 
+// WithKeyManager sets the key manager to use for generating the DID's keypair.
 func WithKeyManager(k crypto.KeyManager) DHTDidOption {
 	return func(o *dHTDidOptions) {
 		o.keyManager = k
 	}
 }
 
-func WithRelay(relay relay) DHTDidOption {
+// WithRelay sets the relay to use for publishing the DID to the DHT.
+func WithRelay(relayURL string, client *http.Client) DHTDidOption {
 	return func(o *dHTDidOptions) {
-		o.relay = relay
+		o.relay = pkarr.NewPkarrRelay(relayURL, client)
 	}
 }
 

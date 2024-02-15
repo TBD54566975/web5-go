@@ -1,6 +1,7 @@
 package diddht
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/tbd54566975/web5-go/dids/did"
@@ -26,6 +27,11 @@ func NewResolver(relayURL string, client *http.Client) *Resolver {
 
 // Resolve resolves a DID using the DHT method
 func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
+	return r.ResolveWithContext(context.Background(), uri)
+}
+
+// Resolve resolves a DID using the DHT method
+func (r *Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
 
 	// 1. Parse URI and make sure it's a DHT method
 	did, err := did.Parse(uri)
@@ -52,7 +58,7 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	}
 
 	// 3. fetch from the relay
-	bep44Message, err := r.relay.Fetch(did.ID)
+	bep44Message, err := r.relay.FetchWithContext(ctx, did.ID)
 	if err != nil {
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
