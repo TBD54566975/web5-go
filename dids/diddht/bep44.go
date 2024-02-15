@@ -2,6 +2,7 @@ package diddht
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/tbd54566975/web5-go/dids/diddht/bencode"
@@ -72,7 +73,7 @@ func (b *bep44Message) DecodePayload() ([]byte, error) {
 
 	v, ok := bdecoded["v"].(string)
 	if !ok {
-		return nil, fmt.Errorf("failed to decode v value")
+		return nil, errors.New("failed to decode v value")
 	}
 	return []byte(v), nil
 }
@@ -80,11 +81,11 @@ func (b *bep44Message) DecodePayload() ([]byte, error) {
 // DecodeBEP44Message decodes the given byte slice into a BEP44 message.
 func DecodeBEP44Message(data []byte, b *bep44Message) error {
 	if len(data) < 72 {
-		return fmt.Errorf("Pkarr response must be at least 72 bytes but got: %d", len(data))
+		return fmt.Errorf("pkarr response must be at least 72 bytes but got: %d", len(data))
 	}
 
 	if len(data) > 1072 {
-		return fmt.Errorf("Pkarr response is larger than 1072 bytes, got: %d", len(data))
+		return fmt.Errorf("pkarr response is larger than 1072 bytes, got: %d", len(data))
 	}
 
 	b.sig = data[:64]

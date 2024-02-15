@@ -45,14 +45,14 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	if len(identifier) <= 0 {
+	if len(identifier) == 0 {
 		// return nil, fmt.Errorf("no bytes decoded from zbase32 identifier %s", did.ID)
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	// 3. fetch from DHT
-	res, err := r.client.Get(fmt.Sprintf("%s/%s", r.relay, did.ID))
+	res, err := r.client.Get(fmt.Sprintf("%s/%s", r.relay, did.ID)) //nolint:noctx
 	if err != nil {
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
@@ -65,7 +65,7 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	bep44Message := bep44Message{}
+	bep44Message := bep44Message{} //nolint:govet
 	if err := DecodeBEP44Message(data, &bep44Message); err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}

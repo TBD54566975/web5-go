@@ -19,7 +19,7 @@ import (
 
 type bep44TXTResourceOpt func() dnsmessage.Resource
 
-func WithDNSRecord(name, body string) bep44TXTResourceOpt {
+func WithDNSRecord(name, body string) bep44TXTResourceOpt { //nolint:revive
 	return func() dnsmessage.Resource {
 		return dnsmessage.Resource{
 			Header: dnsmessage.ResourceHeader{
@@ -76,6 +76,7 @@ func TestDHTResolve(t *testing.T) {
 			),
 
 			assertResult: func(t *testing.T, d *didcore.Document) {
+				t.Helper()
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
@@ -89,11 +90,12 @@ func TestDHTResolve(t *testing.T) {
 			msg: makeDNSMessage(
 				WithDNSRecord("_did.", "vm=k0,k1,k2;auth=k0;asm=k1;inv=k2;del=k0"),
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
-				WithDNSRecord("_k2._did.", fmt.Sprintf("id=2;t=1;k=%s", base64EncodedSecp256k)),
-				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=1;k=%s", base64EncodedSecp256k)),
+				WithDNSRecord("_k2._did.", fmt.Sprintf("id=2;t=1;k=%s", base64EncodedSecp256k)), //nolint:perfsprint
+				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=1;k=%s", base64EncodedSecp256k)), //nolint:perfsprint
 			),
 
 			assertResult: func(t *testing.T, d *didcore.Document) {
+				t.Helper()
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.Equal[int](t, 3, len(d.VerificationMethod), "Expected 3 verification methods")
@@ -112,6 +114,7 @@ func TestDHTResolve(t *testing.T) {
 			),
 
 			assertResult: func(t *testing.T, d *didcore.Document) {
+				t.Helper()
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
@@ -140,7 +143,7 @@ func TestDHTResolve(t *testing.T) {
 				// Construct the body of the request according to the Pkarr relay specification.
 				body := make([]byte, 0, len(msg.v)+72)
 				body = append(body, msg.sig...)
-				var seqUint64 uint64 = uint64(msg.seq)
+				var seqUint64 = uint64(msg.seq)
 
 				// Convert the sequence number to a big-endian byte array.
 				buf := make([]byte, 8) // uint64 is 8 bytes
@@ -176,6 +179,7 @@ func Test_parseDNSDID(t *testing.T) {
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 			),
 			assertResult: func(t *testing.T, d *Decoder) {
+				t.Helper()
 				assert.False(t, d == nil)
 				expectedRecords := map[string]string{
 					"_k0._did.": "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE",

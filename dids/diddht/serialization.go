@@ -2,7 +2,7 @@ package diddht
 
 import (
 	"encoding/base64"
-	"fmt"
+	"errors"
 	"net/url"
 	"strings"
 
@@ -37,8 +37,8 @@ func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) er
 		}
 	}
 
-	if len(key) <= 0 || len(algorithmID) <= 0 {
-		return fmt.Errorf("unable to parse public key")
+	if len(key) == 0 || len(algorithmID) == 0 {
+		return errors.New("unable to parse public key")
 	}
 
 	// RawURLEncoding is the same as URLEncoding but omits padding.
@@ -48,8 +48,8 @@ func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) er
 		return err
 	}
 
-	if len(keyBytes) <= 0 {
-		return fmt.Errorf("malformed public key")
+	if len(keyBytes) == 0 {
+		return errors.New("malformed public key")
 	}
 
 	j, err := dsa.BytesToPublicKey(algorithmID, keyBytes)
@@ -59,8 +59,8 @@ func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) er
 	vm.PublicKeyJwk = &j
 
 	// validate all the parts exist
-	if len(vm.ID) <= 0 || vm.PublicKeyJwk == nil {
-		return fmt.Errorf("malformed verification method representation")
+	if len(vm.ID) == 0 || vm.PublicKeyJwk == nil {
+		return errors.New("malformed verification method representation")
 	}
 
 	return nil
@@ -82,7 +82,7 @@ func UnmarshalService(data string, s *didcore.Service) error {
 			validEndpoints := []string{}
 			for _, uri := range v {
 				if _, err := url.ParseRequestURI(uri); err != nil {
-					return fmt.Errorf("invalid service endpoint")
+					return errors.New("invalid service endpoint")
 				}
 				validEndpoints = append(validEndpoints, uri)
 			}
