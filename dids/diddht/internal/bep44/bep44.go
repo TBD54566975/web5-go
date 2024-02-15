@@ -39,7 +39,7 @@ type Message struct {
 // Signer is a function that signs a given payload and returns the signature.
 type Signer func(payload []byte) ([]byte, error)
 
-// NewSignedBEP44Message creates a new signed BEP44 message with the given DNS payload.
+// NewSignedBEP44Message bemcodes the payload, signes it with the signer and creates a new BEP44 message with the given sequence number, public key.
 func NewSignedBEP44Message(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Signer) (*Message, error) {
 	bencoded := map[string]any{
 		"seq": seq,
@@ -66,7 +66,7 @@ func NewSignedBEP44Message(dnsPayload []byte, seq int64, publicKeyBytes []byte, 
 	return bep, nil
 }
 
-// DecodePayload decodes the payload of the BEP44 message. The payload is typically a bencoded DNS for DHT purposes
+// DecodePayload decodes the payload of the BEP44 message from bencoded format. The payload is typically a bencoded DNS for DHT purposes
 func (b *Message) DecodePayload() ([]byte, error) {
 	bdecoded := map[string]any{}
 	if err := bencode.Unmarshal(b.v, &bdecoded); err != nil {

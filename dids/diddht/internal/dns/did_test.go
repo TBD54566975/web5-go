@@ -1,4 +1,4 @@
-package diddht
+package dns
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/dids/didcore"
-	"golang.org/x/net/dns/dnsmessage"
 )
 
 func Test_MarshalDIDDocument(t *testing.T) {
@@ -45,12 +44,11 @@ func Test_MarshalDIDDocument(t *testing.T) {
 	`), &didDoc))
 
 	assert.NotZero(t, didDoc.VerificationMethod)
-	msg := dnsmessage.Message{}
-	assert.NoError(t, MarshalDIDDocument(&didDoc, &msg))
+	buf, err := MarshalDIDDocument(&didDoc)
+	assert.NoError(t, err)
 
-	assert.Equal(t, len(msg.Answers), 2)
+	assert.NotZero(t, len(buf))
 
-	buf, _ := msg.Pack()
 	rec, _ := parseDNSDID(buf)
 	fmt.Println(rec)
 	reParsedDoc, err := rec.DIDDocument("did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy")

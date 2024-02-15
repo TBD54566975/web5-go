@@ -1,27 +1,26 @@
 package diddht
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
-	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/dns"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/pkarr"
 	"github.com/tv42/zbase32"
 )
 
 // Resolver is a client for resolving DIDs using the DHT network.
 type Resolver struct {
-	relay  string
-	client *http.Client
+	relay relay
 }
 
 // NewResolver creates a new Resolver instance with the given relay and HTTP client.
-func NewResolver(relay string, client *http.Client) *Resolver {
+// TODO make this relay an option and use default relay if not provided
+func NewResolver(relayURL string, client *http.Client) *Resolver {
+	pkarrRelay := pkarr.NewPkarrRelay(relayURL, client)
 	return &Resolver{
-		relay:  relay,
-		client: client,
+		relay: pkarrRelay,
 	}
 }
 
@@ -52,22 +51,10 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	// 3. fetch from DHT
-	res, err := r.client.Get(fmt.Sprintf("%s/%s", r.relay, did.ID)) //nolint:noctx
+	// 3. fetch from the relay
+	bep44Message, err := r.relay.Fetch(did.ID)
 	if err != nil {
 		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
-
-	bep44Message := bep44.Message{}
-	if err := bep44.DecodeBEP44Message(data, &bep44Message); err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
@@ -76,15 +63,11 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	didRecord, err := parseDNSDID(bep44MessagePayload)
+	document, err := dns.UnmarshalDIDDocument(uri, bep44MessagePayload)
 	if err != nil {
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	document, err := didRecord.DIDDocument(uri)
-	if err != nil {
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
-	}
 	return didcore.ResolutionResultWithDocument(*document), nil
 }

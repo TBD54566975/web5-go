@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"io"
@@ -151,6 +150,7 @@ func TestDHTResolve(t *testing.T) {
 				assert.NoError(t, err)
 			}))
 			defer ts.Close()
+
 			r := NewResolver(ts.URL, http.DefaultClient)
 			result, err := r.Resolve(test.didURI)
 
@@ -159,43 +159,6 @@ func TestDHTResolve(t *testing.T) {
 			test.assertResult(t, &result.Document)
 		})
 
-	}
-}
-
-func Test_parseDNSDID(t *testing.T) {
-	tests := map[string]struct {
-		msg           dnsmessage.Message
-		expectedError string
-		assertResult  func(t *testing.T, d *Decoder)
-	}{
-		"basic did with key": {
-			msg: makeDNSMessage(
-				WithDNSRecord("_did.", "vm=k0;auth=k0;asm=k0;inv=k0;del=k0"),
-				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
-			),
-			assertResult: func(t *testing.T, d *Decoder) {
-				t.Helper()
-				assert.False(t, d == nil)
-				expectedRecords := map[string]string{
-					"_k0._did.": "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE",
-				}
-				assert.Equal(t, "vm=k0;auth=k0;asm=k0;inv=k0;del=k0", d.rootRecord)
-				assert.True(t, reflect.DeepEqual(expectedRecords, d.records))
-			},
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			buf, err := test.msg.Pack()
-			assert.NoError(t, err)
-
-			dhtDidRecord, err := parseDNSDID(buf)
-			assert.EqualError(t, err, test.expectedError)
-
-			assert.Equal(t, "vm=k0;auth=k0;asm=k0;inv=k0;del=k0", dhtDidRecord.rootRecord)
-
-		})
 	}
 }
 

@@ -1,4 +1,4 @@
-package diddht
+package dns
 
 import "github.com/tbd54566975/web5-go/crypto/dsa"
 

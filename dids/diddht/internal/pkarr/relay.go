@@ -3,6 +3,7 @@ package pkarr
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -69,4 +70,49 @@ func (r *pkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep4
 
 	// Return `true` if the DHT request was successful, otherwise return `false`.
 	return nil
+}
+
+// Fetch fetches a signed BEP44 message from a Pkarr relay server.
+func (r *pkarrRelay) Fetch(didID string) (*bep44.Message, error) {
+	return r.FetchWithContext(context.Background(), didID)
+}
+
+// FetchWithContext fetches a signed BEP44 message from a Pkarr relay server.
+func (r *pkarrRelay) FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error) {
+	// Concatenate the Pkarr relay URL with the identifier to form the full URL.
+	pkarrUrl, err := url.JoinPath(r.relay, didID)
+	if err != nil {
+		// TODO log err
+		return nil, err
+	}
+
+	// Transmit the Get request to the Pkarr relay and get the response.
+	res, err := r.client.Get(pkarrUrl)
+	if err != nil {
+		// TODO log err
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		// TODO log err
+		return nil, fmt.Errorf("failed to get message: %s", res.Status)
+	}
+
+	// Read the response body into a byte slice.
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		// TODO log err
+		return nil, err
+	}
+
+	// Decode the response body into a BEP44 message.
+	bep44Message := bep44.Message{}
+	if err := bep44.DecodeBEP44Message(body, &bep44Message); err != nil {
+		// TODO log err
+		return nil, err
+	}
+
+	// Return the BEP44 message.
+	return &bep44Message, nil
 }

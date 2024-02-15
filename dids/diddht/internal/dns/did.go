@@ -1,4 +1,4 @@
-package diddht
+package dns
 
 import (
 	"encoding/base64"
@@ -13,9 +13,10 @@ import (
 )
 
 // MarshalDIDDocument packs a DID document into a TXT DNS resource records and adds to the DNS message Answers
-func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
+func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 
 	// create root record
+	var msg dnsmessage.Message
 
 	// get sorted VM IDs
 	sortedIDs := pluckSort(d.VerificationMethod)
@@ -81,12 +82,12 @@ func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
 		}
 		buf, err := MarshalVerificationMethod(&v)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", key))
 		if err != nil {
-			return err
+			return nil, err
 		}
 		header := dnsmessage.ResourceHeader{
 			Name: name,
@@ -108,12 +109,32 @@ func MarshalDIDDocument(d *didcore.Document, msg *dnsmessage.Message) error {
 			// TODO handle error
 			continue
 		}
-		if err := MarshalService(key, s, msg); err != nil {
-			return err
+		if err := MarshalService(key, s, &msg); err != nil {
+			return nil, err
 		}
 	}
 
-	return nil
+	msgByes, err := msg.Pack()
+	if err != nil {
+		return nil, err
+	}
+
+	return msgByes, nil
+}
+
+// UnmarshalDIDDocument unpacks the TXT DNS resource records and returns a DID document
+func UnmarshalDIDDocument(didID string, payload []byte) (*didcore.Document, error) {
+	decoder, err := parseDNSDID(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := decoder.DIDDocument(didID)
+	if err != nil {
+		return nil, err
+	}
+
+	return doc, nil
 }
 
 // MarshalVerificationMethod packs a verification method into a TXT DNS resource record and adds to the DNS message Answers
@@ -123,7 +144,6 @@ func MarshalVerificationMethod(vm *didcore.VerificationMethod) (string, error) {
 		return "", err
 	}
 
-	// TODO this doesn'algID seem legit.  We should be using the alg from the JWK
 	algID, err := dsa.AlgorithmID(vm.PublicKeyJwk)
 	if err != nil {
 		return "", err
