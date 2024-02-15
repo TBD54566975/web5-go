@@ -66,3 +66,9 @@ This repo uses [`just`](https://github.com/casey/just) as a command runner. Belo
 
 ### Contributing
 Each package's README contains in-depth information about the package's structure and suggestions on how add features specific to that package
+
+Before contributing, set up the pre-commit hook by running:
+
+```bash
+cp .githooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
