@@ -2,6 +2,7 @@ package diddht
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -19,11 +20,11 @@ import (
 
 // relay is the internal interface used to publish Pakrr messages to the DHT
 type relay interface {
-	Put(string, *bep44.Message) error
-	PutWithContext(context.Context, string, *bep44.Message) error
+	Put(didID string, payload *bep44.Message) error
+	PutWithContext(ctx context.Context, didID string, payload *bep44.Message) error
 
-	Fetch(string) (*bep44.Message, error)
-	FetchWithContext(context.Context, string) (*bep44.Message, error)
+	Fetch(didID string) (*bep44.Message, error)
+	FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error)
 }
 
 var defaultRelay relay
@@ -177,7 +178,7 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 	}
 
 	if o.relay == nil {
-		return nil, fmt.Errorf("no relay provided")
+		return nil, errors.New("no relay provided")
 	}
 
 	// 7. Submit the result of to the DHT via a Pkarr relay, or a Gateway, with the identifier created in step 1.

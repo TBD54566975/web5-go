@@ -52,6 +52,7 @@ func Test_parseDNSDID(t *testing.T) {
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 			),
 			assertResult: func(t *testing.T, d *decoder) {
+				t.Helper()
 				assert.False(t, d == nil)
 				expectedRecords := map[string]string{
 					"_k0._did.": "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE",

@@ -1,7 +1,7 @@
 package bep44
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -38,7 +38,7 @@ func Test_newSignedBEP44Message(t *testing.T) {
 				seq:            time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC).Unix() / 1000,
 				publicKeyBytes: []byte("YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
 				signer: func(payload []byte) ([]byte, error) {
-					return nil, fmt.Errorf("signer failed")
+					return nil, errors.New("signer failed")
 				},
 			},
 			wantErr: true,

@@ -67,9 +67,9 @@ func NewSignedBEP44Message(dnsPayload []byte, seq int64, publicKeyBytes []byte, 
 }
 
 // DecodePayload decodes the payload of the BEP44 message from bencoded format. The payload is typically a bencoded DNS for DHT purposes
-func (b *Message) DecodePayload() ([]byte, error) {
+func (msg *Message) DecodePayload() ([]byte, error) {
 	bdecoded := map[string]any{}
-	if err := bencode.Unmarshal(b.v, &bdecoded); err != nil {
+	if err := bencode.Unmarshal(msg.v, &bdecoded); err != nil {
 		return nil, fmt.Errorf("failed to decode bencoded payload: %w", err)
 	}
 
@@ -85,11 +85,11 @@ func (msg *Message) Encode() ([]byte, error) {
 	// Construct the body of the request according to the Pkarr relay specification.
 	body := make([]byte, 0, len(msg.v)+72)
 	body = append(body, msg.sig...)
-	var seqUint64 uint64 = uint64(msg.seq)
+	seq := uint64(msg.seq)
 
 	// Convert the sequence number to a big-endian byte array.
 	buf := make([]byte, 8) // uint64 is 8 bytes
-	binary.BigEndian.PutUint64(buf, seqUint64)
+	binary.BigEndian.PutUint64(buf, seq)
 	body = append(body, buf...)
 	body = append(body, msg.v...)
 

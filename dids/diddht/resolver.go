@@ -30,7 +30,7 @@ func (r *Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	return r.ResolveWithContext(context.Background(), uri)
 }
 
-// Resolve resolves a DID using the DHT method
+// ResolveWithContext resolves a DID using the DHT method. This is the context aware version of Resolve.
 func (r *Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
 
 	// 1. Parse URI and make sure it's a DHT method

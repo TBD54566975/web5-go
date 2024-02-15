@@ -11,13 +11,13 @@ import (
 	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
 )
 
-type pkarrRelay struct {
+type PkarrRelay struct {
 	relay  string
 	client *http.Client
 }
 
-func NewPkarrRelay(relay string, client *http.Client) *pkarrRelay {
-	return &pkarrRelay{
+func NewPkarrRelay(relay string, client *http.Client) *PkarrRelay {
+	return &PkarrRelay{
 		relay:  relay,
 		client: client,
 	}
@@ -30,15 +30,15 @@ func NewPkarrRelay(relay string, client *http.Client) *pkarrRelay {
 // bep44Message - The BEP44 message to be published, containing the signed DNS packet.
 //
 // Returns an error if the request fails.
-func (r *pkarrRelay) Put(didID string, msg *bep44.Message) error {
+func (r *PkarrRelay) Put(didID string, msg *bep44.Message) error {
 	return r.PutWithContext(context.Background(), didID, msg)
 }
 
 // PutWithContext same as put but with context
-func (r *pkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep44.Message) error {
+func (r *PkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep44.Message) error {
 
 	// Concatenate the Pkarr relay URL with the identifier to form the full URL.
-	pkarrUrl, err := url.JoinPath(r.relay, didID)
+	pkarrURL, err := url.JoinPath(r.relay, didID)
 	if err != nil {
 		// TODO log err
 		return err
@@ -47,7 +47,7 @@ func (r *pkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep4
 	// Serialize the BEP44 message to a byte slice.
 	body, _ := msg.Encode()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, pkarrUrl, strings.NewReader(string(body)))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, pkarrURL, strings.NewReader(string(body)))
 	if err != nil {
 		// TODO log err
 		return err
@@ -73,21 +73,26 @@ func (r *pkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep4
 }
 
 // Fetch fetches a signed BEP44 message from a Pkarr relay server.
-func (r *pkarrRelay) Fetch(didID string) (*bep44.Message, error) {
+func (r *PkarrRelay) Fetch(didID string) (*bep44.Message, error) {
 	return r.FetchWithContext(context.Background(), didID)
 }
 
 // FetchWithContext fetches a signed BEP44 message from a Pkarr relay server.
-func (r *pkarrRelay) FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error) {
+func (r *PkarrRelay) FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error) {
 	// Concatenate the Pkarr relay URL with the identifier to form the full URL.
-	pkarrUrl, err := url.JoinPath(r.relay, didID)
+	pkarrURL, err := url.JoinPath(r.relay, didID)
 	if err != nil {
 		// TODO log err
 		return nil, err
 	}
 
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, pkarrURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	// Transmit the Get request to the Pkarr relay and get the response.
-	res, err := r.client.Get(pkarrUrl)
+	res, err := r.client.Do(req)
 	if err != nil {
 		// TODO log err
 		return nil, err

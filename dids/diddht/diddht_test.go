@@ -211,7 +211,7 @@ func Test_Create(t *testing.T) {
 	// setting up a fake relay that stores did documents on publish, and responds with the bencoded did document on resolve
 	mockedRes := map[string][]byte{}
 	relay := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		did := fmt.Sprintf("did:dht:%s", r.URL.Path[1:])
+		did := "did:dht:" + r.URL.Path[1:]
 		defer r.Body.Close()
 
 		// create branch
@@ -229,7 +229,8 @@ func Test_Create(t *testing.T) {
 			http.Error(w, "Not found", http.StatusNotFound)
 			return
 		}
-		w.Write(expectedBuf)
+		_, err := w.Write(expectedBuf)
+		assert.NoError(t, err)
 	}))
 
 	defer relay.Close()
