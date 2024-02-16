@@ -51,7 +51,7 @@ func Test_MarshalDIDDocument(t *testing.T) {
 
 	rec, _ := parseDNSDID(buf)
 	fmt.Println(rec)
-	reParsedDoc, err := rec.DIDDocument("did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy")
+	reParsedDoc, err := rec.DIDDocument()
 	assert.NoError(t, err)
 	assert.NotZero(t, reParsedDoc)
 	assert.Equal(t, &didDoc, reParsedDoc)

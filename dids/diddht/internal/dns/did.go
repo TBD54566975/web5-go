@@ -62,7 +62,8 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 		rootPropsSerialized = append(rootPropsSerialized, prop)
 	}
 
-	resource, err := newResource("_did.", strings.Join(rootPropsSerialized, ";"))
+	id := strings.TrimPrefix(d.ID, "did:dht:")
+	resource, err := newResource(fmt.Sprintf("_did.%s.", id), strings.Join(rootPropsSerialized, ";"))
 	if err != nil {
 		return nil, err
 	}
@@ -112,13 +113,13 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 }
 
 // UnmarshalDIDDocument unpacks the TXT DNS resource records and returns a DID document
-func UnmarshalDIDDocument(didID string, payload []byte) (*didcore.Document, error) {
+func UnmarshalDIDDocument(payload []byte) (*didcore.Document, error) {
 	decoder, err := parseDNSDID(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	doc, err := decoder.DIDDocument(didID)
+	doc, err := decoder.DIDDocument()
 	if err != nil {
 		return nil, err
 	}

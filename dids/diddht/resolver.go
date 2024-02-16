@@ -69,7 +69,7 @@ func (r *Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	document, err := dns.UnmarshalDIDDocument(uri, bep44MessagePayload)
+	document, err := dns.UnmarshalDIDDocument(bep44MessagePayload)
 	if err != nil {
 		// TODO log err
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}

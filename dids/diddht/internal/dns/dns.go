@@ -14,11 +14,13 @@ const ttl = 7200
 
 // decoder is used to structure the DNS representation of a DID
 type decoder struct {
+	// zbase32 encoded id
+	id         string
 	rootRecord string
 	records    map[string]string
 }
 
-func (rec *decoder) DIDDocument(didURI string) (*didcore.Document, error) {
+func (rec *decoder) DIDDocument() (*didcore.Document, error) {
 	if len(rec.rootRecord) == 0 {
 		return nil, errors.New("no root record found")
 	}
@@ -29,7 +31,7 @@ func (rec *decoder) DIDDocument(didURI string) (*didcore.Document, error) {
 
 	// Now we have a did in a dns record. yay
 	document := &didcore.Document{
-		ID: didURI,
+		ID: "did:dht:" + rec.id,
 	}
 
 	// Now create the did document
@@ -122,6 +124,7 @@ func parseDNSDID(data []byte) (*decoder, error) {
 		name := h.Name.String()
 		fullTxtRecord := strings.Join(value.TXT, "")
 		if strings.HasPrefix(name, "_did") {
+			didRecord.id = strings.TrimSuffix(strings.TrimPrefix(name, "_did."), ".")
 			didRecord.rootRecord = fullTxtRecord
 			continue
 		}
