@@ -66,6 +66,7 @@ func Create(opts ...CreateOption) (did.BearerDID, error) {
 	}
 
 	id := base64.RawURLEncoding.EncodeToString(bytes)
+
 	didJWK := did.DID{
 		Method: "jwk",
 		URI:    "did:jwk:" + id,
