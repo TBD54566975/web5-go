@@ -53,12 +53,6 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 		"aka":  d.AlsoKnownAs,
 	}
 
-	rootRecordHeader := dnsmessage.ResourceHeader{
-		Name: dnsmessage.MustNewName("_did."),
-		Type: dnsmessage.TypeTXT,
-		TTL:  7200,
-	}
-
 	rootPropsSerialized := []string{}
 	for k, v := range rootProps {
 		if len(v) == 0 {
@@ -68,11 +62,11 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 		rootPropsSerialized = append(rootPropsSerialized, prop)
 	}
 
-	rootTXTRes := dnsmessage.TXTResource{
-		TXT: []string{strings.Join(rootPropsSerialized, ";")},
+	resource, err := newResource("_did.", strings.Join(rootPropsSerialized, ";"))
+	if err != nil {
+		return nil, err
 	}
-
-	msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: rootRecordHeader, Body: &rootTXTRes})
+	msg.Answers = append(msg.Answers, resource)
 
 	// add verification methods to dns message
 	for _, v := range d.VerificationMethod {
@@ -88,21 +82,13 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 			return nil, err
 		}
 
-		name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", key))
+		resource, err := newResource(fmt.Sprintf("_%s._did.", key), buf)
+
 		if err != nil {
 			return nil, err
 		}
-		header := dnsmessage.ResourceHeader{
-			Name: name,
-			Type: dnsmessage.TypeTXT,
-			TTL:  7200,
-		}
 
-		resource := dnsmessage.TXTResource{
-			TXT: []string{buf},
-		}
-
-		msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: header, Body: &resource})
+		msg.Answers = append(msg.Answers, resource)
 	}
 
 	// add services to dns message
@@ -172,23 +158,15 @@ func MarshalVerificationMethod(vm *didcore.VerificationMethod) (string, error) {
 
 }
 
+// MarshalService packs a service into a TXT DNS resource record and adds to the DNS message Answers
 func MarshalService(dhtDNSkey string, s *didcore.Service, msg *dnsmessage.Message) error {
-	name, err := dnsmessage.NewName(fmt.Sprintf("_%s._did.", dhtDNSkey))
+	rawData := fmt.Sprintf("id=%s;t=%s;se=%s", s.ID, s.Type, s.ServiceEndpoint)
+
+	resource, err := newResource(fmt.Sprintf("_%s._did.", dhtDNSkey), rawData)
 	if err != nil {
 		return err
 	}
-	header := dnsmessage.ResourceHeader{
-		Name: name,
-		Type: dnsmessage.TypeTXT,
-		TTL:  7200,
-	}
-
-	rawData := fmt.Sprintf("id=%s;t=%s;se=%s", s.ID, s.Type, s.ServiceEndpoint)
-	resource := dnsmessage.TXTResource{
-		TXT: []string{rawData},
-	}
-
-	msg.Answers = append(msg.Answers, dnsmessage.Resource{Header: header, Body: &resource})
+	msg.Answers = append(msg.Answers, resource)
 	return nil
 }
 

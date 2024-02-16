@@ -9,6 +9,9 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
+// ttl is the default TTL for DNS records recommended by https://did-dht.com/#note-1
+const ttl = 7200
+
 // decoder is used to structure the DNS representation of a DID
 type decoder struct {
 	rootRecord string
@@ -170,4 +173,24 @@ func parseTXTRecordData(data string) (map[string][]string, error) {
 	}
 
 	return result, nil
+}
+
+// newResource creates a new TXT DNS resource with a 7200 TTL
+func newResource(name, body string) (dnsmessage.Resource, error) {
+	headerName, err := dnsmessage.NewName(name)
+	if err != nil {
+		return dnsmessage.Resource{}, err
+	}
+	return dnsmessage.Resource{
+		Header: dnsmessage.ResourceHeader{
+			Name: headerName,
+			Type: dnsmessage.TypeTXT,
+			TTL:  ttl,
+		},
+		Body: &dnsmessage.TXTResource{
+			TXT: []string{
+				body,
+			},
+		},
+	}, nil
 }
