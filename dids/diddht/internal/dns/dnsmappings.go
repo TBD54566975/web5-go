@@ -1,30 +1,20 @@
 package dns
 
-import "github.com/tbd54566975/web5-go/crypto/dsa"
+import (
+	"github.com/tbd54566975/web5-go/crypto/dsa"
+	"github.com/tbd54566975/web5-go/dids/didcore"
+)
 
 // vmPurposeDNStoDID maps the DNS representation of the
 // verification method relationships to the DID representation.
 //
 // https://did-dht.com/#verification-relationship-index
-var vmPurposeDNStoDID = map[string]string{
-	"auth": "authentication",
-	"asm":  "assertionMethod",
-	"agm":  "keyAgreement",
-	"inv":  "capabilityInvocation",
-	"del":  "capabilityDelegation",
-}
-
-// vmPurposeDIDtoDNS maps the DID representation of the
-// verification method relationships to the DNS representation.
-// It is the reverse of vmPurposeDNStoDID.
-//
-// https://did-dht.com/#verification-relationship-index
-var vmPurposeDIDtoDNS = map[string]string{
-	"authentication":       "auth",
-	"assertionMethod":      "asm",
-	"keyAgreement":         "agm",
-	"capabilityInvocation": "inv",
-	"capabilityDelegation": "del",
+var vmPurposeDNStoDID = map[string]didcore.Purpose{
+	DNSLabelAuthentication:       didcore.PurposeAuthentication,
+	DNSLabelAssertionMethod:      didcore.PurposeAssertion,
+	DNSLabelKeyAgreement:         didcore.PurposeKeyAgreement,
+	DNSLabelCapabilityInvocation: didcore.PurposeCapabilityInvocation,
+	DNSLabelCapabilityDeletion:   didcore.PurposeCapabilityDelegation,
 }
 
 // dhtIndexToAlg maps the DNS representation of the key type index

@@ -40,17 +40,17 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 	}
 
 	rootProps := map[string][]string{
-		"v":    {"1"},
-		"id":   {d.ID},
-		"vm":   vmBEP44Keys,
-		"auth": methodsToKeys(d.Authentication, vmIDToK),
-		"asm":  methodsToKeys(d.AssertionMethod, vmIDToK),
-		"agm":  methodsToKeys(d.KeyAgreement, vmIDToK),
-		"inv":  methodsToKeys(d.CapabilityInvocation, vmIDToK),
-		"del":  methodsToKeys(d.CapabilityDelegation, vmIDToK),
-		"srv":  sKeys,
-		"cnt":  d.Controller,
-		"aka":  d.AlsoKnownAs,
+		"v":                          {"1"},
+		"id":                         {d.ID},
+		"vm":                         vmBEP44Keys,
+		DNSLabelAuthentication:       methodsToKeys(d.Authentication, vmIDToK),
+		DNSLabelAssertionMethod:      methodsToKeys(d.AssertionMethod, vmIDToK),
+		DNSLabelKeyAgreement:         methodsToKeys(d.KeyAgreement, vmIDToK),
+		DNSLabelCapabilityInvocation: methodsToKeys(d.CapabilityInvocation, vmIDToK),
+		DNSLabelCapabilityDeletion:   methodsToKeys(d.CapabilityDelegation, vmIDToK),
+		"srv":                        sKeys,
+		"cnt":                        d.Controller,
+		"aka":                        d.AlsoKnownAs,
 	}
 
 	rootPropsSerialized := []string{}
