@@ -3,18 +3,32 @@ package dns
 const (
 	// Labels for the dns representation of the verification method purposes
 
-	// DNSLabelAuthentication is the DNS representation of the authentication purpose
-	DNSLabelAuthentication = "auth"
+	// PurposeAuthentication is the DNS representation of the authentication purpose
+	PurposeAuthentication = "auth"
 
-	// DNSLabelAssertionMethod is the DNS representation of the assertion method purpose
-	DNSLabelAssertionMethod = "asm"
+	// PurposeAssertionMethod is the DNS representation of the assertion method purpose
+	PurposeAssertionMethod = "asm"
 
-	// DNSLabelCapabilityDeletion is the DNS representation of the capability delegation purpose
-	DNSLabelCapabilityDeletion = "del"
+	// PurposeCapabilityDeletion is the DNS representation of the capability delegation purpose
+	PurposeCapabilityDeletion = "del"
 
-	// DNSLabelCapabilityInvocation is the DNS representation of the capability invocation purpose
-	DNSLabelCapabilityInvocation = "inv"
+	// PurposeCapabilityInvocation is the DNS representation of the capability invocation purpose
+	PurposeCapabilityInvocation = "inv"
 
-	// DNSLabelKeyAgreement is the DNS representation of the key agreement purpose
-	DNSLabelKeyAgreement = "agm"
+	// PurposeKeyAgreement is the DNS representation of the key agreement purpose
+	PurposeKeyAgreement = "agm"
+
+	// Labels for other properties
+
+	// DNSLabelVerificationMethod is the DNS representation of the verification method property
+	DNSLabelVerificationMethod = "vm"
+
+	// DNSLabelService is the DNS representation of the service property
+	DNSLabelService = "srv"
+
+	// DNSLabelController is the DNS representation of the controller property
+	DNSLabelController = "cnt"
+
+	// DNSLabelAlsoKnownAs is the DNS representation of the AKA property
+	DNSLabelAlsoKnownAs = "aka"
 )

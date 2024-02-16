@@ -10,11 +10,11 @@ import (
 //
 // https://did-dht.com/#verification-relationship-index
 var vmPurposeDNStoDID = map[string]didcore.Purpose{
-	DNSLabelAuthentication:       didcore.PurposeAuthentication,
-	DNSLabelAssertionMethod:      didcore.PurposeAssertion,
-	DNSLabelKeyAgreement:         didcore.PurposeKeyAgreement,
-	DNSLabelCapabilityInvocation: didcore.PurposeCapabilityInvocation,
-	DNSLabelCapabilityDeletion:   didcore.PurposeCapabilityDelegation,
+	PurposeAuthentication:       didcore.PurposeAuthentication,
+	PurposeAssertionMethod:      didcore.PurposeAssertion,
+	PurposeKeyAgreement:         didcore.PurposeKeyAgreement,
+	PurposeCapabilityInvocation: didcore.PurposeCapabilityInvocation,
+	PurposeCapabilityDeletion:   didcore.PurposeCapabilityDelegation,
 }
 
 // dhtIndexToAlg maps the DNS representation of the key type index
