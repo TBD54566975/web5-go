@@ -19,7 +19,7 @@ type Resolver struct {
 // NewResolver creates a new Resolver instance with the given relay and HTTP client.
 // TODO make this relay an option and use default relay if not provided
 func NewResolver(relayURL string, client *http.Client) *Resolver {
-	pkarrRelay := pkarr.NewPkarrRelay(relayURL, client)
+	pkarrRelay := pkarr.NewClient(relayURL, client)
 	return &Resolver{
 		relay: pkarrRelay,
 	}

@@ -23,12 +23,12 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 	sortedIDs := pluckSort(d.VerificationMethod)
 	vmIDToK := map[string]string{}
 
-	vmBep44Keys := []string{}
+	vmBEP44Keys := []string{}
 
 	for k, id := range sortedIDs {
 		_k := fmt.Sprintf("k%d", k)
 		vmIDToK[id] = _k
-		vmBep44Keys = append(vmBep44Keys, _k)
+		vmBEP44Keys = append(vmBEP44Keys, _k)
 	}
 
 	sToK := map[string]string{}
@@ -42,7 +42,7 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 	rootProps := map[string][]string{
 		"v":    {"1"},
 		"id":   {d.ID},
-		"vm":   vmBep44Keys,
+		"vm":   vmBEP44Keys,
 		"auth": methodsToKeys(d.Authentication, vmIDToK),
 		"asm":  methodsToKeys(d.AssertionMethod, vmIDToK),
 		"agm":  methodsToKeys(d.KeyAgreement, vmIDToK),

@@ -33,14 +33,14 @@ var once sync.Once
 // getDefaultRelay returns the default Pkarr relay client.
 func getDefaultRelay() relay {
 	once.Do(func() {
-		defaultRelay = pkarr.NewPkarrRelay("", http.DefaultClient)
+		defaultRelay = pkarr.NewClient("", http.DefaultClient)
 	})
 
 	return defaultRelay
 }
 
-// dHTDidOptions is used to configure the creation of a `did:dht` DID; it's an internal representation of the options
-type dHTDidOptions struct {
+// createOptions is used to configure the creation of a `did:dht` DID; it's an internal representation of the options
+type createOptions struct {
 	algorithmID         string
 	keyManager          crypto.KeyManager
 	services            []*didcore.Service
@@ -49,18 +49,18 @@ type dHTDidOptions struct {
 	relay               relay
 }
 
-type DHTDidOption func(o *dHTDidOptions)
+type CreateOption func(o *createOptions)
 
 // WithServices adds the provided services to the DID document.
-func WithServices(services ...*didcore.Service) DHTDidOption {
-	return func(o *dHTDidOptions) {
+func WithServices(services ...*didcore.Service) CreateOption {
+	return func(o *createOptions) {
 		o.services = append(o.services, services...)
 	}
 }
 
 // WithVerificationMethod adds the provided verification method to the DID document.
-func WithVerificationMethod(method didcore.VerificationMethod, purposes []didcore.Purpose) DHTDidOption {
-	return func(o *dHTDidOptions) {
+func WithVerificationMethod(method didcore.VerificationMethod, purposes []didcore.Purpose) CreateOption {
+	return func(o *createOptions) {
 		o.verificationMethods = append(o.verificationMethods, method)
 		for _, p := range purposes {
 			if _, ok := o.purposes[method.ID]; !ok {
@@ -72,16 +72,16 @@ func WithVerificationMethod(method didcore.VerificationMethod, purposes []didcor
 }
 
 // WithKeyManager sets the key manager to use for generating the DID's keypair.
-func WithKeyManager(k crypto.KeyManager) DHTDidOption {
-	return func(o *dHTDidOptions) {
+func WithKeyManager(k crypto.KeyManager) CreateOption {
+	return func(o *createOptions) {
 		o.keyManager = k
 	}
 }
 
 // WithRelay sets the relay to use for publishing the DID to the DHT.
-func WithRelay(relayURL string, client *http.Client) DHTDidOption {
-	return func(o *dHTDidOptions) {
-		o.relay = pkarr.NewPkarrRelay(relayURL, client)
+func WithRelay(relayURL string, client *http.Client) CreateOption {
+	return func(o *createOptions) {
+		o.relay = pkarr.NewClient(relayURL, client)
 	}
 }
 
@@ -89,14 +89,14 @@ func WithRelay(relayURL string, client *http.Client) DHTDidOption {
 //
 // If no relay is passed in the options, Create uses a default Pkarr relay.
 // Spec: https://did-dht.com/#create
-func Create(opts ...DHTDidOption) (*did.BearerDID, error) {
+func Create(opts ...CreateOption) (*did.BearerDID, error) {
 	return CreateWithContext(context.Background(), opts...)
 }
 
-func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDID, error) {
+func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDID, error) {
 
 	// 0. Set default options
-	o := dHTDidOptions{
+	o := createOptions{
 		algorithmID:         dsa.AlgorithmIDED25519,
 		verificationMethods: []didcore.VerificationMethod{},
 		services:            []*didcore.Service{},
@@ -107,6 +107,10 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 
 	for _, opt := range opts {
 		opt(&o)
+	}
+
+	if o.relay == nil {
+		return nil, errors.New("no relay provided")
 	}
 
 	// 1. Generate an Ed25519 keypair
@@ -172,13 +176,9 @@ func CreateWithContext(ctx context.Context, opts ...DHTDidOption) (*did.BearerDI
 		return keyMgr.Sign(keyID, payload)
 	}
 
-	bep44Msg, err := bep44.NewSignedBEP44Message(msgBytes, seq, publicKeyBytes, signer)
+	bep44Msg, err := bep44.NewMessage(msgBytes, seq, publicKeyBytes, signer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create signed bep44 message: %w", err)
-	}
-
-	if o.relay == nil {
-		return nil, errors.New("no relay provided")
 	}
 
 	// 7. Submit the result of to the DHT via a Pkarr relay, or a Gateway, with the identifier created in step 1.

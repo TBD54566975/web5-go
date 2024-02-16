@@ -39,8 +39,8 @@ type Message struct {
 // Signer is a function that signs a given payload and returns the signature.
 type Signer func(payload []byte) ([]byte, error)
 
-// NewSignedBEP44Message bemcodes the payload, signes it with the signer and creates a new BEP44 message with the given sequence number, public key.
-func NewSignedBEP44Message(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Signer) (*Message, error) {
+// NewMessage bemcodes the payload, signes it with the signer and creates a new BEP44 message with the given sequence number, public key.
+func NewMessage(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Signer) (*Message, error) {
 	bencoded := map[string]any{
 		"seq": seq,
 		"v":   dnsPayload,

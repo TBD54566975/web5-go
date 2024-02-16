@@ -47,7 +47,7 @@ func Test_newSignedBEP44Message(t *testing.T) {
 
 	for testName, tt := range tests {
 		t.Run(testName, func(t *testing.T) {
-			got, err := NewSignedBEP44Message(tt.args.payload, tt.args.seq, tt.args.publicKeyBytes, tt.args.signer)
+			got, err := NewMessage(tt.args.payload, tt.args.seq, tt.args.publicKeyBytes, tt.args.signer)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantErr {
 				return

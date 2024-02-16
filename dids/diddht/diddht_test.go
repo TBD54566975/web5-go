@@ -143,7 +143,7 @@ func TestDHTResolve(t *testing.T) {
 				publicKeyBytes, err := dsa.PublicKeyToBytes(pkey)
 				assert.NoError(t, err)
 				// create signed bep44 message
-				msg, err := bep44.NewSignedBEP44Message(buf, 0, publicKeyBytes, test.signer)
+				msg, err := bep44.NewMessage(buf, 0, publicKeyBytes, test.signer)
 				assert.NoError(t, err)
 
 				body, _ := msg.Encode()

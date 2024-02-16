@@ -11,13 +11,15 @@ import (
 	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
 )
 
-type PkarrRelay struct {
+// Client is a client for publishing and fetching BEP44 messages to and from a Pkarr relay server.
+type Client struct {
 	relay  string
 	client *http.Client
 }
 
-func NewPkarrRelay(relay string, client *http.Client) *PkarrRelay {
-	return &PkarrRelay{
+// NewClient creates a new Pkarr relay client with the given relay URL and HTTP client.
+func NewClient(relay string, client *http.Client) *Client {
+	return &Client{
 		relay:  relay,
 		client: client,
 	}
@@ -30,12 +32,12 @@ func NewPkarrRelay(relay string, client *http.Client) *PkarrRelay {
 // bep44Message - The BEP44 message to be published, containing the signed DNS packet.
 //
 // Returns an error if the request fails.
-func (r *PkarrRelay) Put(didID string, msg *bep44.Message) error {
+func (r *Client) Put(didID string, msg *bep44.Message) error {
 	return r.PutWithContext(context.Background(), didID, msg)
 }
 
 // PutWithContext same as put but with context
-func (r *PkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep44.Message) error {
+func (r *Client) PutWithContext(ctx context.Context, didID string, msg *bep44.Message) error {
 
 	// Concatenate the Pkarr relay URL with the identifier to form the full URL.
 	pkarrURL, err := url.JoinPath(r.relay, didID)
@@ -73,12 +75,12 @@ func (r *PkarrRelay) PutWithContext(ctx context.Context, didID string, msg *bep4
 }
 
 // Fetch fetches a signed BEP44 message from a Pkarr relay server.
-func (r *PkarrRelay) Fetch(didID string) (*bep44.Message, error) {
+func (r *Client) Fetch(didID string) (*bep44.Message, error) {
 	return r.FetchWithContext(context.Background(), didID)
 }
 
 // FetchWithContext fetches a signed BEP44 message from a Pkarr relay server.
-func (r *PkarrRelay) FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error) {
+func (r *Client) FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error) {
 	// Concatenate the Pkarr relay URL with the identifier to form the full URL.
 	pkarrURL, err := url.JoinPath(r.relay, didID)
 	if err != nil {
