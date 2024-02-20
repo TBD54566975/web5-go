@@ -28,7 +28,7 @@ func Test_GenerateHexNonce(t *testing.T) {
 	nonceMap := make(map[string]bool)
 
 	for i := 0; i < 1000000; i++ {
-		nonce, err := crypto.GenerateHexNonce()
+		nonce, err := crypto.GenerateNonce()
 		assert.NoError(t, err)
 		assert.Equal(t, 32, len(nonce))
 

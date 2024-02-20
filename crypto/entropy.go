@@ -12,19 +12,16 @@ func GenerateEntropy(n int) ([]byte, error) {
 	}
 
 	bytes := make([]byte, n)
-	size, err := rand.Read(bytes)
+	_, err := rand.Read(bytes)
 	if err != nil {
 		return nil, err
-	}
-
-	if size != n {
-		return nil, errors.New("random generation failed to match expected size")
 	}
 
 	return bytes, nil
 }
 
-func GenerateHexNonce() (string, error) {
+// GenerateNonce generates a hex-encoded nonce by calling GenerateEntropy with a size of 16 bytes (128 bits)
+func GenerateNonce() (string, error) {
 	// 16 bytes was chosen because 16 bytes = 128 bits which is considered minimally sufficient
 	//		https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf
 	bytes, err := GenerateEntropy(16)
