@@ -169,7 +169,7 @@ type Claims struct {
 	// Spec: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7
 	JTI string `json:"jti,omitempty"`
 
-	Misc map[string]interface{} `json:"-"`
+	Misc map[string]any `json:"-"`
 }
 
 // MarshalJSON overrides default json.Marshal behavior to include misc claims as flattened
