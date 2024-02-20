@@ -150,19 +150,19 @@ type Claims struct {
 	// or after which the JWT must not be accepted for processing.
 	//
 	// Spec: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.4
-	Expiration uint64 `json:"exp,omitempty"`
+	Expiration int64 `json:"exp,omitempty"`
 
 	// The "nbf" (not before) claim identifies the time before which the JWT
 	// must not be accepted for processing.
 	//
 	// Spec: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.5
-	NotBefore uint64 `json:"nbf,omitempty"`
+	NotBefore int64 `json:"nbf,omitempty"`
 
 	// The "iat" (issued at) claim identifies the time at which the JWT was
 	// issued.
 	//
 	// Spec: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.6
-	IssuedAt uint64 `json:"iat,omitempty"`
+	IssuedAt int64 `json:"iat,omitempty"`
 
 	// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
 	//
