@@ -24,7 +24,7 @@ func Test_GenerateEntropy_InvalidSize(t *testing.T) {
 	assert.Equal(t, nil, bytes)
 }
 
-func Test_GenerateHexNonce(t *testing.T) {
+func Test_GenerateNonce(t *testing.T) {
 	nonceMap := make(map[string]bool)
 
 	for i := 0; i < 1000000; i++ {
