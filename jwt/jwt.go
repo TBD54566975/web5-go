@@ -106,7 +106,7 @@ type Decoded struct {
 
 // Verify verifies a JWT (JSON Web Token)
 func (jwt Decoded) Verify() error {
-	if jwt.Claims.Expiration != 0 && time.Now().Unix() > int64(jwt.Claims.Expiration) {
+	if jwt.Claims.Expiration != 0 && time.Now().Unix() > jwt.Claims.Expiration {
 		return errors.New("JWT has expired")
 	}
 
