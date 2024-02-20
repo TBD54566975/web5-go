@@ -88,7 +88,7 @@ func Create[T any](claims T, opts ...CreateOption) DataModel[T] {
 	}
 }
 
-func (vc DataModel[T]) signJWT(bearerDID did.BearerDID, opts ...jwt.SignOpt) (string, error) {
+func (vc DataModel[T]) SignJWT(bearerDID did.BearerDID, opts ...jwt.SignOpt) (string, error) {
 	vc.Issuer = bearerDID.URI
 	jwtClaims := jwt.Claims{Issuer: vc.Issuer}
 

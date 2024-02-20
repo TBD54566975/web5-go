@@ -1,10 +1,10 @@
 package vc_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 
+	"github.com/alecthomas/assert/v2"
+	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/vc"
 )
 
@@ -16,10 +16,10 @@ func TestSomething(t *testing.T) {
 	claims := YoloClaims{Hello: "world"}
 	cred := vc.Create(claims)
 
-	bytes, err := json.MarshalIndent(cred, "", "  ")
+	bearerDID, err := didjwk.Create()
 	if err != nil {
-		t.Fatal(err)
+		assert.NoError(t, err)
 	}
 
-	fmt.Printf(string(bytes))
+	cred.SignJWT(bearerDID)
 }
