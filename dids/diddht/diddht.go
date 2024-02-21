@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,47 +40,88 @@ func getDefaultRelay() relay {
 	return defaultRelay
 }
 
-// createOptions is used to configure the creation of a `did:dht` DID; it's an internal representation of the options
+// CreateOption is the type returned from each individual option function
+type CreateOption func(*createOptions)
+
+// createOptions is a struct to hold options for creating a new 'did:web' BearerDID.
+// Each option has a corresponding function that can be used by the caller to set the value of the option.
 type createOptions struct {
-	algorithmID         string
-	keyManager          crypto.KeyManager
-	services            []*didcore.Service
-	verificationMethods []didcore.VerificationMethod
-	purposes            map[string][]didcore.Purpose
-	relay               relay
+	services    []didcore.Service
+	privateKeys []privateKeyOption
+	keyManager  crypto.KeyManager
+	alsoKnownAs []string
+	controllers []string
+	relay       relay
 }
 
-type CreateOption func(o *createOptions)
-
-// WithServices adds the provided services to the DID document.
-func WithServices(services ...*didcore.Service) CreateOption {
-	return func(o *createOptions) {
-		o.services = append(o.services, services...)
-	}
+// privateKeyOption is a struct to hold options for creating a new private key.
+type privateKeyOption struct {
+	algorithmID string
+	purposes    []didcore.Purpose
 }
 
-// WithVerificationMethod adds the provided verification method to the DID document.
-func WithVerificationMethod(method didcore.VerificationMethod, purposes []didcore.Purpose) CreateOption {
+// Service is used to add a service to the DID being created with the [Create] function.
+// Note: Service can be passed to [Create] multiple times to add multiple services.
+func Service(id string, svcType string, endpoint string) CreateOption {
 	return func(o *createOptions) {
-		o.verificationMethods = append(o.verificationMethods, method)
-		for _, p := range purposes {
-			if _, ok := o.purposes[method.ID]; !ok {
-				o.purposes[method.ID] = []didcore.Purpose{}
-			}
-			o.purposes[method.ID] = append(o.purposes[method.ID], p)
+		// ensure that id follows relative DID URL requirements defined in did core spec:
+		// https://www.w3.org/TR/did-core/#relative-did-urls
+		var svcID string
+		if id[0] == '#' || strings.HasPrefix(id, "did:") {
+			svcID = id
+		} else {
+			svcID = "#" + id
 		}
+
+		svc := didcore.Service{ID: svcID, Type: svcType, ServiceEndpoint: endpoint}
+		if o.services == nil {
+			o.services = make([]didcore.Service, 0)
+		}
+
+		o.services = append(o.services, svc)
 	}
 }
 
-// WithKeyManager sets the key manager to use for generating the DID's keypair.
-func WithKeyManager(k crypto.KeyManager) CreateOption {
+// PrivateKey is used to add a private key to the DID being created with the [Create] function.
+// Each PrivateKey provided will be used to generate a private key in the key manager and then
+// added to the DID Document as a VerificationMethod.
+func PrivateKey(algorithmID string, purposes ...didcore.Purpose) CreateOption {
 	return func(o *createOptions) {
-		o.keyManager = k
+		keyOpts := privateKeyOption{algorithmID: algorithmID, purposes: purposes}
+
+		if o.privateKeys == nil {
+			o.privateKeys = make([]privateKeyOption, 0)
+		}
+
+		o.privateKeys = append(o.privateKeys, keyOpts)
 	}
 }
 
-// WithRelay sets the relay to use for publishing the DID to the DHT.
-func WithRelay(relayURL string, client *http.Client) CreateOption {
+// KeyManager is used to set the key manager that will be used to generate the private keys for the DID.
+func KeyManager(km crypto.KeyManager) CreateOption {
+	return func(o *createOptions) {
+		o.keyManager = km
+	}
+}
+
+// AlsoKnownAs is used to set the 'alsoKnownAs' property of the DID Document.
+// more details here: https://www.w3.org/TR/did-core/#also-known-as
+func AlsoKnownAs(aka ...string) CreateOption {
+	return func(o *createOptions) {
+		o.alsoKnownAs = aka
+	}
+}
+
+// Controllers is used to set the 'controller' property of the DID Document.
+// more details here: https://www.w3.org/TR/did-core/#controller
+func Controllers(controllers ...string) CreateOption {
+	return func(o *createOptions) {
+		o.controllers = controllers
+	}
+}
+
+// Relay sets the relay to use for publishing the DID to the DHT.
+func Relay(relayURL string, client *http.Client) CreateOption {
 	return func(o *createOptions) {
 		o.relay = pkarr.NewClient(relayURL, client)
 	}
@@ -93,16 +135,14 @@ func Create(opts ...CreateOption) (*did.BearerDID, error) {
 	return CreateWithContext(context.Background(), opts...)
 }
 
+// CreateWithContext creates a new `did:dht` DID and publishes it to the DHT network via a Pkarr relay.
 func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDID, error) {
 
 	// 0. Set default options
 	o := createOptions{
-		algorithmID:         dsa.AlgorithmIDED25519,
-		verificationMethods: []didcore.VerificationMethod{},
-		services:            []*didcore.Service{},
-		keyManager:          crypto.NewLocalKeyManager(),
-		relay:               getDefaultRelay(),
-		purposes:            map[string][]didcore.Purpose{},
+		relay:       getDefaultRelay(),
+		keyManager:  crypto.NewLocalKeyManager(),
+		privateKeys: []privateKeyOption{},
 	}
 
 	for _, opt := range opts {
@@ -116,7 +156,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDI
 	// 1. Generate an Ed25519 keypair
 	keyMgr := o.keyManager
 
-	keyID, err := keyMgr.GeneratePrivateKey(o.algorithmID)
+	keyID, err := keyMgr.GeneratePrivateKey(dsa.AlgorithmIDED25519)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate private key: %w", err)
 	}
@@ -150,17 +190,38 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDI
 		VerificationMethod: []didcore.VerificationMethod{},
 	}
 
-	// 4. Construct a conformant JSON representation of a DID Document.
-	for _, vm := range o.verificationMethods {
-		purposes, ok := o.purposes[vm.ID]
-		if !ok {
-			purposes = []didcore.Purpose{}
+	// create verification methods for each private key
+	for _, pk := range o.privateKeys {
+		// create private keys for the verification methods
+		vmKeyID, err := keyMgr.GeneratePrivateKey(pk.algorithmID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate private key for verification method: %w", err)
 		}
-		document.AddVerificationMethod(vm, didcore.Purposes(purposes...))
+
+		vmPublicKey, err := keyMgr.GetPublicKey(vmKeyID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get public key for verification method: %w", err)
+		}
+
+		vmPublicKeyBytes, err := dsa.PublicKeyToBytes(vmPublicKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert public key to bytes for verification method: %w", err)
+		}
+
+		vmZbase32Encoded := zbase32.EncodeToString(vmPublicKeyBytes)
+		newVM := didcore.VerificationMethod{
+			ID:           "did:dht:" + vmZbase32Encoded,
+			Type:         "JsonWebKey2020",
+			Controller:   bdid.ID,
+			PublicKeyJwk: &vmPublicKey,
+		}
+
+		document.AddVerificationMethod(newVM, didcore.Purposes(pk.purposes...))
 	}
 
-	for _, s := range o.services {
-		document.AddService(s)
+	for _, service := range o.services {
+		s := service
+		document.AddService(&s)
 	}
 
 	// 5. Map the output DID Document to a DNS packet

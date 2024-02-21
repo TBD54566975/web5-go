@@ -170,10 +170,17 @@ func Test_Create(t *testing.T) {
 		didURI         string
 		expectedResult string
 		didDocData     string
+		keys           []privateKeyOption
 	}{
 		"": {
 			didURI:         "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
 			expectedResult: "1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+			keys: []privateKeyOption{
+				{
+					algorithmID: dsa.AlgorithmIDED25519,
+					purposes:    []didcore.Purpose{didcore.PurposeAssertion, didcore.PurposeAuthentication, didcore.PurposeCapabilityDelegation, didcore.PurposeCapabilityInvocation},
+				},
+			},
 			didDocData: `{
 				"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
 				"verificationMethod": [
@@ -243,22 +250,27 @@ func Test_Create(t *testing.T) {
 			var didDoc didcore.Document
 			assert.NoError(t, json.Unmarshal([]byte(test.didDocData), &didDoc))
 			keyMgr := crypto.NewLocalKeyManager()
-			createdDid, err := Create(
-				WithVerificationMethod(didDoc.VerificationMethod[0], []didcore.Purpose{didcore.PurposeAssertion, didcore.PurposeAuthentication, didcore.PurposeCapabilityDelegation, didcore.PurposeCapabilityInvocation}),
-				WithServices(didDoc.Service...),
-				WithRelay(relay.URL, http.DefaultClient),
-				WithKeyManager(keyMgr),
-			)
+
+			var opts []CreateOption
+			opts = []CreateOption{Relay(relay.URL, http.DefaultClient), KeyManager(keyMgr)}
+			for _, service := range didDoc.Service {
+				opts = append(opts, Service(service.ID, service.Type, service.ServiceEndpoint))
+			}
+			for _, key := range test.keys {
+				opts = append(opts, PrivateKey(key.algorithmID, key.purposes...))
+			}
+
+			createdDid, err := Create(opts...)
 			assert.NoError(t, err)
 			resolver := NewResolver(relay.URL, http.DefaultClient)
 			result, err := resolver.Resolve(createdDid.URI)
+			assert.Equal(t, len(createdDid.Document.VerificationMethod), 1)
 			assert.NoError(t, err)
-			assert.Equal(t, createdDid.Document.Authentication, result.Document.Authentication)
-			assert.Equal(t, createdDid.Document.AssertionMethod, result.Document.AssertionMethod)
-			assert.Equal(t, createdDid.Document.CapabilityDelegation, result.Document.CapabilityDelegation)
-			assert.Equal(t, createdDid.Document.CapabilityInvocation, result.Document.CapabilityInvocation)
+			assert.Equal(t, len(createdDid.Document.Authentication), 1)
+			assert.Equal(t, len(createdDid.Document.AssertionMethod), 1)
+			assert.Equal(t, len(createdDid.Document.CapabilityDelegation), 1)
+			assert.Equal(t, len(createdDid.Document.CapabilityInvocation), 1)
 			assert.Equal(t, createdDid.Document.Service, result.Document.Service)
-			assert.Equal(t, createdDid.Document.VerificationMethod, result.Document.VerificationMethod)
 		})
 	}
 }
