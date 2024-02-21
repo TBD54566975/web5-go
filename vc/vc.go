@@ -155,7 +155,7 @@ func (vc DataModel[T]) SignJWT(bearerDID did.BearerDID, opts ...jwt.SignOpt) (st
 		return "", fmt.Errorf("failed to parse issuance date: %w", err)
 	}
 
-	jwtClaims.NotBefore = uint64(t.Unix())
+	jwtClaims.NotBefore = t.Unix()
 
 	if vc.ExpirationDate != "" {
 		t, err := time.Parse(time.RFC3339, vc.ExpirationDate)
@@ -163,7 +163,7 @@ func (vc DataModel[T]) SignJWT(bearerDID did.BearerDID, opts ...jwt.SignOpt) (st
 			return "", fmt.Errorf("failed to parse expiration date: %w", err)
 		}
 
-		jwtClaims.Expiration = uint64(t.Unix())
+		jwtClaims.Expiration = t.Unix()
 	}
 
 	jwtClaims.Misc = make(map[string]any)
