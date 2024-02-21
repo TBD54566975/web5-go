@@ -10,7 +10,7 @@ import (
 
 type didJWKCreate struct{}
 
-func (c *didJWKCreate) Run(ctx context.Context) error {
+func (c *didJWKCreate) Run(_ context.Context) error {
 	did, err := didjwk.Create()
 	if err != nil {
 		return err
