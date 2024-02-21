@@ -10,6 +10,7 @@
   - [Prerequisites](#prerequisites)
     - [`hermit`](#hermit)
     - [Helpful Commands](#helpful-commands)
+    - [`web5` CLI](#web5-cli)
     - [Contributing](#contributing)
 
 
@@ -63,6 +64,13 @@ This repo uses [`just`](https://github.com/casey/just) as a command runner. Belo
 | `just test` | runs all tests |
 | `just lint` | runs linter    |
 
+### `web5` CLI
+
+```shell
+web5 -h
+```
+
+See [cmd/web5/README.md](cmd/web5/README.md) for more information.
 
 ### Contributing
 Each package's README contains in-depth information about the package's structure and suggestions on how add features specific to that package
