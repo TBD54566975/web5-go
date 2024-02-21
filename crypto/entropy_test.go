@@ -14,7 +14,7 @@ func Test_GenerateEntropy(t *testing.T) {
 	assert.Equal(t, int(crypto.Entropy128), len(bytes))
 }
 
-func Test_GenerateEntropy_CustomeSize(t *testing.T) {
+func Test_GenerateEntropy_CustomSize(t *testing.T) {
 	customSize := 99
 	bytes, err := crypto.GenerateEntropy(crypto.EntropySize(customSize))
 	assert.NoError(t, err)
