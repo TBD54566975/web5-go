@@ -43,7 +43,7 @@ func getDefaultRelay() relay {
 // CreateOption is the type returned from each individual option function
 type CreateOption func(*createOptions)
 
-// createOptions is a struct to hold options for creating a new 'did:web' BearerDID.
+// createOptions is a struct to hold options for creating a new 'did:dht' BearerDID.
 // Each option has a corresponding function that can be used by the caller to set the value of the option.
 type createOptions struct {
 	services    []didcore.Service
