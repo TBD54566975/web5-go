@@ -8,9 +8,9 @@ import (
 
 type EntropySize int
 
+// Directly set the sizes according to NIST recommendations for entropy
+// defined here: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf
 const (
-	// Directly set the sizes according to NIST recommendations for entropy
-	// defined here: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf
 	Entropy112 EntropySize = 112 / 8 // 14 bytes
 	Entropy128 EntropySize = 128 / 8 // 16 bytes
 	Entropy192 EntropySize = 192 / 8 // 24 bytes
