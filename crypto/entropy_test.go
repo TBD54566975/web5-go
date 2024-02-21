@@ -9,10 +9,16 @@ import (
 )
 
 func Test_GenerateEntropy(t *testing.T) {
-	size := 16
-	bytes, err := crypto.GenerateEntropy(size)
+	bytes, err := crypto.GenerateEntropy(crypto.Entropy128)
 	assert.NoError(t, err)
-	assert.Equal(t, size, len(bytes))
+	assert.Equal(t, int(crypto.Entropy128), len(bytes))
+}
+
+func Test_GenerateEntropy_CustomeSize(t *testing.T) {
+	customSize := 99
+	bytes, err := crypto.GenerateEntropy(crypto.EntropySize(customSize))
+	assert.NoError(t, err)
+	assert.Equal(t, customSize, len(bytes))
 }
 
 func Test_GenerateEntropy_InvalidSize(t *testing.T) {
@@ -26,10 +32,26 @@ func Test_GenerateEntropy_InvalidSize(t *testing.T) {
 }
 
 func Test_GenerateNonce(t *testing.T) {
-	nonce, err := crypto.GenerateNonce()
+	nonce, err := crypto.GenerateNonce(crypto.Entropy128)
 	assert.NoError(t, err)
-	assert.Equal(t, 32, len(nonce))
+	assert.Equal(t, int(crypto.Entropy128)*2, len(nonce))
 
 	_, err = hex.DecodeString(nonce)
 	assert.NoError(t, err)
+}
+
+func Test_GenerateNonce_CustomSize(t *testing.T) {
+	customSize := 99
+	nonce, err := crypto.GenerateNonce(crypto.EntropySize(99))
+	assert.NoError(t, err)
+	assert.Equal(t, customSize*2, len(nonce))
+
+	_, err = hex.DecodeString(nonce)
+	assert.NoError(t, err)
+}
+
+func Test_GenerateNonce_InvalidSize(t *testing.T) {
+	nonce, err := crypto.GenerateNonce(0)
+	assert.Error(t, err)
+	assert.Equal(t, "", nonce)
 }
