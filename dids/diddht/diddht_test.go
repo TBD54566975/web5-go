@@ -252,7 +252,7 @@ func Test_Create(t *testing.T) {
 			keyMgr := crypto.NewLocalKeyManager()
 
 			var opts []CreateOption
-			opts = []CreateOption{Relay(relay.URL, http.DefaultClient), KeyManager(keyMgr)}
+			opts = []CreateOption{Gateway(relay.URL, http.DefaultClient), KeyManager(keyMgr)}
 			for _, service := range didDoc.Service {
 				opts = append(opts, Service(service.ID, service.Type, service.ServiceEndpoint))
 			}

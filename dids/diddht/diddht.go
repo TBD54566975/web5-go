@@ -31,8 +31,8 @@ type gateway interface {
 var defaultGateway gateway
 var once sync.Once
 
-// getDefaultRelay returns the default Pkarr relay client.
-func getDefaultRelay() gateway {
+// getDefaultGateway returns the default Pkarr relay client.
+func getDefaultGateway() gateway {
 	once.Do(func() {
 		defaultGateway = pkarr.NewClient("", http.DefaultClient)
 	})
@@ -121,27 +121,27 @@ func Controllers(controllers ...string) CreateOption {
 	}
 }
 
-// Relay sets the relay to use for publishing the DID to the DHT.
-func Relay(relayURL string, client *http.Client) CreateOption {
+// Gateway sets the gateway to use for publishing the DID to the DHT.
+func Gateway(gatewayURL string, client *http.Client) CreateOption {
 	return func(o *createOptions) {
-		o.gateway = pkarr.NewClient(relayURL, client)
+		o.gateway = pkarr.NewClient(gatewayURL, client)
 	}
 }
 
-// Create creates a new `did:dht` DID and publishes it to the DHT network via a Pkarr relay.
+// Create creates a new `did:dht` DID and publishes it to the DHT network via a Pkarr gateway.
 //
-// If no relay is passed in the options, Create uses a default Pkarr relay.
+// If no gateway is passed in the options, Create uses a default Pkarr gateway.
 // Spec: https://did-dht.com/#create
 func Create(opts ...CreateOption) (did.BearerDID, error) {
 	return CreateWithContext(context.Background(), opts...)
 }
 
-// CreateWithContext creates a new `did:dht` DID and publishes it to the DHT network via a Pkarr relay.
+// CreateWithContext creates a new `did:dht` DID and publishes it to the DHT network via a Pkarr gateway.
 func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID, error) {
 
 	// 0. Set default options
 	o := createOptions{
-		gateway:     getDefaultRelay(),
+		gateway:     getDefaultGateway(),
 		keyManager:  crypto.NewLocalKeyManager(),
 		privateKeys: []verificationMethodOption{},
 	}
@@ -151,7 +151,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 	}
 
 	if o.gateway == nil {
-		return did.BearerDID{}, errors.New("no relay provided")
+		return did.BearerDID{}, errors.New("no gateway provided")
 	}
 
 	// 1. Generate an Ed25519 keypair (identity key)
