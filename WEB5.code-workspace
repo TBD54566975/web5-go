@@ -1,0 +1,42 @@
+{
+  "folders": [
+    {
+      "path": "crypto"
+    },
+    {
+      "path": "dids"
+    },
+    {
+      "path": "jwk"
+    },
+    {
+      "path": "jws"
+    },
+    {
+      "path": "jwt"
+    },
+    {
+      "path": "cmd/web5",
+      "name": "cli"
+    },
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "examples/**/_ftl": true,
+      "**/node_modules": true,
+      "**/go.work": true,
+      "**/go.work.sum": true,
+      ".hermit": true,
+      "**/*.zip": true,
+    }
+  }
+}
