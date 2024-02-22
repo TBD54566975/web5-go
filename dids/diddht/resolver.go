@@ -13,7 +13,7 @@ import (
 
 // Resolver is a client for resolving DIDs using the DHT network.
 type Resolver struct {
-	relay relay
+	relay gateway
 }
 
 // NewResolver creates a new Resolver instance with the given relay and HTTP client.

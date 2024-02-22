@@ -19,8 +19,8 @@ import (
 	"github.com/tv42/zbase32"
 )
 
-// relay is the internal interface used to publish Pakrr messages to the DHT
-type relay interface {
+// gateway is the internal interface used to publish Pakrr messages to the DHT
+type gateway interface {
 	Put(didID string, payload *bep44.Message) error
 	PutWithContext(ctx context.Context, didID string, payload *bep44.Message) error
 
@@ -28,11 +28,11 @@ type relay interface {
 	FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error)
 }
 
-var defaultRelay relay
+var defaultRelay gateway
 var once sync.Once
 
 // getDefaultRelay returns the default Pkarr relay client.
-func getDefaultRelay() relay {
+func getDefaultRelay() gateway {
 	once.Do(func() {
 		defaultRelay = pkarr.NewClient("", http.DefaultClient)
 	})
@@ -51,7 +51,7 @@ type createOptions struct {
 	keyManager  crypto.KeyManager
 	alsoKnownAs []string
 	controllers []string
-	relay       relay
+	relay       gateway
 }
 
 // privateKeyOption is a struct to hold options for creating a new private key.
