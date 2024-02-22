@@ -47,17 +47,18 @@ type CreateOption func(*createOptions)
 // Each option has a corresponding function that can be used by the caller to set the value of the option.
 type createOptions struct {
 	services    []didcore.Service
-	privateKeys []privateKeyOption
+	privateKeys []verificationMethodOption
 	keyManager  crypto.KeyManager
 	alsoKnownAs []string
 	controllers []string
 	gateway     gateway
 }
 
-// privateKeyOption is a struct to hold options for creating a new private key.
-type privateKeyOption struct {
+// verificationMethodOption is a struct to hold options for creating a new private key.
+type verificationMethodOption struct {
 	algorithmID string
 	purposes    []didcore.Purpose
+	controller  string
 }
 
 // Service is used to add a service to the DID being created with the [Create] function.
@@ -87,10 +88,10 @@ func Service(id string, svcType string, endpoint string) CreateOption {
 // added to the DID Document as a VerificationMethod.
 func PrivateKey(algorithmID string, purposes ...didcore.Purpose) CreateOption {
 	return func(o *createOptions) {
-		keyOpts := privateKeyOption{algorithmID: algorithmID, purposes: purposes}
+		keyOpts := verificationMethodOption{algorithmID: algorithmID, purposes: purposes}
 
 		if o.privateKeys == nil {
-			o.privateKeys = make([]privateKeyOption, 0)
+			o.privateKeys = make([]verificationMethodOption, 0)
 		}
 
 		o.privateKeys = append(o.privateKeys, keyOpts)
@@ -142,7 +143,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 	o := createOptions{
 		gateway:     getDefaultRelay(),
 		keyManager:  crypto.NewLocalKeyManager(),
-		privateKeys: []privateKeyOption{},
+		privateKeys: []verificationMethodOption{},
 	}
 
 	for _, opt := range opts {
@@ -153,7 +154,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 		return did.BearerDID{}, errors.New("no relay provided")
 	}
 
-	// 1. Generate an Ed25519 keypair
+	// 1. Generate an Ed25519 keypair (identity key)
 	keyMgr := o.keyManager
 
 	keyID, err := keyMgr.GeneratePrivateKey(dsa.AlgorithmIDED25519)
@@ -171,7 +172,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 		return did.BearerDID{}, fmt.Errorf("failed to convert public key to bytes: %w", err)
 	}
 
-	// 2. Encode public key in zbase32
+	// 2. Encode public key in zbase32 - the identitfier
 	zbase32Encoded := zbase32.EncodeToString(publicKeyBytes)
 
 	// 3. Create a DID with the zbase32 encoded public key - did:dht:<zbase32 encoded public key>
@@ -189,6 +190,21 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 		Service:            []*didcore.Service{},
 		VerificationMethod: []didcore.VerificationMethod{},
 	}
+
+	// create identitfier verification method
+	identifierVM := didcore.VerificationMethod{
+		ID:           "did:dht:" + zbase32Encoded + "#0",
+		Type:         "JsonWebKey2020",
+		Controller:   "did:dht:" + zbase32Encoded,
+		PublicKeyJwk: &publicKey,
+	}
+
+	document.AddVerificationMethod(identifierVM, didcore.Purposes(
+		didcore.PurposeAssertion,
+		didcore.PurposeAuthentication,
+		didcore.PurposeCapabilityDelegation,
+		didcore.PurposeCapabilityInvocation,
+	))
 
 	// create verification methods for each private key
 	for _, pk := range o.privateKeys {
@@ -208,11 +224,19 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 			return did.BearerDID{}, fmt.Errorf("failed to convert public key to bytes for verification method: %w", err)
 		}
 
+		controller := func() string {
+			if pk.controller != "" {
+				return pk.controller
+			}
+
+			return bdid.ID
+		}()
+
 		vmZbase32Encoded := zbase32.EncodeToString(vmPublicKeyBytes)
 		newVM := didcore.VerificationMethod{
-			ID:           "did:dht:" + vmZbase32Encoded,
+			ID:           "did:dht:" + vmZbase32Encoded + "#" + vmKeyID,
 			Type:         "JsonWebKey2020",
-			Controller:   bdid.ID,
+			Controller:   controller,
 			PublicKeyJwk: &vmPublicKey,
 		}
 

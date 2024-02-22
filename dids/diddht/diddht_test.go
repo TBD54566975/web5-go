@@ -170,12 +170,12 @@ func Test_Create(t *testing.T) {
 		didURI         string
 		expectedResult string
 		didDocData     string
-		keys           []privateKeyOption
+		keys           []verificationMethodOption
 	}{
 		"": {
 			didURI:         "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
 			expectedResult: "1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
-			keys: []privateKeyOption{
+			keys: []verificationMethodOption{
 				{
 					algorithmID: dsa.AlgorithmIDED25519,
 					purposes:    []didcore.Purpose{didcore.PurposeAssertion, didcore.PurposeAuthentication, didcore.PurposeCapabilityDelegation, didcore.PurposeCapabilityInvocation},
@@ -264,12 +264,12 @@ func Test_Create(t *testing.T) {
 			assert.NoError(t, err)
 			resolver := NewResolver(relay.URL, http.DefaultClient)
 			result, err := resolver.Resolve(createdDid.URI)
-			assert.Equal(t, len(createdDid.Document.VerificationMethod), 1)
+			assert.Equal(t, len(createdDid.Document.VerificationMethod), 2)
 			assert.NoError(t, err)
-			assert.Equal(t, len(createdDid.Document.Authentication), 1)
-			assert.Equal(t, len(createdDid.Document.AssertionMethod), 1)
-			assert.Equal(t, len(createdDid.Document.CapabilityDelegation), 1)
-			assert.Equal(t, len(createdDid.Document.CapabilityInvocation), 1)
+			assert.Equal(t, len(createdDid.Document.Authentication), 2)
+			assert.Equal(t, len(createdDid.Document.AssertionMethod), 2)
+			assert.Equal(t, len(createdDid.Document.CapabilityDelegation), 2)
+			assert.Equal(t, len(createdDid.Document.CapabilityInvocation), 2)
 			assert.Equal(t, createdDid.Document.Service, result.Document.Service)
 		})
 	}
