@@ -194,7 +194,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 	// create identitfier verification method
 	identifierVM := didcore.VerificationMethod{
 		ID:           "did:dht:" + zbase32Encoded + "#0",
-		Type:         "JsonWebKey2020",
+		Type:         "JsonWebKey",
 		Controller:   "did:dht:" + zbase32Encoded,
 		PublicKeyJwk: &publicKey,
 	}
@@ -235,7 +235,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 		vmZbase32Encoded := zbase32.EncodeToString(vmPublicKeyBytes)
 		newVM := didcore.VerificationMethod{
 			ID:           "did:dht:" + vmZbase32Encoded + "#" + vmKeyID,
-			Type:         "JsonWebKey2020",
+			Type:         "JsonWebKey",
 			Controller:   controller,
 			PublicKeyJwk: &vmPublicKey,
 		}

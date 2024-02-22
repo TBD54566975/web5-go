@@ -178,7 +178,7 @@ func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) er
 		return err
 	}
 
-	vm.Type = "JsonWebKey2020"
+	vm.Type = "JsonWebKey"
 
 	var key string
 	var algorithmID string

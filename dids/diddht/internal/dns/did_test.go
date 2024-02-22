@@ -18,7 +18,7 @@ func Test_MarshalDIDDocument(t *testing.T) {
 		"verificationMethod": [
 		{
 			"id": "did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy#0",
-			"type": "JsonWebKey2020",
+			"type": "JsonWebKey",
 			"controller": "did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy",
 			"publicKeyJwk": {
 			"crv": "Ed25519",
