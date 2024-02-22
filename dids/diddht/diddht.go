@@ -28,16 +28,16 @@ type gateway interface {
 	FetchWithContext(ctx context.Context, didID string) (*bep44.Message, error)
 }
 
-var defaultRelay gateway
+var defaultGateway gateway
 var once sync.Once
 
 // getDefaultRelay returns the default Pkarr relay client.
 func getDefaultRelay() gateway {
 	once.Do(func() {
-		defaultRelay = pkarr.NewClient("", http.DefaultClient)
+		defaultGateway = pkarr.NewClient("", http.DefaultClient)
 	})
 
-	return defaultRelay
+	return defaultGateway
 }
 
 // CreateOption is the type returned from each individual option function
@@ -51,7 +51,7 @@ type createOptions struct {
 	keyManager  crypto.KeyManager
 	alsoKnownAs []string
 	controllers []string
-	relay       gateway
+	gateway     gateway
 }
 
 // privateKeyOption is a struct to hold options for creating a new private key.
@@ -123,7 +123,7 @@ func Controllers(controllers ...string) CreateOption {
 // Relay sets the relay to use for publishing the DID to the DHT.
 func Relay(relayURL string, client *http.Client) CreateOption {
 	return func(o *createOptions) {
-		o.relay = pkarr.NewClient(relayURL, client)
+		o.gateway = pkarr.NewClient(relayURL, client)
 	}
 }
 
@@ -131,16 +131,16 @@ func Relay(relayURL string, client *http.Client) CreateOption {
 //
 // If no relay is passed in the options, Create uses a default Pkarr relay.
 // Spec: https://did-dht.com/#create
-func Create(opts ...CreateOption) (*did.BearerDID, error) {
+func Create(opts ...CreateOption) (did.BearerDID, error) {
 	return CreateWithContext(context.Background(), opts...)
 }
 
 // CreateWithContext creates a new `did:dht` DID and publishes it to the DHT network via a Pkarr relay.
-func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDID, error) {
+func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID, error) {
 
 	// 0. Set default options
 	o := createOptions{
-		relay:       getDefaultRelay(),
+		gateway:     getDefaultRelay(),
 		keyManager:  crypto.NewLocalKeyManager(),
 		privateKeys: []privateKeyOption{},
 	}
@@ -149,8 +149,8 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDI
 		opt(&o)
 	}
 
-	if o.relay == nil {
-		return nil, errors.New("no relay provided")
+	if o.gateway == nil {
+		return did.BearerDID{}, errors.New("no relay provided")
 	}
 
 	// 1. Generate an Ed25519 keypair
@@ -158,24 +158,24 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDI
 
 	keyID, err := keyMgr.GeneratePrivateKey(dsa.AlgorithmIDED25519)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key: %w", err)
+		return did.BearerDID{}, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	publicKey, err := keyMgr.GetPublicKey(keyID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get public key: %w", err)
+		return did.BearerDID{}, fmt.Errorf("failed to get public key: %w", err)
 	}
 
 	publicKeyBytes, err := dsa.PublicKeyToBytes(publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert public key to bytes: %w", err)
+		return did.BearerDID{}, fmt.Errorf("failed to convert public key to bytes: %w", err)
 	}
 
 	// 2. Encode public key in zbase32
 	zbase32Encoded := zbase32.EncodeToString(publicKeyBytes)
 
 	// 3. Create a DID with the zbase32 encoded public key - did:dht:<zbase32 encoded public key>
-	bdid := &did.BearerDID{
+	bdid := did.BearerDID{
 		DID: did.DID{
 			Method: "dht",
 			URI:    "did:dht:" + zbase32Encoded,
@@ -195,17 +195,17 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDI
 		// create private keys for the verification methods
 		vmKeyID, err := keyMgr.GeneratePrivateKey(pk.algorithmID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate private key for verification method: %w", err)
+			return did.BearerDID{}, fmt.Errorf("failed to generate private key for verification method: %w", err)
 		}
 
 		vmPublicKey, err := keyMgr.GetPublicKey(vmKeyID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get public key for verification method: %w", err)
+			return did.BearerDID{}, fmt.Errorf("failed to get public key for verification method: %w", err)
 		}
 
 		vmPublicKeyBytes, err := dsa.PublicKeyToBytes(vmPublicKey)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert public key to bytes for verification method: %w", err)
+			return did.BearerDID{}, fmt.Errorf("failed to convert public key to bytes for verification method: %w", err)
 		}
 
 		vmZbase32Encoded := zbase32.EncodeToString(vmPublicKeyBytes)
@@ -227,7 +227,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDI
 	// 5. Map the output DID Document to a DNS packet
 	msgBytes, err := dns.MarshalDIDDocument(&document)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal did document to dns packet: %w", err)
+		return did.BearerDID{}, fmt.Errorf("failed to marshal did document to dns packet: %w", err)
 	}
 
 	// 6. Construct a signed BEP44 put message with the v value as a bencoded DNS packet from the prior step.
@@ -239,12 +239,12 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (*did.BearerDI
 
 	bep44Msg, err := bep44.NewMessage(msgBytes, seq, publicKeyBytes, signer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create signed bep44 message: %w", err)
+		return did.BearerDID{}, fmt.Errorf("failed to create signed bep44 message: %w", err)
 	}
 
 	// 7. Submit the result of to the DHT via a Pkarr relay, or a Gateway, with the identifier created in step 1.
-	if err := o.relay.PutWithContext(ctx, bdid.ID, bep44Msg); err != nil {
-		return nil, fmt.Errorf("failed to punlish bep44 message to relay: %w", err)
+	if err := o.gateway.PutWithContext(ctx, bdid.ID, bep44Msg); err != nil {
+		return did.BearerDID{}, fmt.Errorf("failed to punlish bep44 message to relay: %w", err)
 	}
 
 	bdid.Document = document
