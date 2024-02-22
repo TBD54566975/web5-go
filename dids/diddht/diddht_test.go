@@ -146,7 +146,7 @@ func TestDHTResolve(t *testing.T) {
 				msg, err := bep44.NewMessage(buf, 0, publicKeyBytes, test.signer)
 				assert.NoError(t, err)
 
-				body, _ := msg.Encode()
+				body, _ := msg.Marshal()
 
 				// send signed bep44 message
 				_, err = w.Write(body)

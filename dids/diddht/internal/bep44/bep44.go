@@ -66,8 +66,8 @@ func NewMessage(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Sign
 	return bep, nil
 }
 
-// DecodePayload decodes the payload of the BEP44 message from bencoded format. The payload is typically a bencoded DNS for DHT purposes
-func (msg *Message) DecodePayload() ([]byte, error) {
+// UnmarshalPayload decodes the payload of the BEP44 message from bencoded format. The payload is typically a bencoded DNS for DHT purposes
+func (msg *Message) UnmarshalPayload() ([]byte, error) {
 	bdecoded := map[string]any{}
 	if err := bencode.Unmarshal(msg.v, &bdecoded); err != nil {
 		return nil, fmt.Errorf("failed to decode bencoded payload: %w", err)
@@ -80,8 +80,8 @@ func (msg *Message) DecodePayload() ([]byte, error) {
 	return []byte(v), nil
 }
 
-// Encode encodes the BEP44 message into a byte slice, conforming to the Pkarr relay specification.
-func (msg *Message) Encode() ([]byte, error) {
+// Marshal encodes the BEP44 message into a byte slice, conforming to the Pkarr relay specification.
+func (msg *Message) Marshal() ([]byte, error) {
 	// Construct the body of the request according to the Pkarr relay specification.
 	body := make([]byte, 0, len(msg.v)+72)
 	body = append(body, msg.sig...)
@@ -96,8 +96,8 @@ func (msg *Message) Encode() ([]byte, error) {
 	return body, nil
 }
 
-// DecodeBEP44Message decodes the given byte slice into a BEP44 message.
-func DecodeBEP44Message(data []byte, b *Message) error {
+// UnmarshalMessage decodes the given byte slice into a BEP44 message.
+func UnmarshalMessage(data []byte, b *Message) error {
 	if len(data) < 72 {
 		return fmt.Errorf("pkarr response must be at least 72 bytes but got: %d", len(data))
 	}

@@ -47,7 +47,7 @@ func (r *Client) PutWithContext(ctx context.Context, didID string, msg *bep44.Me
 	}
 
 	// Serialize the BEP44 message to a byte slice.
-	body, _ := msg.Encode()
+	body, _ := msg.Marshal()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, pkarrURL, strings.NewReader(string(body)))
 	if err != nil {
@@ -115,7 +115,7 @@ func (r *Client) FetchWithContext(ctx context.Context, didID string) (*bep44.Mes
 
 	// Decode the response body into a BEP44 message.
 	bep44Message := bep44.Message{}
-	if err := bep44.DecodeBEP44Message(body, &bep44Message); err != nil {
+	if err := bep44.UnmarshalMessage(body, &bep44Message); err != nil {
 		// TODO log err
 		return nil, err
 	}

@@ -55,7 +55,7 @@ func Test_newSignedBEP44Message(t *testing.T) {
 			assert.True(t, strings.HasSuffix(string(got.sig), "signed"))
 			assert.Equal(t, tt.args.publicKeyBytes, got.k)
 
-			decodedPayload, err := got.DecodePayload()
+			decodedPayload, err := got.UnmarshalPayload()
 			assert.NoError(t, err)
 			assert.Equal(t, tt.args.payload, decodedPayload)
 		})

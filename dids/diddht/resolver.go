@@ -64,7 +64,7 @@ func (r *Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	bep44MessagePayload, err := bep44Message.DecodePayload()
+	bep44MessagePayload, err := bep44Message.UnmarshalPayload()
 	if err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
