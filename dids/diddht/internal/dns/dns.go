@@ -142,7 +142,7 @@ func parseVerificationRelationships(rootRecord string) (map[string][]string, err
 		return nil, err
 	}
 	// reverse the map to get the relationships
-	relationshipMap := map[string][]string{}
+	var relationshipMap = make(map[string][]string)
 	for k, values := range rootRecordProps {
 		v := strings.Join(values, "")
 		rel, ok := relationshipMap[v]
@@ -157,7 +157,7 @@ func parseVerificationRelationships(rootRecord string) (map[string][]string, err
 }
 
 func parseTXTRecordData(data string) (map[string][]string, error) {
-	result := map[string][]string{}
+	var result = make(map[string][]string)
 	fields := strings.Split(data, ";")
 	if len(fields) == 0 {
 		return nil, errors.New("no fields found")

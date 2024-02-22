@@ -18,12 +18,10 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 
 	// create root record
 	var msg dnsmessage.Message
-
+	var vmIDToK = make(map[string]string)
+	var vmBEP44Keys []string
 	// get sorted VM IDs
 	sortedIDs := pluckSort(d.VerificationMethod)
-	vmIDToK := map[string]string{}
-
-	vmBEP44Keys := []string{}
 
 	for k, id := range sortedIDs {
 		_k := fmt.Sprintf("k%d", k)
@@ -31,8 +29,8 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 		vmBEP44Keys = append(vmBEP44Keys, _k)
 	}
 
-	sToK := map[string]string{}
-	sKeys := []string{}
+	var sToK = make(map[string]string)
+	var sKeys []string
 	for k, v := range d.Service {
 		_k := fmt.Sprintf("s%d", k)
 		sToK[v.ID] = _k
@@ -53,7 +51,7 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 		DNSLabelAlsoKnownAs:         d.AlsoKnownAs,
 	}
 
-	rootPropsSerialized := []string{}
+	var rootPropsSerialized []string
 	for k, v := range rootProps {
 		if len(v) == 0 {
 			continue
@@ -240,7 +238,7 @@ func UnmarshalService(data string, s *didcore.Service) error {
 		case "t":
 			s.Type = strings.Join(v, "")
 		case "se":
-			validEndpoints := []string{}
+			var validEndpoints []string
 			for _, uri := range v {
 				if _, err := url.ParseRequestURI(uri); err != nil {
 					return errors.New("invalid service endpoint")
@@ -257,7 +255,7 @@ func UnmarshalService(data string, s *didcore.Service) error {
 }
 
 func pluckSort(hayStack []didcore.VerificationMethod) []string {
-	ids := []string{}
+	var ids []string
 	for _, v := range hayStack {
 		ids = append(ids, v.ID)
 	}
@@ -267,7 +265,7 @@ func pluckSort(hayStack []didcore.VerificationMethod) []string {
 
 // methodsToKeys takes a list of method indices and returns the corresonding verification method _kN keys
 func methodsToKeys(methods []string, idToKey map[string]string) []string {
-	keys := []string{}
+	var keys []string
 	for _, v := range methods {
 		k, ok := idToKey[v]
 		if ok {

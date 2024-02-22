@@ -51,6 +51,10 @@ func NewMessage(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Sign
 		return nil, fmt.Errorf("failed to bencode: %w", err)
 	}
 
+	if len(bencodedBytes) > 1000 {
+		return nil, errors.New("bencoded payload is too large")
+	}
+
 	signedBytes, err := signer(bencodedBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign: %w", err)
@@ -68,7 +72,7 @@ func NewMessage(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Sign
 
 // UnmarshalPayload decodes the payload of the BEP44 message from bencoded format. The payload is typically a bencoded DNS for DHT purposes
 func (msg *Message) UnmarshalPayload() ([]byte, error) {
-	bdecoded := map[string]any{}
+	var bdecoded = make(map[string]any)
 	if err := bencode.Unmarshal(msg.v, &bdecoded); err != nil {
 		return nil, fmt.Errorf("failed to decode bencoded payload: %w", err)
 	}
