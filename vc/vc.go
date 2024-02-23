@@ -47,20 +47,25 @@ type DataModel[T CredentialSubject] struct {
 // [CredentialSubject]: https://www.w3.org/TR/vc-data-model/#credential-subject
 // [vc-jwt]: https://www.w3.org/TR/vc-data-model/#json-web-token
 type CredentialSubject interface {
-	ID() string
+	GetID() string
+	SetID(id string)
 }
 
 // Claims is a type alias for a map[string]any that can be used to represent the claims of a Verifiable Credential
 // when the structure of the claims is not known at compile time.
 type Claims map[string]any
 
-func (c Claims) ID() string {
+func (c Claims) GetID() string {
 	id, ok := c["id"].(string)
 	if !ok {
 		return ""
 	}
 
 	return id
+}
+
+func (c Claims) SetID(id string) {
+	c["id"] = id
 }
 
 // createOptions contains all of the options that can be passed to [Create]
@@ -142,12 +147,15 @@ func Create[T CredentialSubject](claims T, opts ...CreateOption) DataModel[T] {
 	}
 }
 
+// SignJWT returns a signed JWT conformant with the [vc-jwt] format.
+//
+// [vc-jwt]: https://www.w3.org/TR/vc-data-model/#json-web-token
 func (vc DataModel[T]) SignJWT(bearerDID did.BearerDID, opts ...jwt.SignOpt) (string, error) {
 	vc.Issuer = bearerDID.URI
 	jwtClaims := jwt.Claims{
 		Issuer:  vc.Issuer,
 		JTI:     vc.ID,
-		Subject: vc.CredentialSubject.ID(),
+		Subject: vc.CredentialSubject.GetID(),
 	}
 
 	t, err := time.Parse(time.RFC3339, vc.IssuanceDate)
