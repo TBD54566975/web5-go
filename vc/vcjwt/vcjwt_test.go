@@ -1,4 +1,4 @@
-package vc_test
+package vcjwt_test
 
 import (
 	"testing"
@@ -7,9 +7,10 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jwt"
 	"github.com/tbd54566975/web5-go/vc"
+	"github.com/tbd54566975/web5-go/vc/vcjwt"
 )
 
-func TestDecodeJWT(t *testing.T) {
+func TestDecode(t *testing.T) {
 	bearerDID, err := didjwk.Create()
 	assert.NoError(t, err)
 
@@ -17,7 +18,7 @@ func TestDecodeJWT(t *testing.T) {
 	vcJWT, err := cred.SignJWT(bearerDID)
 	assert.NoError(t, err)
 
-	decoded, err := vc.DecodeJWT[vc.Claims](vcJWT)
+	decoded, err := vcjwt.Decode[vc.Claims](vcJWT)
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, jwt.Decoded{}, decoded.JWT)

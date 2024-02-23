@@ -1,4 +1,4 @@
-package vc
+package vcjwt
 
 import (
 	"encoding/json"
@@ -7,26 +7,27 @@ import (
 	"time"
 
 	"github.com/tbd54566975/web5-go/jwt"
+	"github.com/tbd54566975/web5-go/vc"
 )
 
-func DecodeJWT[T CredentialSubject](vcJWT string) (DecodedJWT[T], error) {
+func Decode[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
 	decoded, err := jwt.Decode(vcJWT)
 	if err != nil {
-		return DecodedJWT[T]{}, fmt.Errorf("failed to decode vc-jwt: %w", err)
+		return Decoded[T]{}, fmt.Errorf("failed to decode vc-jwt: %w", err)
 	}
 
 	if decoded.Claims.Misc == nil {
-		return DecodedJWT[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+		return Decoded[T]{}, fmt.Errorf("vc-jwt missing vc claim")
 	}
 
 	bytes, err := json.Marshal(decoded.Claims.Misc["vc"])
 	if err != nil {
-		return DecodedJWT[T]{}, fmt.Errorf("failed to marshal vc claim: %w", err)
+		return Decoded[T]{}, fmt.Errorf("failed to marshal vc claim: %w", err)
 	}
 
-	var vc DataModel[T]
+	var vc vc.DataModel[T]
 	if err := json.Unmarshal(bytes, &vc); err != nil {
-		return DecodedJWT[T]{}, fmt.Errorf("failed to unmarshal vc claim: %w", err)
+		return Decoded[T]{}, fmt.Errorf("failed to unmarshal vc claim: %w", err)
 	}
 
 	// the following conditionals are included to conform with the jwt decoding section
@@ -51,19 +52,19 @@ func DecodeJWT[T CredentialSubject](vcJWT string) (DecodedJWT[T], error) {
 		vc.IssuanceDate = time.Unix(decoded.Claims.NotBefore, 0).UTC().Format(time.RFC3339)
 	}
 
-	return DecodedJWT[T]{
+	return Decoded[T]{
 		JWT: decoded,
 		VC:  vc,
 	}, nil
 
 }
 
-type DecodedJWT[T CredentialSubject] struct {
+type Decoded[T vc.CredentialSubject] struct {
 	JWT jwt.Decoded
-	VC  DataModel[T]
+	VC  vc.DataModel[T]
 }
 
-func (vcjwt DecodedJWT[T]) verify() error {
+func (vcjwt Decoded[T]) verify() error {
 	if vcjwt.VC.Issuer == "" {
 		return fmt.Errorf("vc-jwt missing issuer")
 	}
@@ -91,16 +92,16 @@ func (vcjwt DecodedJWT[T]) verify() error {
 		return fmt.Errorf("vc-jwt missing type")
 	}
 
-	if slices.Contains(vcjwt.VC.Type, BaseType) == false {
-		return fmt.Errorf("vc-jwt missing %s type", BaseType)
+	if slices.Contains(vcjwt.VC.Type, vc.BaseType) == false {
+		return fmt.Errorf("vc-jwt missing %s type", vc.BaseType)
 	}
 
 	if vcjwt.VC.Context == nil || len(vcjwt.VC.Context) == 0 {
 		return fmt.Errorf("vc-jwt missing @context")
 	}
 
-	if slices.Contains(vcjwt.VC.Context, BaseContext) == false {
-		return fmt.Errorf("vc-jwt missing %s context", BaseContext)
+	if slices.Contains(vcjwt.VC.Context, vc.BaseContext) == false {
+		return fmt.Errorf("vc-jwt missing %s context", vc.BaseContext)
 	}
 
 	err := vcjwt.JWT.Verify()

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/vc"
 )
 
@@ -38,17 +37,4 @@ func (k KCClaims) GetID() string {
 
 func (k *KCClaims) SetID(id string) {
 	k.ID = id
-}
-
-func TestCreate_Unmarshal(t *testing.T) {
-	cred := vc.Create(&KCClaims{ID: "1234"})
-
-	bearerDID, err := didjwk.Create()
-	assert.NoError(t, err)
-
-	vcJWT, err := cred.SignJWT(bearerDID)
-	assert.NoError(t, err)
-
-	_, err = vc.DecodeJWT[vc.Claims](vcJWT)
-	assert.NoError(t, err)
 }
