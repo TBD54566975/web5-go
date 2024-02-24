@@ -6,9 +6,43 @@ import (
 	"slices"
 	"time"
 
+	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/jwt"
 	"github.com/tbd54566975/web5-go/vc"
 )
+
+// SignJWT returns a signed JWT conformant with the [vc-jwt] format.
+//
+// [vc-jwt]: https://www.w3.org/TR/vc-data-model/#json-web-token
+func Sign[T vc.CredentialSubject](vc vc.DataModel[T], bearerDID did.BearerDID, opts ...jwt.SignOpt) (string, error) {
+	vc.Issuer = bearerDID.URI
+	jwtClaims := jwt.Claims{
+		Issuer:  vc.Issuer,
+		JTI:     vc.ID,
+		Subject: vc.CredentialSubject.GetID(),
+	}
+
+	t, err := time.Parse(time.RFC3339, vc.IssuanceDate)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse issuance date: %w", err)
+	}
+
+	jwtClaims.NotBefore = t.Unix()
+
+	if vc.ExpirationDate != "" {
+		t, err := time.Parse(time.RFC3339, vc.ExpirationDate)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse expiration date: %w", err)
+		}
+
+		jwtClaims.Expiration = t.Unix()
+	}
+
+	jwtClaims.Misc = make(map[string]any)
+	jwtClaims.Misc["vc"] = vc
+
+	return jwt.Sign(jwtClaims, bearerDID, opts...)
+}
 
 func Decode[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
 	decoded, err := jwt.Decode(vcJWT)
@@ -20,14 +54,18 @@ func Decode[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
 		return Decoded[T]{}, fmt.Errorf("vc-jwt missing vc claim")
 	}
 
+	if _, ok := decoded.Claims.Misc["vc"]; ok == false {
+		return Decoded[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+	}
+
 	bytes, err := json.Marshal(decoded.Claims.Misc["vc"])
 	if err != nil {
-		return Decoded[T]{}, fmt.Errorf("failed to marshal vc claim: %w", err)
+		return Decoded[T]{}, fmt.Errorf("failed to decode vc claim: %w", err)
 	}
 
 	var vc vc.DataModel[T]
 	if err := json.Unmarshal(bytes, &vc); err != nil {
-		return Decoded[T]{}, fmt.Errorf("failed to unmarshal vc claim: %w", err)
+		return Decoded[T]{}, fmt.Errorf("failed to decode vc claim: %w", err)
 	}
 
 	// the following conditionals are included to conform with the jwt decoding section
