@@ -9,7 +9,7 @@ import (
 
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids"
-	"github.com/tbd54566975/web5-go/dids/did"
+	_did "github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
@@ -124,7 +124,7 @@ func Type(typ string) SignOpt {
 // Sign signs the provided payload with a key associated to the provided DID.
 // if no purpose is provided, the default is "assertionMethod". Passing Detached(true)
 // will return a compact JWS with detached content
-func Sign(payload Payload, did did.BearerDID, opts ...SignOpt) (string, error) {
+func Sign(payload Payload, did _did.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{selector: nil, detached: false}
 	for _, opt := range opts {
 		opt(&o)
@@ -197,20 +197,18 @@ func (jws Decoded) Verify() error {
 		return errors.New("malformed JWS header. alg and kid are required")
 	}
 
-	verificationMethodID := jws.Header.KID
-	verificationMethodIDParts := strings.Split(verificationMethodID, "#")
-	if len(verificationMethodIDParts) != 2 {
+	did, err := _did.Parse(jws.Header.KID)
+	if err != nil {
 		return errors.New("malformed JWS header. kid must be a DID URL")
 	}
 
-	var didURI = verificationMethodIDParts[0]
-
-	resolutionResult, err := dids.Resolve(didURI)
+	resolutionResult, err := dids.Resolve(did.URI)
 	if err != nil {
 		return fmt.Errorf("failed to resolve DID: %w", err)
 	}
 
-	verificationMethod, err := resolutionResult.Document.SelectVerificationMethod(didcore.ID(verificationMethodID))
+	vmSelector := didcore.ID(did.URL)
+	verificationMethod, err := resolutionResult.Document.SelectVerificationMethod(vmSelector)
 	if err != nil {
 		return fmt.Errorf("kid does not match any verification method %w", err)
 	}
