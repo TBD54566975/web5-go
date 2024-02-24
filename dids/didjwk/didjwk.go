@@ -1,6 +1,7 @@
 package didjwk
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -20,14 +21,14 @@ type createOptions struct {
 
 type CreateOption func(o *createOptions)
 
-// KeyManager is an option that can be passed to NewDIDJWK to provide a KeyManager
+// KeyManager is an option that can be passed to Create to provide a KeyManager
 func KeyManager(k crypto.KeyManager) CreateOption {
 	return func(o *createOptions) {
 		o.keyManager = k
 	}
 }
 
-// AlgorithmID is an option that can be passed to NewDIDJWK to specify a specific
+// AlgorithmID is an option that can be passed to Create to specify a specific
 // cryptographic algorithm to use to generate the private key
 func AlgorithmID(id string) CreateOption {
 	return func(o *createOptions) {
@@ -65,6 +66,7 @@ func Create(opts ...CreateOption) (did.BearerDID, error) {
 	}
 
 	id := base64.RawURLEncoding.EncodeToString(bytes)
+
 	didJWK := did.DID{
 		Method: "jwk",
 		URI:    "did:jwk:" + id,
@@ -81,6 +83,10 @@ func Create(opts ...CreateOption) (did.BearerDID, error) {
 }
 
 type Resolver struct{}
+
+func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
+	return r.Resolve(uri)
+}
 
 // Resolve the provided DID URI (must be a did:jwk) as per the wee bit of detail provided in the
 // spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md

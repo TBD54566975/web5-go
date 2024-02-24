@@ -2,24 +2,26 @@ package diddht
 
 import (
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+
+	"io"
 
 	"github.com/alecthomas/assert/v2"
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
 	"github.com/tbd54566975/web5-go/dids/didcore"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/bep44"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-type bep44TXTResourceOpt func() dnsmessage.Resource
+type DHTTXTResourceOpt func() dnsmessage.Resource
 
-func WithDNSRecord(name, body string) bep44TXTResourceOpt { //nolint:revive
+func WithDNSRecord(name, body string) DHTTXTResourceOpt {
 	return func() dnsmessage.Resource {
 		return dnsmessage.Resource{
 			Header: dnsmessage.ResourceHeader{
@@ -35,7 +37,7 @@ func WithDNSRecord(name, body string) bep44TXTResourceOpt { //nolint:revive
 		}
 	}
 }
-func makeDNSMessage(answersOpt ...bep44TXTResourceOpt) dnsmessage.Message {
+func makeDNSMessage(answersOpt ...DHTTXTResourceOpt) dnsmessage.Message {
 
 	answers := []dnsmessage.Resource{}
 	for _, a := range answersOpt {
@@ -66,7 +68,7 @@ func TestDHTResolve(t *testing.T) {
 		msg                  dnsmessage.Message
 		expectedErrorMessage string
 		assertResult         func(t *testing.T, d *didcore.Document)
-		signer               signer
+		signer               bep44.Signer
 	}{
 		"did with valid key and no service": {
 			didURI: "did:dht:cwxob5rbhhu3z9x3gfqy6cthqgm6ngrh4k8s615n7pw11czoq4fy",
@@ -76,6 +78,7 @@ func TestDHTResolve(t *testing.T) {
 			),
 
 			assertResult: func(t *testing.T, d *didcore.Document) {
+				t.Helper()
 				t.Helper()
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
@@ -90,6 +93,8 @@ func TestDHTResolve(t *testing.T) {
 			msg: makeDNSMessage(
 				WithDNSRecord("_did.", "vm=k0,k1,k2;auth=k0;asm=k1;inv=k2;del=k0"),
 				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
+				WithDNSRecord("_k2._did.", fmt.Sprintf("id=2;t=1;k=%s", base64EncodedSecp256k)), //nolint:perfsprint
+				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=1;k=%s", base64EncodedSecp256k)), //nolint:perfsprint
 				WithDNSRecord("_k2._did.", fmt.Sprintf("id=2;t=1;k=%s", base64EncodedSecp256k)), //nolint:perfsprint
 				WithDNSRecord("_k1._did.", fmt.Sprintf("id=1;t=1;k=%s", base64EncodedSecp256k)), //nolint:perfsprint
 			),
@@ -115,6 +120,7 @@ func TestDHTResolve(t *testing.T) {
 
 			assertResult: func(t *testing.T, d *didcore.Document) {
 				t.Helper()
+				t.Helper()
 				assert.False(t, d == nil, "Expected non nil document")
 				assert.NotZero(t, d.ID, "Expected DID Document ID to be initialized")
 				assert.NotZero(t, d.VerificationMethod, "Expected at least 1 verification method")
@@ -137,25 +143,17 @@ func TestDHTResolve(t *testing.T) {
 				publicKeyBytes, err := dsa.PublicKeyToBytes(pkey)
 				assert.NoError(t, err)
 				// create signed bep44 message
-				msg, err := newSignedBEP44Message(buf, 0, publicKeyBytes, test.signer)
+				msg, err := bep44.NewMessage(buf, 0, publicKeyBytes, test.signer)
 				assert.NoError(t, err)
 
-				// Construct the body of the request according to the Pkarr relay specification.
-				body := make([]byte, 0, len(msg.v)+72)
-				body = append(body, msg.sig...)
-				var seqUint64 = uint64(msg.seq)
-
-				// Convert the sequence number to a big-endian byte array.
-				buf := make([]byte, 8) // uint64 is 8 bytes
-				binary.BigEndian.PutUint64(buf, seqUint64)
-				body = append(body, buf...)
-				body = append(body, msg.v...)
+				body, _ := msg.Marshal()
 
 				// send signed bep44 message
 				_, err = w.Write(body)
 				assert.NoError(t, err)
 			}))
 			defer ts.Close()
+
 			r := NewResolver(ts.URL, http.DefaultClient)
 			result, err := r.Resolve(test.didURI)
 
@@ -167,39 +165,112 @@ func TestDHTResolve(t *testing.T) {
 	}
 }
 
-func Test_parseDNSDID(t *testing.T) {
+func Test_Create(t *testing.T) {
 	tests := map[string]struct {
-		msg           dnsmessage.Message
-		expectedError string
-		assertResult  func(t *testing.T, d *Decoder)
+		didURI         string
+		expectedResult string
+		didDocData     string
+		keys           []verificationMethodOption
 	}{
-		"basic did with key": {
-			msg: makeDNSMessage(
-				WithDNSRecord("_did.", "vm=k0;auth=k0;asm=k0;inv=k0;del=k0"),
-				WithDNSRecord("_k0._did.", "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
-			),
-			assertResult: func(t *testing.T, d *Decoder) {
-				t.Helper()
-				assert.False(t, d == nil)
-				expectedRecords := map[string]string{
-					"_k0._did.": "id=0;t=0;k=YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE",
-				}
-				assert.Equal(t, "vm=k0;auth=k0;asm=k0;inv=k0;del=k0", d.rootRecord)
-				assert.True(t, reflect.DeepEqual(expectedRecords, d.records))
+		"": {
+			didURI:         "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+			expectedResult: "1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+			keys: []verificationMethodOption{
+				{
+					algorithmID: dsa.AlgorithmIDED25519,
+					purposes:    []didcore.Purpose{didcore.PurposeAssertion, didcore.PurposeAuthentication, didcore.PurposeCapabilityDelegation, didcore.PurposeCapabilityInvocation},
+				},
 			},
+			didDocData: `{
+				"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+				"verificationMethod": [
+				  {
+					"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0",
+					"type": "JsonWebKey",
+					"controller": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko",
+					"publicKeyJwk": {
+					  "kty": "OKP",
+					  "crv": "Ed25519",
+					  "x": "lSuMYhg12IMawqFut-2URA212Nqe8-WEB7OBlam5oBU",
+					  "kid": "2Jr7faCpoEgHvy5HXH32z-MH_0CRToO9NllZtemVvNo"
+					}
+				  }
+				],
+				"service": [
+				  {
+					"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#dwn",
+					"type": "DecentralizedWebNode",
+					"serviceEndpoint": "https://example.com/dwn"
+				  }
+				],
+				"authentication": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				],
+				"assertionMethod": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				],
+				"capabilityDelegation": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				],
+				"capabilityInvocation": [
+				  "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#0"
+				]
+			  }`,
 		},
 	}
 
+	// setting up a fake relay that stores did documents on publish, and responds with the bencoded did document on resolve
+	mockedRes := map[string][]byte{}
+	relay := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		did := "did:dht:" + r.URL.Path[1:]
+		defer r.Body.Close()
+
+		// create branch
+		if r.Method != http.MethodGet {
+			packagedDid, err := io.ReadAll(r.Body)
+			assert.NoError(t, err)
+			mockedRes[did] = packagedDid
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// resolve branch
+		expectedBuf, ok := mockedRes[did]
+		if !ok {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+		_, err := w.Write(expectedBuf)
+		assert.NoError(t, err)
+	}))
+
+	defer relay.Close()
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			buf, err := test.msg.Pack()
+			var didDoc didcore.Document
+			assert.NoError(t, json.Unmarshal([]byte(test.didDocData), &didDoc))
+			keyMgr := crypto.NewLocalKeyManager()
+
+			var opts []CreateOption
+			opts = []CreateOption{Gateway(relay.URL, http.DefaultClient), KeyManager(keyMgr)}
+			for _, service := range didDoc.Service {
+				opts = append(opts, Service(service.ID, service.Type, service.ServiceEndpoint))
+			}
+			for _, key := range test.keys {
+				opts = append(opts, PrivateKey(key.algorithmID, key.purposes...))
+			}
+
+			createdDid, err := Create(opts...)
 			assert.NoError(t, err)
-
-			dhtDidRecord, err := parseDNSDID(buf)
-			assert.EqualError(t, err, test.expectedError)
-
-			assert.Equal(t, "vm=k0;auth=k0;asm=k0;inv=k0;del=k0", dhtDidRecord.rootRecord)
-
+			resolver := NewResolver(relay.URL, http.DefaultClient)
+			result, err := resolver.Resolve(createdDid.URI)
+			assert.Equal(t, len(createdDid.Document.VerificationMethod), 2)
+			assert.NoError(t, err)
+			assert.Equal(t, len(createdDid.Document.Authentication), 2)
+			assert.Equal(t, len(createdDid.Document.AssertionMethod), 2)
+			assert.Equal(t, len(createdDid.Document.CapabilityDelegation), 2)
+			assert.Equal(t, len(createdDid.Document.CapabilityInvocation), 2)
+			assert.Equal(t, createdDid.Document.Service, result.Document.Service)
 		})
 	}
 }

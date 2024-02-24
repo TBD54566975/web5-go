@@ -22,7 +22,6 @@ func ED25519GeneratePrivateKey() (jwk.JWK, error) {
 	}
 
 	privKeyJwk := jwk.JWK{
-		ALG: JWA,
 		KTY: KeyType,
 		CRV: ED25519JWACurve,
 		D:   base64.RawURLEncoding.EncodeToString(privateKey),
@@ -58,7 +57,6 @@ func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
 	}
 
 	return jwk.JWK{
-		ALG: JWA,
 		KTY: KeyType,
 		CRV: ED25519JWACurve,
 		X:   base64.RawURLEncoding.EncodeToString(input),

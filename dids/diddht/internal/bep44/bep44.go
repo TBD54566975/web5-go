@@ -1,14 +1,14 @@
-package diddht
+package bep44
 
 import (
 	"encoding/binary"
 	"errors"
 	"fmt"
 
-	"github.com/tbd54566975/web5-go/dids/diddht/bencode"
+	"github.com/tbd54566975/web5-go/dids/diddht/internal/bencode"
 )
 
-// Represents a BEP44 message, which is used for storing and retrieving data in the Mainline DHT
+// Message Represents a BEP44 message, which is used for storing and retrieving data in the Mainline DHT
 // network.
 //
 // A BEP44 message is used primarily in the context of the DID DHT method for publishing and
@@ -16,7 +16,7 @@ import (
 // for such operations in accordance with BEP44.
 //
 // https://www.bittorrent.org/beps/bep_0044.html
-type bep44Message struct {
+type Message struct {
 
 	// The public key bytes of the Identity Key, which serves as the identifier in the DHT network for
 	// the corresponding BEP44 message.
@@ -36,10 +36,11 @@ type bep44Message struct {
 	v []byte
 }
 
-type signer func(payload []byte) ([]byte, error)
+// Signer is a function that signs a given payload and returns the signature.
+type Signer func(payload []byte) ([]byte, error)
 
-// newSignedBEP44Message creates a new signed BEP44 message with the given DNS payload.
-func newSignedBEP44Message(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer signer) (*bep44Message, error) {
+// NewMessage bencodes the payload, signes it with the signer and creates a new BEP44 message with the given sequence number, public key.
+func NewMessage(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Signer) (*Message, error) {
 	bencoded := map[string]any{
 		"seq": seq,
 		"v":   dnsPayload,
@@ -50,12 +51,16 @@ func newSignedBEP44Message(dnsPayload []byte, seq int64, publicKeyBytes []byte, 
 		return nil, fmt.Errorf("failed to bencode: %w", err)
 	}
 
+	if len(bencodedBytes) > 1000 {
+		return nil, errors.New("bencoded payload is too large")
+	}
+
 	signedBytes, err := signer(bencodedBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign: %w", err)
 	}
 
-	bep := &bep44Message{
+	bep := &Message{
 		k:   publicKeyBytes,
 		seq: seq,
 		sig: signedBytes,
@@ -65,9 +70,10 @@ func newSignedBEP44Message(dnsPayload []byte, seq int64, publicKeyBytes []byte, 
 	return bep, nil
 }
 
-func (b *bep44Message) DecodePayload() ([]byte, error) {
-	bdecoded := map[string]any{}
-	if err := bencode.Unmarshal(b.v, &bdecoded); err != nil {
+// UnmarshalPayload decodes the payload of the BEP44 message from bencoded format. The payload is typically a bencoded DNS for DHT purposes
+func (msg *Message) UnmarshalPayload() ([]byte, error) {
+	var bdecoded = make(map[string]any)
+	if err := bencode.Unmarshal(msg.v, &bdecoded); err != nil {
 		return nil, fmt.Errorf("failed to decode bencoded payload: %w", err)
 	}
 
@@ -78,8 +84,24 @@ func (b *bep44Message) DecodePayload() ([]byte, error) {
 	return []byte(v), nil
 }
 
-// DecodeBEP44Message decodes the given byte slice into a BEP44 message.
-func DecodeBEP44Message(data []byte, b *bep44Message) error {
+// Marshal encodes the BEP44 message into a byte slice, conforming to the Pkarr relay specification.
+func (msg *Message) Marshal() ([]byte, error) {
+	// Construct the body of the request according to the Pkarr relay specification.
+	body := make([]byte, 0, len(msg.v)+72)
+	body = append(body, msg.sig...)
+	seq := uint64(msg.seq)
+
+	// Convert the sequence number to a big-endian byte array.
+	buf := make([]byte, 8) // uint64 is 8 bytes
+	binary.BigEndian.PutUint64(buf, seq)
+	body = append(body, buf...)
+	body = append(body, msg.v...)
+
+	return body, nil
+}
+
+// UnmarshalMessage decodes the given byte slice into a BEP44 message.
+func UnmarshalMessage(data []byte, b *Message) error {
 	if len(data) < 72 {
 		return fmt.Errorf("pkarr response must be at least 72 bytes but got: %d", len(data))
 	}

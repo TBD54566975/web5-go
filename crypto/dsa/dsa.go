@@ -94,3 +94,14 @@ func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 		return nil, fmt.Errorf("unsupported key type: %s", publicKey.KTY)
 	}
 }
+
+func AlgorithmID(jwk *jwk.JWK) (string, error) {
+	switch jwk.KTY {
+	case ecdsa.KeyType:
+		return ecdsa.AlgorithmID(jwk)
+	case eddsa.KeyType:
+		return eddsa.AlgorithmID(jwk)
+	default:
+		return "", fmt.Errorf("unsupported key type: %s", jwk.KTY)
+	}
+}
