@@ -122,6 +122,16 @@ func (jwt Decoded) Verify() error {
 		return fmt.Errorf("JWT signature verification failed: %w", err)
 	}
 
+	//! we should check this claim prior to verifying the signature as verification
+	//! requires DID resolution which is a network call. doing so without duplicating
+	//! code is a bit tricky (Moe 2021-08-25)
+
+	// check to ensure that the did used to sign the JWT matches the issuer claim.
+	// the value of KID should always be ${did}#${verificationMethodID} (aka did url)
+	if jwt.Claims.Issuer != "" && !strings.HasPrefix(jwt.Header.KID, jwt.Claims.Issuer) {
+		return errors.New("JWT issuer does not match the did url provided as KID")
+	}
+
 	return nil
 }
 
