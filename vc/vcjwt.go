@@ -1,4 +1,4 @@
-package vcjwt
+package vc
 
 import (
 	"encoding/json"
@@ -7,48 +7,12 @@ import (
 	"slices"
 	"time"
 
-	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/jwt"
-	"github.com/tbd54566975/web5-go/vc"
 )
-
-// Sign returns a signed JWT conformant with the [vc-jwt] format. sets the provided vc as value of
-// the "vc" claim in the jwt. It returns the signed jwt and an error if the signing fails.
-//
-// [vc-jwt]: https://www.w3.org/TR/vc-data-model/#json-web-token
-func Sign[T vc.CredentialSubject](vc vc.DataModel[T], bearerDID did.BearerDID, opts ...jwt.SignOpt) (string, error) {
-	vc.Issuer = bearerDID.URI
-	jwtClaims := jwt.Claims{
-		Issuer:  vc.Issuer,
-		JTI:     vc.ID,
-		Subject: vc.CredentialSubject.GetID(),
-	}
-
-	t, err := time.Parse(time.RFC3339, vc.IssuanceDate)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse issuance date: %w", err)
-	}
-
-	jwtClaims.NotBefore = t.Unix()
-
-	if vc.ExpirationDate != "" {
-		t, err := time.Parse(time.RFC3339, vc.ExpirationDate)
-		if err != nil {
-			return "", fmt.Errorf("failed to parse expiration date: %w", err)
-		}
-
-		jwtClaims.Expiration = t.Unix()
-	}
-
-	jwtClaims.Misc = make(map[string]any)
-	jwtClaims.Misc["vc"] = vc
-
-	return jwt.Sign(jwtClaims, bearerDID, opts...)
-}
 
 // Verify verifies the decoded vc-jwt. It checks for the presence of required fields and verifies the jwt.
 // It returns the decoded vc-jwt and an error if the verification fails.
-func Verify[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
+func Verify[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 	decoded, err := Decode[T](vcJWT)
 	if err != nil {
 		return decoded, err
@@ -64,28 +28,28 @@ func Verify[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
 // but there would be no way to know if they don't match given that they're overwritten.
 //
 // [spec]: https://www.w3.org/TR/vc-data-model/#json-web-token
-func Decode[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
+func Decode[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 	decoded, err := jwt.Decode(vcJWT)
 	if err != nil {
-		return Decoded[T]{}, fmt.Errorf("failed to decode vc-jwt: %w", err)
+		return DecodedVCJWT[T]{}, fmt.Errorf("failed to decode vc-jwt: %w", err)
 	}
 
 	if decoded.Claims.Misc == nil {
-		return Decoded[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+		return DecodedVCJWT[T]{}, fmt.Errorf("vc-jwt missing vc claim")
 	}
 
 	if _, ok := decoded.Claims.Misc["vc"]; ok == false {
-		return Decoded[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+		return DecodedVCJWT[T]{}, fmt.Errorf("vc-jwt missing vc claim")
 	}
 
 	bytes, err := json.Marshal(decoded.Claims.Misc["vc"])
 	if err != nil {
-		return Decoded[T]{}, fmt.Errorf("failed to decode vc claim: %w", err)
+		return DecodedVCJWT[T]{}, fmt.Errorf("failed to decode vc claim: %w", err)
 	}
 
-	var vc vc.DataModel[T]
+	var vc DataModel[T]
 	if err := json.Unmarshal(bytes, &vc); err != nil {
-		return Decoded[T]{}, fmt.Errorf("failed to decode vc claim: %w", err)
+		return DecodedVCJWT[T]{}, fmt.Errorf("failed to decode vc claim: %w", err)
 	}
 
 	// the following conditionals are included to conform with the jwt decoding section
@@ -110,21 +74,21 @@ func Decode[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
 		vc.IssuanceDate = time.Unix(decoded.Claims.NotBefore, 0).UTC().Format(time.RFC3339)
 	}
 
-	return Decoded[T]{
+	return DecodedVCJWT[T]{
 		JWT: decoded,
 		VC:  vc,
 	}, nil
 
 }
 
-// Decoded represents a decoded vc-jwt. It contains the decoded jwt and decoded vc data model
-type Decoded[T vc.CredentialSubject] struct {
+// DecodedVCJWT represents a decoded vc-jwt. It contains the decoded jwt and decoded vc data model
+type DecodedVCJWT[T CredentialSubject] struct {
 	JWT jwt.Decoded
-	VC  vc.DataModel[T]
+	VC  DataModel[T]
 }
 
 // Verify verifies the decoded vc-jwt. It checks for the presence of required fields and verifies the jwt.
-func (vcjwt Decoded[T]) Verify() error {
+func (vcjwt DecodedVCJWT[T]) Verify() error {
 	if vcjwt.VC.Issuer == "" {
 		return errors.New("verification failed. missing issuer")
 	}
@@ -161,16 +125,16 @@ func (vcjwt Decoded[T]) Verify() error {
 		return errors.New("verification failed. missing type")
 	}
 
-	if slices.Contains(vcjwt.VC.Type, vc.BaseType) == false {
-		return fmt.Errorf("verification failed. missing base type: %s", vc.BaseType)
+	if slices.Contains(vcjwt.VC.Type, BaseType) == false {
+		return fmt.Errorf("verification failed. missing base type: %s", BaseType)
 	}
 
 	if vcjwt.VC.Context == nil || len(vcjwt.VC.Context) == 0 {
 		return errors.New("verification failed. missing @context")
 	}
 
-	if slices.Contains(vcjwt.VC.Context, vc.BaseContext) == false {
-		return fmt.Errorf("verification failed. missing base @context: %s", vc.BaseContext)
+	if slices.Contains(vcjwt.VC.Context, BaseContext) == false {
+		return fmt.Errorf("verification failed. missing base @context: %s", BaseContext)
 	}
 
 	err = vcjwt.JWT.Verify()

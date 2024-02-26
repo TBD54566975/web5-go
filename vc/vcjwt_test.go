@@ -1,4 +1,4 @@
-package vcjwt_test
+package vc_test
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jwt"
 	"github.com/tbd54566975/web5-go/vc"
-	"github.com/tbd54566975/web5-go/vc/vcjwt"
 )
 
 type vector struct {
@@ -47,14 +46,14 @@ func TestDecode(t *testing.T) {
 
 	for _, tt := range vectors {
 		t.Run(tt.description, func(t *testing.T) {
-			decoded, err := vcjwt.Decode[vc.Claims](tt.input)
+			decoded, err := vc.Decode[vc.Claims](tt.input)
 
 			if tt.errors == true {
 				assert.Error(t, err)
-				assert.Equal(t, vcjwt.Decoded[vc.Claims]{}, decoded)
+				assert.Equal(t, vc.DecodedVCJWT[vc.Claims]{}, decoded)
 			} else {
 				assert.NoError(t, err)
-				assert.NotEqual(t, vcjwt.Decoded[vc.Claims]{}, decoded)
+				assert.NotEqual(t, vc.DecodedVCJWT[vc.Claims]{}, decoded)
 			}
 		})
 	}
@@ -91,7 +90,7 @@ func TestDecode_SetClaims(t *testing.T) {
 	vcJWT, err := jwt.Sign(jwtClaims, issuer)
 	assert.NoError(t, err)
 
-	decoded, err := vcjwt.Decode[vc.Claims](vcJWT)
+	decoded, err := vc.Decode[vc.Claims](vcJWT)
 	assert.NoError(t, err)
 
 	assert.Equal(t, jwtClaims.JTI, decoded.VC.ID)
@@ -148,7 +147,7 @@ func TestVerify(t *testing.T) {
 
 	for _, tt := range vectors {
 		t.Run(tt.description, func(t *testing.T) {
-			_, err := vcjwt.Verify[vc.Claims](tt.input)
+			_, err := vc.Verify[vc.Claims](tt.input)
 
 			if tt.errors == true {
 				fmt.Printf("true error: %v\n", err)
@@ -159,25 +158,4 @@ func TestVerify(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestSign(t *testing.T) {
-	issuer, err := didjwk.Create()
-	assert.NoError(t, err)
-
-	subject, err := didjwk.Create()
-	assert.NoError(t, err)
-
-	claims := vc.Claims{"id": subject.URI, "name": "Randy McRando"}
-	cred := vc.Create(claims)
-
-	vcJWT, err := vcjwt.Sign(cred, issuer)
-	assert.NoError(t, err)
-	assert.NotZero(t, vcJWT)
-
-	// TODO: make test more reliable by not depending on another function in this package (Moe - 2024-02-25)
-	decoded, err := vcjwt.Verify[vc.Claims](vcJWT)
-
-	assert.NoError(t, err)
-	assert.NotZero(t, decoded)
 }

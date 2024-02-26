@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tbd54566975/web5-go/dids/did"
+	"github.com/tbd54566975/web5-go/jwt"
 )
 
 // these constants are defined in the W3C Verifiable Credential Data Model specification for:
@@ -159,4 +161,38 @@ func Create[T CredentialSubject](claims T, opts ...CreateOption) DataModel[T] {
 	}
 
 	return cred
+}
+
+// Sign returns a signed JWT conformant with the [vc-jwt] format. sets the provided vc as value of
+// the "vc" claim in the jwt. It returns the signed jwt and an error if the signing fails.
+//
+// [vc-jwt]: https://www.w3.org/TR/vc-data-model/#json-web-token
+func (vc DataModel[T]) Sign(bearerDID did.BearerDID, opts ...jwt.SignOpt) (string, error) {
+	vc.Issuer = bearerDID.URI
+	jwtClaims := jwt.Claims{
+		Issuer:  vc.Issuer,
+		JTI:     vc.ID,
+		Subject: vc.CredentialSubject.GetID(),
+	}
+
+	t, err := time.Parse(time.RFC3339, vc.IssuanceDate)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse issuance date: %w", err)
+	}
+
+	jwtClaims.NotBefore = t.Unix()
+
+	if vc.ExpirationDate != "" {
+		t, err := time.Parse(time.RFC3339, vc.ExpirationDate)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse expiration date: %w", err)
+		}
+
+		jwtClaims.Expiration = t.Unix()
+	}
+
+	jwtClaims.Misc = make(map[string]any)
+	jwtClaims.Misc["vc"] = vc
+
+	return jwt.Sign(jwtClaims, bearerDID, opts...)
 }

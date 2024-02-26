@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/assert/v2"
+	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/vc"
 )
 
@@ -53,4 +54,25 @@ func TestCreate_Options(t *testing.T) {
 	assert.Equal(t, "hehecustomid", cred.ID)
 
 	assert.NotZero(t, cred.ExpirationDate)
+}
+
+func TestSign(t *testing.T) {
+	issuer, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	subject, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	claims := vc.Claims{"id": subject.URI, "name": "Randy McRando"}
+	cred := vc.Create(claims)
+
+	vcJWT, err := cred.Sign(issuer)
+	assert.NoError(t, err)
+	assert.NotZero(t, vcJWT)
+
+	// TODO: make test more reliable by not depending on another function in this package (Moe - 2024-02-25)
+	decoded, err := vc.Verify[vc.Claims](vcJWT)
+
+	assert.NoError(t, err)
+	assert.NotZero(t, decoded)
 }
