@@ -74,7 +74,7 @@ type createOptions struct {
 	types          []string
 	id             string
 	issuanceDate   time.Time
-	expirationDate string
+	expirationDate time.Time
 }
 
 // CreateOption is the return type of all Option functions that can be passed to [Create]
@@ -119,7 +119,7 @@ func IssuanceDate(issuanceDate time.Time) CreateOption {
 // ExpirationDate can be used to set the expiration date of the Verifiable Credential created by [Create]
 func ExpirationDate(expirationDate time.Time) CreateOption {
 	return func(o *createOptions) {
-		o.expirationDate = expirationDate.UTC().Format(time.RFC3339)
+		o.expirationDate = expirationDate
 	}
 }
 
@@ -146,11 +146,17 @@ func Create[T CredentialSubject](claims T, opts ...CreateOption) DataModel[T] {
 		f(&o)
 	}
 
-	return DataModel[T]{
+	cred := DataModel[T]{
 		Context:           o.contexts,
 		Type:              o.types,
 		ID:                o.id,
 		IssuanceDate:      o.issuanceDate.UTC().Format(time.RFC3339),
 		CredentialSubject: claims,
 	}
+
+	if (o.expirationDate != time.Time{}) {
+		cred.ExpirationDate = o.expirationDate.UTC().Format(time.RFC3339)
+	}
+
+	return cred
 }
