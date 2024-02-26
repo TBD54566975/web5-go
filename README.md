@@ -74,3 +74,32 @@ See [cmd/web5/README.md](cmd/web5/README.md) for more information.
 
 ### Contributing
 Each package's README contains in-depth information about the package's structure and suggestions on how add features specific to that package
+
+### Release Guidelines
+
+#### Pre-releases
+
+In go, pre-releases are not necessary as it can directly utilize the repository's revision or branch name. For instance, to test the current version of the web5 go package, you can use the `go get` cli tool with:
+
+```sh
+# Import the main branch (or a PR to preview fixes)
+go get github.com/tbd54566975/web5-go@cmd-resolve-did
+
+# PS: For branches named with slashes, GOPROXY=direct might be needed
+# Reference: https://github.com/golang/go/issues/32955
+
+# Use a specific commit SH revision
+go get github.com/tbd54566975/web5-go@f8a901b48ce4a90c006214ba6bb8fd1a7eb935d6
+```
+
+More: https://go.dev/doc/modules/managing-dependencies#repo_identifier
+
+#### Releasing New Versions
+
+To release a new version, simply merge the `release-please` (TODO) preview PR.
+
+TODO: Conventional commits writeup.
+
+#### Publishing Docs
+
+API reference documentation is automatically updated and available at [https://pkg.go.dev/github.com/tbd54566975/web5-go]https://pkg.go.dev/github.com/tbd54566975/web5-go) following each release.
