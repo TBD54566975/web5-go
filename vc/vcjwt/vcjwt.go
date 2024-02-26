@@ -12,7 +12,8 @@ import (
 	"github.com/tbd54566975/web5-go/vc"
 )
 
-// SignJWT returns a signed JWT conformant with the [vc-jwt] format.
+// Sign returns a signed JWT conformant with the [vc-jwt] format. sets the provided vc as value of
+// the "vc" claim in the jwt. It returns the signed jwt and an error if the signing fails.
 //
 // [vc-jwt]: https://www.w3.org/TR/vc-data-model/#json-web-token
 func Sign[T vc.CredentialSubject](vc vc.DataModel[T], bearerDID did.BearerDID, opts ...jwt.SignOpt) (string, error) {
@@ -45,13 +46,15 @@ func Sign[T vc.CredentialSubject](vc vc.DataModel[T], bearerDID did.BearerDID, o
 	return jwt.Sign(jwtClaims, bearerDID, opts...)
 }
 
+// Verify verifies the decoded vc-jwt. It checks for the presence of required fields and verifies the jwt.
+// It returns the decoded vc-jwt and an error if the verification fails.
 func Verify[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
 	decoded, err := Decode[T](vcJWT)
 	if err != nil {
 		return decoded, err
 	}
 
-	return decoded, decoded.verify()
+	return decoded, decoded.Verify()
 }
 
 // Decode decodes a vc-jwt as per the [spec] and returns [Decoded].
@@ -114,12 +117,14 @@ func Decode[T vc.CredentialSubject](vcJWT string) (Decoded[T], error) {
 
 }
 
+// Decoded represents a decoded vc-jwt. It contains the decoded jwt and decoded vc data model
 type Decoded[T vc.CredentialSubject] struct {
 	JWT jwt.Decoded
 	VC  vc.DataModel[T]
 }
 
-func (vcjwt Decoded[T]) verify() error {
+// Verify verifies the decoded vc-jwt. It checks for the presence of required fields and verifies the jwt.
+func (vcjwt Decoded[T]) Verify() error {
 	if vcjwt.VC.Issuer == "" {
 		return errors.New("verification failed. missing issuer")
 	}
