@@ -130,7 +130,7 @@ func (jwt Decoded) Verify() error {
 
 	//! we should check ^ prior to verifying the signature as verification
 	//! requires DID resolution which is a network call. doing so without duplicating
-	//! code is a bit tricky (Moe 2021-08-25)
+	//! code is a bit tricky (Moe 2024-02-25)
 
 	return nil
 }
