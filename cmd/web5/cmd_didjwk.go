@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -10,7 +9,7 @@ import (
 
 type didJWKCreate struct{}
 
-func (c *didJWKCreate) Run(_ context.Context) error {
+func (c *didJWKCreate) Run() error {
 	did, err := didjwk.Create()
 	if err != nil {
 		return err

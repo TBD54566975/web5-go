@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -12,7 +11,7 @@ type didResolveCmd struct {
 	URI string `arg:"" name:"uri" help:"The URI to resolve."`
 }
 
-func (c *didResolveCmd) Run(_ context.Context) error {
+func (c *didResolveCmd) Run() error {
 	result, err := dids.Resolve(c.URI)
 	if err != nil {
 		return err
