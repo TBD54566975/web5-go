@@ -113,6 +113,13 @@ func IssuanceDate(issuanceDate time.Time) CreateOption {
 	}
 }
 
+// ExpirationDate can be used to set the expiration date of the Verifiable Credential created by [Create]
+func ExpirationDate(expirationDate time.Time) CreateOption {
+	return func(o *createOptions) {
+		o.expirationDate = expirationDate.UTC().Format(time.RFC3339)
+	}
+}
+
 // Create returns a new Verifiable Credential with the provided claims and options.
 // if no options are provided, the following defaults will be used:
 //   - ID: urn:vc:uuid:<uuid>
