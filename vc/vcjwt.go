@@ -11,7 +11,7 @@ import (
 )
 
 // Verify decodes and verifies the vc-jwt. It checks for the presence of required fields and verifies the jwt.
-// It returns the decoded vc-jwt and an error if the verification fails.
+// It returns the decoded vc-jwt and the verification result.
 func Verify[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 	decoded, err := Decode[T](vcJWT)
 	if err != nil {
