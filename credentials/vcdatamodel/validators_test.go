@@ -8,7 +8,7 @@ import (
 )
 
 func TestValidateContext(t *testing.T) {
-	c := []URI{DefaultContext}
+	c := []URI{DefaultCredsContext}
 
 	err := ValidateContext(c)
 

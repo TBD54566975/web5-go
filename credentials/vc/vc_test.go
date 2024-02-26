@@ -8,17 +8,18 @@ import (
 	. "github.com/tbd54566975/web5-go/credentials/vc"
 	vcdm "github.com/tbd54566975/web5-go/credentials/vcdatamodel"
 	"github.com/tbd54566975/web5-go/dids/didjwk"
+	"github.com/tbd54566975/web5-go/jwt"
 )
 
 func TestVerifiableCredential_Create(t *testing.T) {
-	types := []vcdm.URI{"VerifiableCredential", "UniversityDegreeCredential"}
+	types := []string{"VerifiableCredential", "UniversityDegreeCredential"}
 	issuer := "https://example.edu"
 	subjectID := "did:example:ebfeb1f712ebc6f1c276e12ec21"
 	issuanceDate := "2010-01-01T19:23:24Z"
 	expirationDate := "2039-12-31T19:23:24Z"
 
 	o := CreateCredentialOptions{
-		VCType:         types,
+		Type:           types,
 		Issuer:         issuer,
 		Subject:        []vcdm.CredentialSubject{vcdm.IDString(subjectID)},
 		IssuanceDate:   issuanceDate,
@@ -29,7 +30,7 @@ func TestVerifiableCredential_Create(t *testing.T) {
 	err := vc.Create(o)
 
 	assert.NoError(t, err)
-	assert.Equal(t, []vcdm.URI{vcdm.DefaultContext}, vc.VCDataModel.Context)
+	assert.Equal(t, []vcdm.URI{vcdm.DefaultCredsContext}, vc.VCDataModel.Context)
 	assert.Equal(t, types, vc.VCDataModel.Type)
 	assert.NotZero(t, vc.VCDataModel.ID)
 	assert.Equal(t, issuer, vc.VCDataModel.Issuer)
@@ -43,7 +44,7 @@ func TestVerifiableCredential_Create_NoIssuanceDate(t *testing.T) {
 	subjectID := "did:example:ebfeb1f712ebc6f1c276e12ec21"
 
 	o := CreateCredentialOptions{
-		VCType:  types,
+		Type:    types,
 		Issuer:  issuer,
 		Subject: []vcdm.CredentialSubject{vcdm.IDString(subjectID)},
 	}
@@ -62,7 +63,7 @@ func TestVerifiableCredential_Create_NoIssuer(t *testing.T) {
 	subjectID := "did:example:ebfeb1f712ebc6f1c276e12ec21"
 
 	o := CreateCredentialOptions{
-		VCType:  types,
+		Type:    types,
 		Subject: []vcdm.CredentialSubject{vcdm.IDString(subjectID)},
 	}
 
@@ -77,7 +78,7 @@ func TestVerifiableCredential_Create_NoSubject(t *testing.T) {
 	issuer := "https://example.edu"
 
 	o := CreateCredentialOptions{
-		VCType: types,
+		Type:   types,
 		Issuer: issuer,
 	}
 
@@ -93,7 +94,7 @@ func TestVerifiableCredential_Create_InvalidType(t *testing.T) {
 	subjectID := "did:example:ebfeb1f712ebc6f1c276e12ec21"
 
 	o := CreateCredentialOptions{
-		VCType:  types,
+		Type:    types,
 		Issuer:  issuer,
 		Subject: []vcdm.CredentialSubject{vcdm.IDString(subjectID)},
 	}
@@ -105,7 +106,7 @@ func TestVerifiableCredential_Create_InvalidType(t *testing.T) {
 }
 
 func TestVerifiableCredential_Sign(t *testing.T) {
-	types := []vcdm.URI{"VerifiableCredential", "UniversityDegreeCredential"}
+	types := []string{"VerifiableCredential", "UniversityDegreeCredential"}
 	issuer := "https://example.edu"
 	subjectID := "did:example:ebfeb1f712ebc6f1c276e12ec21"
 	issuanceDate := "2010-01-01T19:23:24Z"
@@ -114,7 +115,7 @@ func TestVerifiableCredential_Sign(t *testing.T) {
 	bearerDID, didErr := didjwk.Create()
 
 	o := CreateCredentialOptions{
-		VCType:         types,
+		Type:           types,
 		Issuer:         issuer,
 		Subject:        []vcdm.CredentialSubject{vcdm.IDString(subjectID)},
 		IssuanceDate:   issuanceDate,
@@ -125,7 +126,8 @@ func TestVerifiableCredential_Sign(t *testing.T) {
 	err := vc.Create(o)
 
 	signed, signErr := vc.Sign(&SignVCOptions{
-		DID: bearerDID,
+		DID:      bearerDID,
+		SignOpts: []jwt.SignOpt{},
 	})
 
 	assert.NoError(t, err)
@@ -157,7 +159,7 @@ func TestVerifiableCredential_Verify(t *testing.T) {
 	bearerDID, didErr := didjwk.Create()
 
 	o := CreateCredentialOptions{
-		VCType:         types,
+		Type:           types,
 		Issuer:         issuer,
 		Subject:        []vcdm.CredentialSubject{vcdm.IDString(subjectID)},
 		IssuanceDate:   issuanceDate,

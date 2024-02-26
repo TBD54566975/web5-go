@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	DefaultContext = "https://www.w3.org/2018/credentials/v1"
-	DefaultVCType  = "VerifiableCredential"
+	DefaultCredsContext = "https://www.w3.org/2018/credentials/v1"
+	DefaultVCType       = "VerifiableCredential"
 )
 
 type URI = string

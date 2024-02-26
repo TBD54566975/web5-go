@@ -94,7 +94,7 @@ func (u *VerifiableCredential) Verify(vcjwt string) (*jwt.Claims, error) {
 }
 
 type CreateCredentialOptions struct {
-	VCType         []vcdm.URI
+	Type           []vcdm.URI
 	Issuer         string
 	Subject        []vcdm.CredentialSubject
 	IssuanceDate   string
@@ -113,8 +113,8 @@ func (o *CreateCredentialOptions) CreateVerifiableCredential() (*VerifiableCrede
 	}
 
 	vcdm := &vcdm.VerifiableCredentialDataModel{
-		Context:           []vcdm.URI{vcdm.DefaultContext},
-		Type:              o.VCType,
+		Context:           []vcdm.URI{vcdm.DefaultCredsContext},
+		Type:              o.Type,
 		ID:                fmt.Sprintf("urn:uuid:%s", crypto.RandomUUID()),
 		Issuer:            o.Issuer,
 		IssuanceDate:      o.IssuanceDate,

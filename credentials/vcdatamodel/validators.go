@@ -6,9 +6,9 @@ import (
 )
 
 func ValidateContext(c []URI) error {
-	err := errors.New(fmt.Sprintf("@context is missing default context %s", DefaultContext))
+	err := errors.New(fmt.Sprintf("@context is missing default context %s", DefaultCredsContext))
 	for _, v := range c {
-		if v == DefaultContext {
+		if v == DefaultCredsContext {
 			return nil
 		}
 	}
