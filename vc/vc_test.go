@@ -31,8 +31,8 @@ func TestCreate_Defaults(t *testing.T) {
 
 func TestCreate_Options(t *testing.T) {
 	claims := vc.Claims{"id": "1234"}
-	issuanceDate := time.Now().UTC().Add(-1 * time.Hour)
-	expirationDate := issuanceDate.Add(2 * time.Hour)
+	issuanceDate := time.Now().UTC().Add(10 * time.Hour)
+	expirationDate := issuanceDate.Add(30 * time.Hour)
 
 	cred := vc.Create(
 		claims,

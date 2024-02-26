@@ -1,12 +1,15 @@
 package vc_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/vc"
 )
 
+// Demonstrates how to create, sign, and verify a Verifiable Credential using the vc package.
 func Example() {
 	issuer, err := didjwk.Create()
 	if err != nil {
@@ -43,6 +46,7 @@ func (c KnownCustomerClaims) SetID(id string) {
 	c.ID = id
 }
 
+// Demonstrates how to use a strongly typed credential subject with the vc package.
 func Example_stronglyTyped() {
 	issuer, err := didjwk.Create()
 	if err != nil {
@@ -71,6 +75,7 @@ func Example_stronglyTyped() {
 	// Output: Randy McRando
 }
 
+// Demonstrates how to use a mix of strongly typed and untyped credential subjects with the vc package.
 func Example_mixed() {
 	issuer, err := didjwk.Create()
 	if err != nil {
@@ -97,4 +102,38 @@ func Example_mixed() {
 
 	fmt.Println(decoded.VC.CredentialSubject["name"])
 	// Output: Randy McRando
+}
+
+func ExampleCreate() {
+	claims := vc.Claims{"name": "Randy McRando"}
+	cred := vc.Create(claims)
+
+	bytes, err := json.MarshalIndent(cred, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(bytes))
+}
+
+func ExampleCreate_options() {
+	claims := vc.Claims{"id": "1234"}
+	issuanceDate := time.Now().UTC().Add(10 * time.Hour)
+	expirationDate := issuanceDate.Add(30 * time.Hour)
+
+	cred := vc.Create(
+		claims,
+		vc.ID("hehecustomid"),
+		vc.Contexts("https://nocontextisbestcontext.gov"),
+		vc.Types("StreetCredential"),
+		vc.IssuanceDate(issuanceDate),
+		vc.ExpirationDate(expirationDate),
+	)
+
+	bytes, err := json.MarshalIndent(cred, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(bytes))
 }
