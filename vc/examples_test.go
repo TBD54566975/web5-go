@@ -51,7 +51,7 @@ func (c KnownCustomerClaims) GetID() string {
 	return c.ID
 }
 
-func (c KnownCustomerClaims) SetID(id string) {
+func (c *KnownCustomerClaims) SetID(id string) {
 	c.ID = id
 }
 
@@ -75,7 +75,7 @@ func Example_stronglyTyped() {
 		panic(err)
 	}
 
-	decoded, err := vc.Verify[KnownCustomerClaims](vcJWT)
+	decoded, err := vc.Verify[*KnownCustomerClaims](vcJWT)
 	if err != nil {
 		panic(err)
 	}
