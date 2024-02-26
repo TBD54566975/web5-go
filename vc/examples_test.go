@@ -11,19 +11,28 @@ import (
 
 // Demonstrates how to create, sign, and verify a Verifiable Credential using the vc package.
 func Example() {
+	// create sample issuer and subject DIDs
 	issuer, err := didjwk.Create()
 	if err != nil {
 		panic(err)
 	}
 
-	claims := vc.Claims{"name": "Randy McRando"}
+	subject, err := didjwk.Create()
+	if err != nil {
+		panic(err)
+	}
+
+	// creation
+	claims := vc.Claims{"id": subject.URI, "name": "Randy McRando"}
 	cred := vc.Create(claims)
 
+	// signing
 	vcJWT, err := cred.Sign(issuer)
 	if err != nil {
 		panic(err)
 	}
 
+	// verification
 	decoded, err := vc.Verify[vc.Claims](vcJWT)
 	if err != nil {
 		panic(err)
@@ -46,7 +55,7 @@ func (c KnownCustomerClaims) SetID(id string) {
 	c.ID = id
 }
 
-// Demonstrates how to use a strongly typed credential subject with the vc package.
+// Demonstrates how to use a strongly typed credential subject
 func Example_stronglyTyped() {
 	issuer, err := didjwk.Create()
 	if err != nil {
