@@ -26,15 +26,3 @@ func TestCreate_Defaults(t *testing.T) {
 
 	assert.Equal(t, "1234", cred.CredentialSubject["id"])
 }
-
-type KCClaims struct {
-	ID string `json:"id"`
-}
-
-func (k KCClaims) GetID() string {
-	return k.ID
-}
-
-func (k *KCClaims) SetID(id string) {
-	k.ID = id
-}
