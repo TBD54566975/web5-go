@@ -160,3 +160,24 @@ func TestVerify(t *testing.T) {
 		})
 	}
 }
+
+func TestSign(t *testing.T) {
+	issuer, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	subject, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	claims := vc.Claims{"id": subject.URI, "name": "Randy McRando"}
+	cred := vc.Create(claims)
+
+	vcJWT, err := vcjwt.Sign(cred, issuer)
+	assert.NoError(t, err)
+	assert.NotZero(t, vcJWT)
+
+	// TODO: make test more reliable by not depending on another function in this package (Moe - 2024-02-25)
+	decoded, err := vcjwt.Verify[vc.Claims](vcJWT)
+
+	assert.NoError(t, err)
+	assert.NotZero(t, decoded)
+}
