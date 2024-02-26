@@ -10,7 +10,7 @@ import (
 	"github.com/tbd54566975/web5-go/jwt"
 )
 
-// Verify verifies the decoded vc-jwt. It checks for the presence of required fields and verifies the jwt.
+// Verify decodes and verifies the vc-jwt. It checks for the presence of required fields and verifies the jwt.
 // It returns the decoded vc-jwt and an error if the verification fails.
 func Verify[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 	decoded, err := Decode[T](vcJWT)
