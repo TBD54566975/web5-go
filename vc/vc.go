@@ -53,6 +53,7 @@ type CredentialSubject interface {
 // when the structure of the claims is not known at compile time.
 type Claims map[string]any
 
+// GetID returns the id of the CredentialSubject. used to set the sub claim of a vc-jwt in [vcjwt.Sign]
 func (c Claims) GetID() string {
 	id, ok := c["id"].(string)
 	if !ok {
@@ -62,6 +63,7 @@ func (c Claims) GetID() string {
 	return id
 }
 
+// SetID sets the id of the CredentialSubject. used to set the sub claim of a vc-jwt in [vcjwt.Verify]
 func (c Claims) SetID(id string) {
 	c["id"] = id
 }
