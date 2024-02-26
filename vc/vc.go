@@ -80,6 +80,7 @@ type createOptions struct {
 // CreateOption is the return type of all Option functions that can be passed to [Create]
 type CreateOption func(*createOptions)
 
+// Contexts can be used to add additional contexts to the Verifiable Credential created by [Create]
 func Contexts(contexts ...string) CreateOption {
 	return func(o *createOptions) {
 		if o.contexts != nil {
