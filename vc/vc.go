@@ -137,8 +137,8 @@ func ExpirationDate(expirationDate time.Time) CreateOption {
 func Create[T CredentialSubject](claims T, opts ...CreateOption) DataModel[T] {
 	o := createOptions{
 		id:           fmt.Sprintf("urn:vc:uuid:%s", uuid.New().String()),
-		contexts:     []string{"https://www.w3.org/2018/credentials/v1"},
-		types:        []string{"VerifiableCredential"},
+		contexts:     []string{BaseContext},
+		types:        []string{BaseType},
 		issuanceDate: time.Now(),
 	}
 
