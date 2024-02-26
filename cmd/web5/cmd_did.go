@@ -8,13 +8,11 @@ import (
 	"github.com/tbd54566975/web5-go/dids"
 )
 
-type didResolve struct {
+type didResolveCmd struct {
 	URI string `arg:"" name:"uri" help:"The URI to resolve."`
 }
 
-func (c *didResolve) Run(_ context.Context) error {
-	fmt.Println(c.URI)
-
+func (c *didResolveCmd) Run(_ context.Context) error {
 	result, err := dids.Resolve(c.URI)
 	if err != nil {
 		return err
@@ -31,5 +29,5 @@ func (c *didResolve) Run(_ context.Context) error {
 }
 
 type didCmd struct {
-	Resolve didResolve `cmd:"" help:"Resolve a DID."`
+	Resolve didResolveCmd `cmd:"" help:"Resolve a DID."`
 }
