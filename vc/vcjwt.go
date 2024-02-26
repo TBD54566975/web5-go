@@ -21,7 +21,7 @@ func Verify[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 	return decoded, decoded.Verify()
 }
 
-// Decode decodes a vc-jwt as per the [spec] and returns [Decoded].
+// Decode decodes a vc-jwt as per the [spec] and returns [DecodedVCJWT].
 // 
 // # Note 
 // 
