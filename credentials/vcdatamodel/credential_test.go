@@ -2,6 +2,7 @@ package vcdatamodel_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -15,17 +16,22 @@ func TestIDString_MarshalJSON(t *testing.T) {
 	b, err := ids.MarshalJSON()
 
 	assert.NoError(t, err)
-	assert.Equal[[]byte](t, []byte(expected), b)
+	assert.Equal[[]byte](t, []byte(fmt.Sprintf(`"%s"`, expected)), b)
+}
+
+type Name struct {
+	First string `json:"first"`
+	Last  string `json:"last"`
 }
 
 func TestIDObject_MarshalJSON(t *testing.T) {
 	uuid := "urn:uuid:1234-567..."
 	cs := struct {
 		ID   string `json:"id"`
-		Name string `json:"name"`
+		Name Name   `json:"name"`
 	}{
 		ID:   uuid,
-		Name: "bob",
+		Name: Name{First: "Bob", Last: "Smith"},
 	}
 
 	expected, csErr := json.Marshal(&cs)

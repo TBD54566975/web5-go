@@ -2,6 +2,7 @@ package vcdatamodel
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 const (
@@ -23,7 +24,7 @@ func (id IDString) ID() string {
 }
 
 func (ids IDString) MarshalJSON() ([]byte, error) {
-	return []byte(ids), nil
+	return []byte(fmt.Sprintf(`"%s"`, ids)), nil
 }
 
 type IDObject struct {
@@ -130,11 +131,11 @@ type VerifiableCredentialDataModel struct {
 	Type []URI `json:"type"`
 	// This specification defines the following credentialStatus property for the discovery of information about the current
 	// status of a verifiable credential, such as whether it is suspended or revoked.
-	CredentialStatus []CredentialStatus `json:"credentialStatus"`
+	CredentialStatus []CredentialStatus `json:"credentialStatus,omitempty"`
 	// The value of the CredentialSubject property is defined as a set of objects that
 	// contain one or more properties that are each related to a subject of the
 	// verifiable credential. Each object MAY contain an id, as described in Section 4.2 Identifiers.
-	CredentialSubject []CredentialSubject `json:"CredentialSubject"`
+	CredentialSubject []CredentialSubject `json:"credentialSubject"`
 	// This specification defines the expirationDate property for the expression of credential expiration information.
 	// If present, the value of the expirationDate property MUST be a string value of an [XMLSCHEMA11-2] date-time
 	// representing the date and time the credential ceases to be valid.
@@ -147,7 +148,7 @@ type VerifiableCredentialDataModel struct {
 	IssuanceDate string `json:"issuanceDate"`
 	// This specification defines a property for expressing the issuer of a verifiable credential.
 	// A verifiable credential MUST have an issuer property.
-	Issuer string `json:"issuerType"`
+	Issuer string `json:"issuer"`
 }
 
 func (v *VerifiableCredentialDataModel) Validate() error {

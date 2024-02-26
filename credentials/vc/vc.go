@@ -13,23 +13,24 @@ import (
 )
 
 type VerifiableCredential struct {
-	vcDataModel *vcdm.VerifiableCredentialDataModel
+	VCDataModel *vcdm.VerifiableCredentialDataModel
 }
 
 func (v *VerifiableCredential) UnmarshalJSON(data []byte) error {
-	return v.vcDataModel.UnmarshalJSON(data)
+	v.VCDataModel = &vcdm.VerifiableCredentialDataModel{}
+	return v.VCDataModel.UnmarshalJSON(data)
 }
 
 func (v VerifiableCredential) MarhsalJSON() ([]byte, error) {
-	return json.Marshal(v.vcDataModel)
+	return json.Marshal(v.VCDataModel)
 }
 
-type signVCOptions struct {
-	did      did.BearerDID
-	signOpts []jwt.SignOpt
+type SignVCOptions struct {
+	DID      did.BearerDID
+	SignOpts []jwt.SignOpt
 }
 
-func (v *VerifiableCredential) Create(o createCredentialOptions) error {
+func (v *VerifiableCredential) Create(o CreateCredentialOptions) error {
 	vc, err := o.CreateVerifiableCredential()
 	if err != nil {
 		return err
@@ -39,24 +40,25 @@ func (v *VerifiableCredential) Create(o createCredentialOptions) error {
 	return nil
 }
 
-func (v *VerifiableCredential) Sign(o *signVCOptions) (string, error) {
-	if err := v.vcDataModel.Validate(); err != nil {
+func (v *VerifiableCredential) Sign(o *SignVCOptions) (string, error) {
+	// this is only being called in case some user is creating a VC by hand without create options
+	if err := v.VCDataModel.Validate(); err != nil {
 		return "", err
 	}
 
 	claims := jwt.Claims{
-		Issuer:  v.vcDataModel.Issuer,
-		Subject: v.vcDataModel.CredentialSubject[0].ID(),
-		Misc:    map[string]interface{}{"vc": v.vcDataModel},
+		Issuer:  v.VCDataModel.Issuer,
+		Subject: v.VCDataModel.CredentialSubject[0].ID(),
+		Misc:    map[string]interface{}{"vc": v.VCDataModel},
 	}
 
-	return jwt.Sign(claims, o.did, o.signOpts...)
+	return jwt.Sign(claims, o.DID, o.SignOpts...)
 }
 
 func (u *VerifiableCredential) Verify(vcjwt string) (*jwt.Claims, error) {
-	var decoded *jwt.Decoded
-	if d, err := jwt.Verify(vcjwt); err != nil {
-		decoded = &d
+	decoded, err := jwt.Verify(vcjwt)
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -65,12 +67,18 @@ func (u *VerifiableCredential) Verify(vcjwt string) (*jwt.Claims, error) {
 		return nil, errors.New("JWT payload missing 'vc' property")
 	}
 
-	vc, ok := vcRaw.(VerifiableCredential)
-	if !ok {
+	vcStr, err := json.Marshal(vcRaw)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var vc VerifiableCredential
+	if err := json.Unmarshal(vcStr, &vc); err != nil {
 		return nil, errors.New("JWT payload entry 'vc' is invalid type")
 	}
 
-	if err := vc.vcDataModel.Validate(); err != nil {
+	if err := vc.VCDataModel.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -85,40 +93,40 @@ func (u *VerifiableCredential) Verify(vcjwt string) (*jwt.Claims, error) {
 	return claims, nil
 }
 
-type createCredentialOptions struct {
-	vcType         []vcdm.URI
-	issuer         string
-	subject        []vcdm.CredentialSubject
-	issuanceDate   string
-	expirationDate string
+type CreateCredentialOptions struct {
+	VCType         []vcdm.URI
+	Issuer         string
+	Subject        []vcdm.CredentialSubject
+	IssuanceDate   string
+	ExpirationDate string
 }
 
-func (o *createCredentialOptions) CreateVerifiableCredential() (*VerifiableCredential, error) {
-	if o.issuer == "" || len(o.subject) == 0 {
+func (o *CreateCredentialOptions) CreateVerifiableCredential() (*VerifiableCredential, error) {
+	if o.Issuer == "" || len(o.Subject) == 0 {
 		return nil, errors.New("Issuer and subject must be defined")
 	}
 
-	if o.issuanceDate == "" {
+	if o.IssuanceDate == "" {
 		t := time.Now()
 		xmlFmt := "2006-01-02T15:04:05Z"
-		o.issuanceDate = t.Format(xmlFmt)
+		o.IssuanceDate = t.Format(xmlFmt)
 	}
 
 	vcdm := &vcdm.VerifiableCredentialDataModel{
 		Context:           []vcdm.URI{vcdm.DefaultContext},
-		Type:              o.vcType,
+		Type:              o.VCType,
 		ID:                fmt.Sprintf("urn:uuid:%s", crypto.RandomUUID()),
-		Issuer:            o.issuer,
-		IssuanceDate:      o.issuanceDate,
-		CredentialSubject: o.subject,
-		ExpirationDate:    o.expirationDate,
+		Issuer:            o.Issuer,
+		IssuanceDate:      o.IssuanceDate,
+		CredentialSubject: o.Subject,
+		ExpirationDate:    o.ExpirationDate,
 	}
 
 	vc := &VerifiableCredential{
-		vcDataModel: vcdm,
+		VCDataModel: vcdm,
 	}
 
-	if err := vc.vcDataModel.Validate(); err != nil {
+	if err := vc.VCDataModel.Validate(); err != nil {
 		return nil, err
 	}
 
