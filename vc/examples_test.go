@@ -104,6 +104,7 @@ func Example_mixed() {
 	// Output: Randy McRando
 }
 
+// Demonstrates how to create a Verifiable Credential
 func ExampleCreate() {
 	claims := vc.Claims{"name": "Randy McRando"}
 	cred := vc.Create(claims)
@@ -116,6 +117,7 @@ func ExampleCreate() {
 	fmt.Println(string(bytes))
 }
 
+// Demonstrates how to create a Verifiable Credential with options
 func ExampleCreate_options() {
 	claims := vc.Claims{"id": "1234"}
 	issuanceDate := time.Now().UTC().Add(10 * time.Hour)
