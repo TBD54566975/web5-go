@@ -1,10 +1,7 @@
 package vcdatamodel
 
-// TODO: what is the linter on about here?
-
 import (
 	"encoding/json"
-	"errors"
 )
 
 const (
@@ -32,6 +29,20 @@ func (ids IDString) MarshalJSON() ([]byte, error) {
 type IDObject struct {
 	Id   string                 `json:"id"`
 	Misc map[string]interface{} `json:"-"`
+}
+
+type cpyIDO IDObject
+
+func (ido *IDObject) UnmarshalJSON(data []byte) error {
+	cpy := cpyIDO(*ido)
+	cpy.Misc = map[string]interface{}{}
+
+	if err := unmarshalMisc(data, &cpy, cpy.Misc, []string{"id"}); err != nil {
+		return err
+	}
+
+	*ido = IDObject(cpy)
+	return nil
 }
 
 func (ido IDObject) MarshalJSON() ([]byte, error) {
@@ -62,23 +73,11 @@ type CredentialStatus struct {
 }
 
 func (cs *CredentialStatus) UnmarshalJSON(data []byte) error {
-	var m map[string]interface{}
-	if err := json.Unmarshal(data, &m); err != nil {
-		return errors.New("Failed to unmarshal Credential Subject map")
-	}
-
 	csCpy := cpyCrdSts(*cs)
-	if err := json.Unmarshal(data, &csCpy); err != nil {
-		return errors.New("Failed to unmarshal Credential Subject")
-	}
+	csCpy.Misc = map[string]interface{}{}
 
-	for k, v := range m {
-		// these should be mapped directly to the struct
-		if k == "id" || k == "type" {
-			continue
-		}
-
-		csCpy.Misc[k] = v
+	if err := unmarshalMisc(data, &csCpy, csCpy.Misc, []string{"id", "type"}); err != nil {
+		return err
 	}
 
 	*cs = CredentialStatus(csCpy)
@@ -112,7 +111,7 @@ type verifiableCredentialLD struct {
 	CredentialSubject json.RawMessage    `json:"CredentialSubject"`
 	ExpirationDate    string             `json:"expirationDate,omitempty"`
 	IssuanceDate      string             `json:"issuanceDate"`
-	Issuer            string             `json:"issuerType"`
+	Issuer            string             `json:"issuer"`
 }
 
 type VerifiableCredentialDataModel struct {
@@ -152,15 +151,15 @@ type VerifiableCredentialDataModel struct {
 }
 
 func (v *VerifiableCredentialDataModel) Validate() error {
-	if err := validateContext(v.Context); err != nil {
+	if err := ValidateContext(v.Context); err != nil {
 		return err
 	}
 
-	if err := validateVCType(v.Type); err != nil {
+	if err := ValidateVCType(v.Type); err != nil {
 		return err
 	}
 
-	if err := validateCredentialSubject(v.CredentialSubject); err != nil {
+	if err := ValidateCredentialSubject(v.CredentialSubject); err != nil {
 		return err
 	}
 

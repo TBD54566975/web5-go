@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func validateContext(c []URI) error {
+func ValidateContext(c []URI) error {
 	err := errors.New(fmt.Sprintf("@context is missing default context %s", DefaultContext))
 	for _, v := range c {
 		if v == DefaultContext {
@@ -16,7 +16,7 @@ func validateContext(c []URI) error {
 	return err
 }
 
-func validateVCType(t []string) error {
+func ValidateVCType(t []string) error {
 	err := errors.New(fmt.Sprintf("type is missing default %s", DefaultVCType))
 	for _, v := range t {
 		if v == DefaultVCType {
@@ -27,7 +27,7 @@ func validateVCType(t []string) error {
 	return err
 }
 
-func validateCredentialSubject(cs []CredentialSubject) error {
+func ValidateCredentialSubject(cs []CredentialSubject) error {
 	err := errors.New("credentialSubject must not be empty")
 
 	if len(cs) >= 1 {

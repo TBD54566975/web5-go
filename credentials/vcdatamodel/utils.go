@@ -32,6 +32,43 @@ func marshalMisc(data interface{}, misc *map[string]interface{}) ([]byte, error)
 	return json.Marshal(combined)
 }
 
+// Standardizes the handling of how to unmarshal any struct that contains a map of misc things
+//
+// @param data: The inbound json data
+// @param copyRef: The type you will be unmarshalling into
+// @param misc: The map where misc extra fields should get added
+// @param ignore: Any fields that are known to be part of copyRef which should be ignored when unmarshalling into the map
+func unmarshalMisc(data []byte, copyRef interface{}, misc map[string]interface{}, ignore []string) error {
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return fmt.Errorf("Failed to unmarshal Misc map")
+	}
+
+	if err := json.Unmarshal(data, &copyRef); err != nil {
+		return fmt.Errorf("Failed to unmarshal copied struct containing Misc")
+	}
+
+	contains := func(v string) bool {
+		for _, ign := range ignore {
+			if ign == v {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for k, v := range m {
+		if contains(k) {
+			continue
+		}
+
+		misc[k] = v
+	}
+
+	return nil
+}
+
 // get rid of any possible leading characters
 func trimJSON(data []byte) []byte {
 	return bytes.TrimLeft(data, " \t\r\n")

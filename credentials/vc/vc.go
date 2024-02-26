@@ -16,13 +16,27 @@ type VerifiableCredential struct {
 	vcDataModel *vcdm.VerifiableCredentialDataModel
 }
 
-func (v *VerifiableCredential) MarhsalJSON() ([]byte, error) {
+func (v *VerifiableCredential) UnmarshalJSON(data []byte) error {
+	return v.vcDataModel.UnmarshalJSON(data)
+}
+
+func (v VerifiableCredential) MarhsalJSON() ([]byte, error) {
 	return json.Marshal(v.vcDataModel)
 }
 
 type signVCOptions struct {
 	did      did.BearerDID
 	signOpts []jwt.SignOpt
+}
+
+func (v *VerifiableCredential) Create(o createCredentialOptions) error {
+	vc, err := o.CreateVerifiableCredential()
+	if err != nil {
+		return err
+	}
+
+	*v = *vc
+	return nil
 }
 
 func (v *VerifiableCredential) Sign(o *signVCOptions) (string, error) {

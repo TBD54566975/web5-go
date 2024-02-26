@@ -1,6 +1,7 @@
 package crypto
 
-// TODO: need to generate a random uuid
+import "github.com/google/uuid"
+
 func RandomUUID() string {
-	return ""
+	return uuid.New().String()
 }
