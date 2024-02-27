@@ -16,4 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: cashapp/activate-hermit@v1
-      - run: just lint
+      # - run: just lint
+
+      # Add step to print Go version
+      - name: Print Go version
+        run: go version
+
+      # Add step to print golangci-lint version
+      - name: Print golangci-lint version
+        run: golangci-lint --version
+
+      # Original lint step using just
+      - name: Lint with Justfile
+        run: just lint
+
+      # Add step to run golangci-lint directly
+      - name: Directly run golangci-lint
+        run: golangci-lint run
