@@ -55,6 +55,14 @@ This repo uses hermit to manage all environment dependencies (e.g. `just`, `go`)
 > [!IMPORTANT]
 > run `. ./bin/activate-hermit` _everytime_ you enter this directory if you don't have hermit [shell hooks](https://cashapp.github.io/hermit/usage/shell/#shell-hooks) configured
 
+### Git hooks
+Before contributing, set up the pre-commit hook by running:
+
+```bash
+cp .githooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
 ### Helpful Commands
 
 This repo uses [`just`](https://github.com/casey/just) as a command runner. Below is a table of helpful `just` commands:
