@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+      - kendallw/linting-pipeline-dbging
   pull_request:
 name: CI
 concurrency:
