@@ -7,9 +7,10 @@ import (
 )
 
 type CLI struct {
-	DID didCmd `cmd:"" help:"Interface with DID's."`
-	DIDJWK didJWKCmd `cmd:"" name:"did:jwk" help:"Manage did:jwk's."`
-	DIDWeb didWebCmd `cmd:"" name:"did:web" help:"Manage did:web's."`
+	DID struct {
+		Resolve didResolveCmd `cmd:"" help:"Resolve a DID."`
+		Create  didCreateCmd  `cmd:"" help:"Create a DID."`
+	} `cmd:"" help:"Interface with DID's."`
 }
 
 var cli CLI

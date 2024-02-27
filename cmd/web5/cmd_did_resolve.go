@@ -26,7 +26,3 @@ func (c *didResolveCmd) Run() error {
 
 	return nil
 }
-
-type didCmd struct {
-	Resolve didResolveCmd `cmd:"" help:"Resolve a DID."`
-}
