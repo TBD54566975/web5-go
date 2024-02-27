@@ -38,11 +38,11 @@ func Decode[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 	}
 
 	if decoded.Claims.Misc == nil {
-		return DecodedVCJWT[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+		return DecodedVCJWT[T]{}, errors.New("vc-jwt missing vc claim")
 	}
 
 	if _, ok := decoded.Claims.Misc["vc"]; ok == false {
-		return DecodedVCJWT[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+		return DecodedVCJWT[T]{}, errors.New("vc-jwt missing vc claim")
 	}
 
 	bytes, err := json.Marshal(decoded.Claims.Misc["vc"])
