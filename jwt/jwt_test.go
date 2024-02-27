@@ -66,7 +66,7 @@ func TestVerify(t *testing.T) {
 	assert.NoError(t, err)
 
 	claims := jwt.Claims{
-		Issuer: did.ID,
+		Issuer: did.URI,
 		Misc:   map[string]interface{}{"c_nonce": "abcd123"},
 	}
 

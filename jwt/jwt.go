@@ -122,6 +122,16 @@ func (jwt Decoded) Verify() error {
 		return fmt.Errorf("JWT signature verification failed: %w", err)
 	}
 
+	// check to ensure that issuer has been set and that it matches the did used to sign.
+	// the value of KID should always be ${did}#${verificationMethodID} (aka did url)
+	if jwt.Claims.Issuer == "" || !strings.HasPrefix(jwt.Header.KID, jwt.Claims.Issuer) {
+		return errors.New("JWT issuer does not match the did url provided as KID")
+	}
+
+	//! we should check ^ prior to verifying the signature as verification
+	//! requires DID resolution which is a network call. doing so without duplicating
+	//! code is a bit tricky (Moe 2024-02-25)
+
 	return nil
 }
 
@@ -169,7 +179,7 @@ type Claims struct {
 	// Spec: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7
 	JTI string `json:"jti,omitempty"`
 
-	Misc map[string]interface{} `json:"-"`
+	Misc map[string]any `json:"-"`
 }
 
 // MarshalJSON overrides default json.Marshal behavior to include misc claims as flattened
