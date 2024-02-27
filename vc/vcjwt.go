@@ -22,9 +22,9 @@ func Verify[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 }
 
 // Decode decodes a vc-jwt as per the [spec] and returns [DecodedVCJWT].
-// 
-// # Note 
-// 
+//
+// # Note
+//
 // This function uses certain fields from the jwt claims to eagrly populate the vc model as described
 // in the encoding section of the spec. The jwt fields will clobber any values that exist in the vc model.
 // While the jwt claims should match the counterpart values in the vc model, it's possible that they don't
