@@ -122,9 +122,9 @@ func (jwt Decoded) Verify() error {
 		return fmt.Errorf("JWT signature verification failed: %w", err)
 	}
 
-	// check to ensure that the did used to sign the JWT matches the issuer claim.
+	// check to ensure that issuer has been set and that it matches the did used to sign.
 	// the value of KID should always be ${did}#${verificationMethodID} (aka did url)
-	if jwt.Claims.Issuer != "" && !strings.HasPrefix(jwt.Header.KID, jwt.Claims.Issuer) {
+	if jwt.Claims.Issuer == "" || !strings.HasPrefix(jwt.Header.KID, jwt.Claims.Issuer) {
 		return errors.New("JWT issuer does not match the did url provided as KID")
 	}
 
