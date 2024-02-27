@@ -7,6 +7,7 @@ import (
 )
 
 type CLI struct {
+	DID didCmd `cmd:"" help:"Interface with DID's."`
 	DIDJWK didJWKCmd `cmd:"" name:"did:jwk" help:"Manage did:jwk's."`
 	DIDWeb didWebCmd `cmd:"" name:"did:web" help:"Manage did:web's."`
 }

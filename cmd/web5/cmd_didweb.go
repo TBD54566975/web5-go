@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -12,7 +11,7 @@ type didWebCreate struct {
 	Domain string `arg:"" help:"The domain name for the DID." required:""`
 }
 
-func (c *didWebCreate) Run(_ context.Context) error {
+func (c *didWebCreate) Run() error {
 	did, err := didweb.Create(c.Domain)
 	if err != nil {
 		return err
