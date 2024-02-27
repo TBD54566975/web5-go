@@ -31,4 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # - uses: ./.github/actions/setup
+      - uses: cashapp/activate-hermit@v1
       - run: just lint
