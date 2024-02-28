@@ -1,7 +1,6 @@
 package didcore
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -28,7 +27,7 @@ const (
 // A DID Document can be retrieved by resolving a DID URI.
 type Document struct {
 	// Context is a URI that defines the schema version used in the document.
-	Context Context `json:"@context,omitempty"`
+	Context string `json:"@context,omitempty"`
 
 	// Id is the DID URI for a particular DID subject, expressed using the id property in the DID document.
 	ID string `json:"id"`
@@ -71,35 +70,6 @@ type Document struct {
 	// CapabilityInvocation specifies a verification method used by the DID subject to invoke a
 	// cryptographic capability, such as the authorization to update the DID Document.
 	CapabilityInvocation []string `json:"capabilityInvocation,omitempty"`
-}
-
-type Context []string
-
-// UnmarshalJSON implements the json.Unmarshaler interface.
-// This method allows ContextValue to unmarshal a JSON object as a string or an array of strings.
-func (c *Context) UnmarshalJSON(data []byte) error {
-	var single string
-	if err := json.Unmarshal(data, &single); err == nil {
-		*c = []string{single}
-		return nil
-	}
-
-	var multiple []string
-	if err := json.Unmarshal(data, &multiple); err == nil {
-		*c = multiple
-		return nil
-	}
-
-	return errors.New("context must be a string or an array of strings")
-}
-
-// MarshalJSON implements the json.Marshaler interface.
-// This method allows ContextValue to marshal into a JSON object as a string if it contains only one element, or an array of strings otherwise.
-func (c Context) MarshalJSON() ([]byte, error) {
-	if len(c) == 1 {
-		return json.Marshal(c[0])
-	}
-	return json.Marshal([]string(c))
 }
 
 type addVMOptions struct {

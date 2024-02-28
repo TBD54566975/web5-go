@@ -59,10 +59,3 @@ func TestDecodeID(t *testing.T) {
 	withPortWithoutPath := didweb.DecodeID("localhost%3A8080")
 	assert.Equal(t, "https://localhost:8080/.well-known/did.json", withPortWithoutPath)
 }
-
-func TestResolve(t *testing.T) {
-	resolver := &didweb.Resolver{}
-	result, err := resolver.Resolve("did:web:www.linkedin.com")
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(result.Document.VerificationMethod))
-}
