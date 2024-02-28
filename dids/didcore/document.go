@@ -1,6 +1,7 @@
 package didcore
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -272,6 +273,10 @@ type Service struct {
 	// ServiceEndpoint is a network address, such as an HTTP URL, at which services
 	// operate on behalf of a DID subject.
 	ServiceEndpoint string `json:"serviceEndpoint"`
+}
+
+func (s *Service) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, (*Service)(s))
 }
 
 // VerificationMethod expresses verification methods, such as cryptographic
