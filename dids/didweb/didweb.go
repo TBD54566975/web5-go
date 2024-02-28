@@ -216,7 +216,7 @@ func DecodeID(id string) string {
 
 type Resolver struct{}
 
-// Resolve the provided DID URI (must be a did:web) as per the [spec]
+// ResolveWithContext the provided DID URI (must be a did:web) as per the [spec]
 //
 // [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
 func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
