@@ -13,7 +13,6 @@ import (
 
 	"github.com/tbd54566975/web5-go/crypto"
 	"github.com/tbd54566975/web5-go/crypto/dsa"
-	"github.com/tbd54566975/web5-go/dids/did"
 	_did "github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
@@ -189,6 +188,9 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 	}, nil
 }
 
+// DecodeID takes a did:web's identifier (the third part, after the method) and returns the web URL per the [spec]
+//
+// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
 func DecodeID(id string) string {
 	var domain string
 
@@ -214,14 +216,18 @@ func DecodeID(id string) string {
 
 type Resolver struct{}
 
+// Resolve the provided DID URI (must be a did:web) as per the [spec]
+//
+// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
 func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
 	return r.Resolve(uri)
 }
 
-// Resolve the provided DID URI (must be a did:web) as per the wee bit of detail provided in the
-// spec: https://w3c-ccg.github.io/did-method-web/#read-resolve
+// Resolve the provided DID URI (must be a did:web) as per the [spec]
+//
+// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
 func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
-	did, err := did.Parse(uri)
+	did, err := _did.Parse(uri)
 	if err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
