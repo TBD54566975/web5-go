@@ -50,7 +50,10 @@ func Decode(jwt string) (Decoded, error) {
 }
 
 // signOpts is a type that holds all the options that can be passed to Sign
-type signOpts struct{ selector didcore.VMSelector }
+type signOpts struct {
+	selector didcore.VMSelector
+	typ      string
+}
 
 // SignOpt is a type returned by all individual Sign Options.
 type SignOpt func(opts *signOpts)
@@ -65,17 +68,33 @@ func Purpose(p string) SignOpt {
 	}
 }
 
+func Type(t string) SignOpt {
+	return func(opts *signOpts) {
+		opts.typ = t
+	}
+}
+
 // Sign signs the provided JWT Claims with the provided BearerDID.
 // The Purpose option can be provided to specify that a key from a given
 // DID Document Verification Relationship should be used (e.g. authentication).
 // defaults to using assertionMethod
 func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
-	o := signOpts{selector: nil}
+	o := signOpts{selector: nil, typ: ""}
 	for _, opt := range opts {
 		opt(&o)
 	}
 
-	return jws.Sign(claims, did, jws.VMSelector(o.selector))
+	jwsOpts := make([]jws.SignOpt, 0)
+
+	if o.typ == "" {
+		jwsOpts = append(jwsOpts, jws.Type(o.typ))
+	}
+
+	if o.selector != nil {
+		jwsOpts = append(jwsOpts, jws.VMSelector(o.selector))
+	}
+
+	return jws.Sign(claims, did, jwsOpts...)
 }
 
 // Verify verifies a JWT (JSON Web Token) as per the spec https://datatracker.ietf.org/doc/html/rfc7519

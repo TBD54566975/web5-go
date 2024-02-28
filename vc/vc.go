@@ -194,5 +194,7 @@ func (vc DataModel[T]) Sign(bearerDID did.BearerDID, opts ...jwt.SignOpt) (strin
 	jwtClaims.Misc = make(map[string]any)
 	jwtClaims.Misc["vc"] = vc
 
+	// typ must be set to "JWT" as per the spec
+	opts = append(opts, jwt.Type("JWT"))
 	return jwt.Sign(jwtClaims, bearerDID, opts...)
 }
