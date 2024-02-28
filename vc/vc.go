@@ -57,11 +57,7 @@ type Claims map[string]any
 
 // GetID returns the id of the CredentialSubject. used to set the sub claim of a vc-jwt in [vcjwt.Sign]
 func (c Claims) GetID() string {
-	id, ok := c["id"].(string)
-	if !ok {
-		return ""
-	}
-
+	id, _ := c["id"].(string)
 	return id
 }
 
