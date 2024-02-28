@@ -86,7 +86,7 @@ func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
 
 	jwsOpts := make([]jws.SignOpt, 0)
 
-	if o.typ == "" {
+	if o.typ != "" {
 		jwsOpts = append(jwsOpts, jws.Type(o.typ))
 	}
 
