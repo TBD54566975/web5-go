@@ -76,8 +76,10 @@ type addVMOptions struct {
 	purposes []Purpose
 }
 
+// AddVMOption is a type returned by all AddVerificationMethod options for variadic parameter support
 type AddVMOption func(o *addVMOptions)
 
+// Purposes can be used to select a verification method with a specific purpose.
 func Purposes(p ...Purpose) AddVMOption {
 	return func(o *addVMOptions) {
 		o.purposes = p
@@ -191,6 +193,7 @@ func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMe
 	return VerificationMethod{}, fmt.Errorf("no verification method found for id: %s", vmID)
 }
 
+// AddService will append the given Service to the Document.Services array
 func (d *Document) AddService(service *Service) {
 	d.Service = append(d.Service, service)
 }
