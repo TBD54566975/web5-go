@@ -51,3 +51,18 @@ func TestCreate_WithOptions(t *testing.T) {
 	assert.Equal(t, "did:example:123", document.Controller[0])
 
 }
+
+func TestDecodeID(t *testing.T) {
+	withPortAndPath := didweb.DecodeID("localhost%3A8080:something")
+	assert.Equal(t, "https://localhost:8080/something/did.json", withPortAndPath)
+
+	withPortWithoutPath := didweb.DecodeID("localhost%3A8080")
+	assert.Equal(t, "https://localhost:8080/.well-known/did.json", withPortWithoutPath)
+}
+
+func TestResolve(t *testing.T) {
+	resolver := &didweb.Resolver{}
+	result, err := resolver.Resolve("did:web:www.linkedin.com")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(result.Document.VerificationMethod))
+}
