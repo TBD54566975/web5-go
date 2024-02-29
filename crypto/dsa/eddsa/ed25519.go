@@ -15,6 +15,7 @@ const (
 	ED25519AlgorithmID string = ED25519JWACurve
 )
 
+// ED25519GeneratePrivateKey generates a new ED25519 private key
 func ED25519GeneratePrivateKey() (jwk.JWK, error) {
 	publicKey, privateKey, err := _ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -31,6 +32,7 @@ func ED25519GeneratePrivateKey() (jwk.JWK, error) {
 	return privKeyJwk, nil
 }
 
+// ED25519Sign signs the given payload with the given private key
 func ED25519Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	privateKeyBytes, err := base64.RawURLEncoding.DecodeString(privateKey.D)
 	if err != nil {
@@ -41,6 +43,7 @@ func ED25519Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	return signature, nil
 }
 
+// ED25519Verify verifies the given signature against the given payload using the given public key
 func ED25519Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
 	publicKeyBytes, err := base64.RawURLEncoding.DecodeString(publicKey.X)
 	if err != nil {
@@ -51,6 +54,7 @@ func ED25519Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, e
 	return legit, nil
 }
 
+// ED25519BytesToPublicKey deserializes the byte array into a jwk.JWK public key
 func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
 	if len(input) != _ed25519.PublicKeySize {
 		return jwk.JWK{}, errors.New("invalid public key")
@@ -63,7 +67,7 @@ func ED25519BytesToPublicKey(input []byte) (jwk.JWK, error) {
 	}, nil
 }
 
-// ED25519PublicKeyToBytes converts the provided public key to bytes
+// ED25519PublicKeyToBytes serializes the given public key int a byte array
 func ED25519PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 	if publicKey.X == "" {
 		return nil, errors.New("x must be set")

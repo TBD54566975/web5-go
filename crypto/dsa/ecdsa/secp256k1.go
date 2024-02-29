@@ -17,6 +17,7 @@ const (
 	SECP256K1AlgorithmID string = SECP256K1JWACurve
 )
 
+// SECP256K1GeneratePrivateKey generates a new private key
 func SECP256K1GeneratePrivateKey() (jwk.JWK, error) {
 	keyPair, err := _secp256k1.GeneratePrivateKey()
 	if err != nil {
@@ -39,6 +40,7 @@ func SECP256K1GeneratePrivateKey() (jwk.JWK, error) {
 	return privateKey, nil
 }
 
+// SECP256K1Sign signs the given payload with the given private key
 func SECP256K1Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	privateKeyBytes, err := base64.RawURLEncoding.DecodeString(privateKey.D)
 	if err != nil {
@@ -53,6 +55,7 @@ func SECP256K1Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	return signature, nil
 }
 
+// SECP256K1Verify verifies the given signature over the given payload with the given public key
 func SECP256K1Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
 	if publicKey.X == "" || publicKey.Y == "" {
 		return false, errors.New("x and y must be set")
