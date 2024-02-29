@@ -99,12 +99,16 @@ func Purpose(p string) SignOpt {
 	}
 }
 
+// VerificationMethod is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// It is used to select the appropriate key to sign with
 func VerificationMethod(id string) SignOpt {
 	return func(opts *signOpts) {
 		opts.selector = didcore.ID(id)
 	}
 }
 
+// VMSelector is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
+// It is used to select the appropriate key to sign with
 func VMSelector(selector didcore.VMSelector) SignOpt {
 	return func(opts *signOpts) {
 		opts.selector = selector
@@ -182,6 +186,8 @@ func Sign(payload Payload, did _did.BearerDID, opts ...SignOpt) (string, error) 
 	return compactJWS, nil
 }
 
+// Verify verifies the given compactJWS by resolving the DID Document from the kid header value
+// and using the associated public key found by resolving the DID Document
 func Verify(compactJWS string) (Decoded, error) {
 	decodedJWS, err := Decode(compactJWS)
 	if err != nil {
@@ -193,6 +199,7 @@ func Verify(compactJWS string) (Decoded, error) {
 	return decodedJWS, err
 }
 
+// Decoded is a compact JWS decoded into it's parts
 type Decoded struct {
 	Header    Header
 	Payload   Payload
@@ -200,6 +207,8 @@ type Decoded struct {
 	Parts     []string
 }
 
+// Verify verifies the given compactJWS by resolving the DID Document from the kid header value
+// and using the associated public key found by resolving the DID Document
 func (jws Decoded) Verify() error {
 	if jws.Header.ALG == "" || jws.Header.KID == "" {
 		return errors.New("malformed JWS header. alg and kid are required")
@@ -264,4 +273,7 @@ func (j Header) Encode() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
 
+// Payload is a type to represent the [JWS Payload]
+//
+// [JWS Payload]: https://datatracker.ietf.org/doc/html/rfc7515#section-2
 type Payload any
