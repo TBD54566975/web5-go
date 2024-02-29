@@ -95,6 +95,7 @@ func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 	}
 }
 
+// AlgorithmID returns the algorithm ID for the given jwk.JWK
 func AlgorithmID(jwk *jwk.JWK) (string, error) {
 	switch jwk.KTY {
 	case ecdsa.KeyType:

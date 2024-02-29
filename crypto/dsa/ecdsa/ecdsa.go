@@ -15,7 +15,7 @@ var algorithmIDs = map[string]bool{
 	SECP256K1AlgorithmID: true,
 }
 
-// GeneratePrivateKey generates a private key for the given algorithm
+// GeneratePrivateKey generates an ECDSA private key for the given algorithm
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 	switch algorithmID {
 	case SECP256K1AlgorithmID:
@@ -53,7 +53,7 @@ func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	}
 }
 
-// Verify verified the given signature over a given payload by the given public key
+// Verify verifies the given signature over a given payload by the given public key
 //
 // # Note
 //

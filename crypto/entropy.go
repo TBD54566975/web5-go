@@ -6,6 +6,7 @@ import (
 	"errors"
 )
 
+// EntropySize represents the size of the entropy in bits, i.e. Entropy128 is equal to 128 bits (or 16 bytes) of entrop
 type EntropySize int
 
 // Directly set the sizes according to NIST recommendations for entropy
