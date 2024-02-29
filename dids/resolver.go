@@ -17,6 +17,8 @@ func Resolve(uri string) (didcore.ResolutionResult, error) {
 	return getDefaultResolver().Resolve(uri)
 }
 
+// ResolveWithContext resolves the provided DID URI. This function is capable of resolving
+// the DID methods implemented in web5-go
 func ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
 	return getDefaultResolver().ResolveWithContext(ctx, uri)
 }

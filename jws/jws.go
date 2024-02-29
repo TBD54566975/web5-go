@@ -13,6 +13,13 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
+// Decode decodes the given JWS string into a [Decoded] type
+//
+// # Note
+//
+// The given JWS input is assumed to be a [compact JWS]
+//
+// [compact JWS]: https://datatracker.ietf.org/doc/html/rfc7515#section-7.1
 func Decode(jws string) (Decoded, error) {
 	parts := strings.Split(jws, ".")
 	if len(parts) != 3 {
@@ -48,7 +55,7 @@ func Decode(jws string) (Decoded, error) {
 	}, nil
 }
 
-// DecodeHeader decodes the base64url encoded JWS header.
+// DecodeHeader decodes the base64url encoded JWS header into a [Header]
 func DecodeHeader(base64UrlEncodedHeader string) (Header, error) {
 	bytes, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedHeader)
 	if err != nil {
@@ -64,6 +71,7 @@ func DecodeHeader(base64UrlEncodedHeader string) (Header, error) {
 	return header, nil
 }
 
+// DecodeSignature decodes the base64url encoded JWS signature into a byte array
 func DecodeSignature(base64UrlEncodedSignature string) ([]byte, error) {
 	signature, err := base64.RawURLEncoding.DecodeString(base64UrlEncodedSignature)
 	if err != nil {
