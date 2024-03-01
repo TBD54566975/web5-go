@@ -9,7 +9,7 @@ import (
 )
 
 // Demonstrates how to unmarshal [Document]'s with mixed types, such as an array of both strings and ordered maps
-func ExampleDocument_UnmarshalJSON_contextWithMixedTypes() {
+func ExampleDocument_contextWithMixedTypes() {
 	var doc didcore.Document
 	err := json.Unmarshal([]byte(`{
 		"@context": [
@@ -25,14 +25,12 @@ func ExampleDocument_UnmarshalJSON_contextWithMixedTypes() {
 	if !ok {
 		panic(errors.New("error unmarshalling Document"))
 	}
-
 	fmt.Printf("Document @context array string item: %s\n", context[0])
 
 	orderedMap, ok := context[1].(map[string]interface{})
 	if !ok {
 		panic(errors.New("error unmarshalling Document"))
 	}
-
 	fmt.Printf("Document @context array ordered map item: %s", orderedMap)
 
 	// Output:
