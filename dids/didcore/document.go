@@ -16,6 +16,9 @@ const (
 	PurposeKeyAgreement         Purpose = "keyAgreement"
 )
 
+// Context is a representation of the JSON-LD @context type from [the spec]
+//
+// [the spec]: https://www.w3.org/TR/did-core/#dfn-context
 type Context interface{}
 
 // Document represents a set of data describing the DID subject including mechanisms such as:
