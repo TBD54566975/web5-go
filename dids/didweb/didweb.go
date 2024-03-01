@@ -238,7 +238,8 @@ func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 
 	domain := DecodeID(did.ID)
 
-	// TODO 6 & 7 from https://w3c-ccg.github.io/did-method-web/#read-resolve
+	// TODO item 6 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/94
+	// TODO item 7 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/95
 
 	resp, err := http.Get(domain)
 	if err != nil {
