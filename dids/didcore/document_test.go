@@ -82,3 +82,19 @@ func TestUnmarshal_ContextMixedTypes(t *testing.T) {
 		map[string]interface{}{"@base": "did:web:www.linkedin.com"},
 	}, context)
 }
+
+func TestMarshal_ContextMixedType(t *testing.T) {
+	doc := didcore.Document{
+		ID: "whatev",
+		Context: []interface{}{
+			"https://www.w3.org/ns/did/v1",
+			map[string]interface{}{"@base": "did:web:www.linkedin.com"},
+		},
+	}
+
+	bytes, err := json.Marshal(&doc)
+	assert.NoError(t, err)
+	assert.Equal(t,
+		"{\"@context\":[\"https://www.w3.org/ns/did/v1\",{\"@base\":\"did:web:www.linkedin.com\"}],\"id\":\"whatev\"}",
+		string(bytes))
+}
