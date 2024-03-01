@@ -1,6 +1,7 @@
 package didcore_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -40,4 +41,44 @@ func TestWoo(t *testing.T) {
 	vm, err := doc.SelectVerificationMethod(didcore.Purpose("authentication"))
 	assert.NoError(t, err)
 	assert.Equal(t, "did:example:123456789abcdefghi#keys-1", vm.ID)
+}
+
+func TestUnmarshal_ContextString(t *testing.T) {
+	var doc didcore.Document
+	err := json.Unmarshal([]byte(`{
+        "@context": "https://www.w3.org/ns/did/v1"
+    }`), &doc)
+	assert.NoError(t, err)
+	assert.Equal(t, "https://www.w3.org/ns/did/v1", doc.Context)
+}
+
+func TestUnmarshal_ContextStringArray(t *testing.T) {
+	var doc didcore.Document
+	err := json.Unmarshal([]byte(`{
+        "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://www.w3.org/ns/did/v1"
+        ]
+    }`), &doc)
+	assert.NoError(t, err)
+	context, ok := doc.Context.([]didcore.Context)
+	assert.True(t, ok)
+	assert.Equal(t, []didcore.Context{"https://www.w3.org/ns/did/v1", "https://www.w3.org/ns/did/v1"}, context)
+}
+
+func TestUnmarshal_ContextMixedTypes(t *testing.T) {
+	var doc didcore.Document
+	err := json.Unmarshal([]byte(`{
+        "@context": [
+            "https://www.w3.org/ns/did/v1",
+            { "@base": "did:web:www.linkedin.com" }
+        ]
+    }`), &doc)
+	assert.NoError(t, err)
+	context, ok := doc.Context.([]didcore.Context)
+	assert.True(t, ok)
+	assert.Equal(t, []didcore.Context{
+		"https://www.w3.org/ns/did/v1",
+		map[string]interface{}{"@base": "did:web:www.linkedin.com"},
+	}, context)
 }

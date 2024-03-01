@@ -1,6 +1,7 @@
 package didcore
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -15,6 +16,8 @@ const (
 	PurposeKeyAgreement         Purpose = "keyAgreement"
 )
 
+type Context interface{}
+
 // Document represents a set of data describing the DID subject including mechanisms such as:
 //   - cryptographic public keys - used to authenticate itself and prove
 //     association with the DID
@@ -27,7 +30,8 @@ const (
 // A DID Document can be retrieved by resolving a DID URI.
 type Document struct {
 	// Context is a URI that defines the schema version used in the document.
-	Context string `json:"@context,omitempty"`
+	// Context string `json:"@context,omitempty"`
+	Context Context `json:"@context,omitempty"`
 
 	// Id is the DID URI for a particular DID subject, expressed using the id property in the DID document.
 	ID string `json:"id"`
@@ -70,6 +74,69 @@ type Document struct {
 	// CapabilityInvocation specifies a verification method used by the DID subject to invoke a
 	// cryptographic capability, such as the authorization to update the DID Document.
 	CapabilityInvocation []string `json:"capabilityInvocation,omitempty"`
+}
+
+type jsonDocument struct {
+	Context              json.RawMessage      `json:"@context"`
+	ID                   string               `json:"id"`
+	AlsoKnownAs          []string             `json:"alsoKnownAs,omitempty"`
+	Controller           []string             `json:"controller,omitempty"`
+	VerificationMethod   []VerificationMethod `json:"verificationMethod,omitempty"`
+	Service              []*Service           `json:"service,omitempty"`
+	AssertionMethod      []string             `json:"assertionMethod,omitempty"`
+	Authentication       []string             `json:"authentication,omitempty"`
+	KeyAgreement         []string             `json:"keyAgreement,omitempty"`
+	CapabilityDelegation []string             `json:"capabilityDelegation,omitempty"`
+	CapabilityInvocation []string             `json:"capabilityInvocation,omitempty"`
+}
+
+func unmarshalContext(context json.RawMessage) (Context, error) {
+	// Try to unmarshal as a single string.
+	var single string
+	if err := json.Unmarshal(context, &single); err == nil {
+		return single, nil
+	}
+
+	// Try to unmarshal as a slice of Context (strings and/or maps).
+	var multiple []Context
+	if err := json.Unmarshal(context, &multiple); err == nil {
+		return multiple, nil
+	}
+
+	return nil, errors.New("invalid @context format")
+}
+
+// UnmarshalJSON is an override to json.Unmarshal for [Document] types, necessary because of mixed types,
+// for example, @context from [the spec], "is either a string or a list containing any combination of
+// strings and/or ordered maps"
+//
+// [the spec]: https://www.w3.org/TR/did-core/#dfn-context
+func (d *Document) UnmarshalJSON(data []byte) error {
+	var jsonDoc jsonDocument
+	if err := json.Unmarshal(data, &jsonDoc); err != nil {
+		return err
+	}
+
+	context, err := unmarshalContext(jsonDoc.Context)
+	if err != nil {
+		return err
+	}
+	d.Context = context
+
+	// TODO unmarshal other weird fields like Services & Controller
+
+	d.ID = jsonDoc.ID
+	d.AlsoKnownAs = jsonDoc.AlsoKnownAs
+	d.Controller = jsonDoc.Controller
+	d.VerificationMethod = jsonDoc.VerificationMethod
+	d.Service = jsonDoc.Service
+	d.AssertionMethod = jsonDoc.AssertionMethod
+	d.Authentication = jsonDoc.Authentication
+	d.KeyAgreement = jsonDoc.KeyAgreement
+	d.CapabilityDelegation = jsonDoc.CapabilityDelegation
+	d.CapabilityInvocation = jsonDoc.CapabilityInvocation
+
+	return nil
 }
 
 type addVMOptions struct {
