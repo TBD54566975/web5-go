@@ -68,6 +68,7 @@ func Purpose(p string) SignOpt {
 	}
 }
 
+// Type is an option that can be used to set the typ header of the JWT
 func Type(t string) SignOpt {
 	return func(opts *signOpts) {
 		opts.typ = t

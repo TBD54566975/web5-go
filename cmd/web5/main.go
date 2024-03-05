@@ -6,14 +6,19 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-var cli struct {
-	DID    didCmd    `cmd:"" help:"Interface with DID's."`
-	DIDJWK didJWKCmd `cmd:"" name:"did:jwk" help:"Manage did:jwk's."`
-	DIDWeb didWebCmd `cmd:"" name:"did:web" help:"Manage did:web's."`
+// CLI is the main command line interface for the web5 CLI.
+// more information about this struct can be found in the [kong documentation]
+//
+// [kong documentation]: https://github.com/alecthomas/kong
+type CLI struct {
+	DID struct {
+		Resolve didResolveCMD `cmd:"" help:"Resolve a DID."`
+		Create  didCreateCMD  `cmd:"" help:"Create a DID."`
+	} `cmd:"" help:"Interface with DID's."`
 }
 
 func main() {
-	kctx := kong.Parse(&cli,
+	kctx := kong.Parse(&CLI{},
 		kong.Description("Web5 - A decentralized web platform that puts you in control of your data and identity."),
 	)
 
