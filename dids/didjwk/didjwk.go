@@ -19,6 +19,7 @@ type createOptions struct {
 	algorithmID string
 }
 
+// CreateOption is a type returned by all [Create] options for variadic parameter support
 type CreateOption func(o *createOptions)
 
 // KeyManager is an option that can be passed to Create to provide a KeyManager
@@ -82,8 +83,11 @@ func Create(opts ...CreateOption) (did.BearerDID, error) {
 	return bearerDID, nil
 }
 
+// Resolver is a type to implement resolution
 type Resolver struct{}
 
+// ResolveWithContext the provided DID URI (must be a did:jwk) as per the wee bit of detail provided in the
+// spec: https://github.com/quartzjer/did-jwk/blob/main/spec.md
 func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
 	return r.Resolve(uri)
 }

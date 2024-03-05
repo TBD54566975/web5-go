@@ -50,10 +50,12 @@ func (d DID) String() string {
 	return d.URL
 }
 
+// MarshalText will convert the given DID's URL into a byte array
 func (d DID) MarshalText() (text []byte, err error) {
 	return []byte(d.String()), nil
 }
 
+// UnmarshalText will deserialize the given byte array into an instance of [DID]
 func (d *DID) UnmarshalText(text []byte) error {
 	did, err := Parse(string(text))
 	if err != nil {

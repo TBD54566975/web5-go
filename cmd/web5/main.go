@@ -6,13 +6,11 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-type CLI struct {
-	DID didCmd `cmd:"" help:"Interface with DID's."`
+var cli struct {
+	DID    didCmd    `cmd:"" help:"Interface with DID's."`
 	DIDJWK didJWKCmd `cmd:"" name:"did:jwk" help:"Manage did:jwk's."`
 	DIDWeb didWebCmd `cmd:"" name:"did:web" help:"Manage did:web's."`
 }
-
-var cli CLI
 
 func main() {
 	kctx := kong.Parse(&cli,
