@@ -9,13 +9,13 @@ import (
 )
 
 type didCreateCMD struct {
-	JWK didCreateJWKCmd `cmd:"" help:"Create did:jwk's."`
-	Web didCreateWebCmd `cmd:"" help:"Create did:web's."`
+	JWK didCreateJWKCMD `cmd:"" help:"Create did:jwk's."`
+	Web didCreateWebCMD `cmd:"" help:"Create did:web's."`
 }
 
-type didCreateJWKCmd struct{}
+type didCreateJWKCMD struct{}
 
-func (c *didCreateJWKCmd) Run() error {
+func (c *didCreateJWKCMD) Run() error {
 	did, err := didjwk.Create()
 	if err != nil {
 		return err
@@ -36,11 +36,11 @@ func (c *didCreateJWKCmd) Run() error {
 	return nil
 }
 
-type didCreateWebCmd struct {
+type didCreateWebCMD struct {
 	Domain string `arg:"" help:"The domain name for the DID." required:""`
 }
 
-func (c *didCreateWebCmd) Run() error {
+func (c *didCreateWebCMD) Run() error {
 	did, err := didweb.Create(c.Domain)
 	if err != nil {
 		return err
