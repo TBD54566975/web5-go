@@ -8,15 +8,13 @@ import (
 
 type CLI struct {
 	DID struct {
-		Resolve didResolveCmd `cmd:"" help:"Resolve a DID."`
-		Create  didCreateCmd  `cmd:"" help:"Create a DID."`
+		Resolve didResolveCMD `cmd:"" help:"Resolve a DID."`
+		Create  didCreateCMD  `cmd:"" help:"Create a DID."`
 	} `cmd:"" help:"Interface with DID's."`
 }
 
-var cli CLI
-
 func main() {
-	kctx := kong.Parse(&cli,
+	kctx := kong.Parse(&CLI{},
 		kong.Description("Web5 - A decentralized web platform that puts you in control of your data and identity."),
 	)
 

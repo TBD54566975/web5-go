@@ -15,6 +15,7 @@ var algorithmIDs = map[string]bool{
 	SECP256K1AlgorithmID: true,
 }
 
+// GeneratePrivateKey generates an ECDSA private key for the given algorithm
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 	switch algorithmID {
 	case SECP256K1AlgorithmID:
@@ -24,6 +25,7 @@ func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 	}
 }
 
+// GetPublicKey builds an ECDSA public key from the given ECDSA private key
 func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 	return jwk.JWK{
 		KTY: privateKey.KTY,
@@ -33,6 +35,11 @@ func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 	}
 }
 
+// Sign generates a cryptographic signature for the given payload with the given private key
+//
+// # Note
+//
+// The function will automatically detect the given ECDSA cryptographic curve from the given private key
 func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	if privateKey.D == "" {
 		return nil, errors.New("d must be set")
@@ -46,6 +53,11 @@ func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	}
 }
 
+// Verify verifies the given signature over a given payload by the given public key
+//
+// # Note
+//
+// The function will automatically detect the given ECDSA cryptographic curve from the given public key
 func Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
 	switch publicKey.CRV {
 	case SECP256K1JWACurve:
@@ -55,6 +67,9 @@ func Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
 	}
 }
 
+// GetJWA returns the [JWA] for the given ECDSA key
+//
+// [JWA]: https://datatracker.ietf.org/doc/html/rfc7518
 func GetJWA(jwk jwk.JWK) (string, error) {
 	switch jwk.CRV {
 	case SECP256K1JWACurve:
@@ -64,6 +79,7 @@ func GetJWA(jwk jwk.JWK) (string, error) {
 	}
 }
 
+// BytesToPublicKey deserializes the given byte array into a jwk.JWK for the given cryptographic algorithm
 func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
 	switch algorithmID {
 	case SECP256K1AlgorithmID:
@@ -73,6 +89,7 @@ func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
 	}
 }
 
+// PublicKeyToBytes serializes the given public key into a byte array
 func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 	switch publicKey.CRV {
 	case SECP256K1JWACurve:
@@ -82,10 +99,12 @@ func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 	}
 }
 
+// SupportsAlgorithmID informs as to whether or not the given algorithm ID is supported by this package
 func SupportsAlgorithmID(id string) bool {
 	return algorithmIDs[id]
 }
 
+// AlgorithmID returns the algorithm ID for the given jwk.JWK
 func AlgorithmID(jwk *jwk.JWK) (string, error) {
 	switch jwk.CRV {
 	case SECP256K1JWACurve:

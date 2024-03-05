@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Move to the git repository root
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+# Stash non-staged changes to avoid linting them
+git stash push -q --keep-index
+trap 'git stash pop -q' EXIT INT TERM
+
+# Run golangci-lint on all staged Go files
+echo "Running golangci-lint on staged Go files..."
+STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$')
+if [ -n "$STAGED_GO_FILES" ]; then
+  # Use xargs to run golangci-lint on each file
+  golangci-lint run --new-from-rev=HEAD~
+fi
+
+exit 0
+

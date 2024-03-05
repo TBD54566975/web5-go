@@ -57,11 +57,7 @@ type Claims map[string]any
 
 // GetID returns the id of the CredentialSubject. used to set the sub claim of a vc-jwt in [vcjwt.Sign]
 func (c Claims) GetID() string {
-	id, ok := c["id"].(string)
-	if !ok {
-		return ""
-	}
-
+	id, _ := c["id"].(string)
 	return id
 }
 
@@ -138,7 +134,7 @@ func ExpirationDate(expirationDate time.Time) CreateOption {
 // the W3C Verifiable Credential Data Model specification
 func Create[T CredentialSubject](claims T, opts ...CreateOption) DataModel[T] {
 	o := createOptions{
-		id:           fmt.Sprintf("urn:vc:uuid:%s", uuid.New().String()),
+		id:           "urn:vc:uuid:" + uuid.New().String(),
 		contexts:     []string{BaseContext},
 		types:        []string{BaseType},
 		issuanceDate: time.Now(),
@@ -194,5 +190,7 @@ func (vc DataModel[T]) Sign(bearerDID did.BearerDID, opts ...jwt.SignOpt) (strin
 	jwtClaims.Misc = make(map[string]any)
 	jwtClaims.Misc["vc"] = vc
 
+	// typ must be set to "JWT" as per the spec
+	opts = append(opts, jwt.Type("JWT"))
 	return jwt.Sign(jwtClaims, bearerDID, opts...)
 }

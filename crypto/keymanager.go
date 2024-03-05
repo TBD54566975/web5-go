@@ -20,10 +20,12 @@ type KeyManager interface {
 	Sign(keyID string, payload []byte) ([]byte, error)
 }
 
+// KeyExporter is an abstraction that can be leveraged to implement types which intend to export keys
 type KeyExporter interface {
 	ExportKey(keyID string) (jwk.JWK, error)
 }
 
+// KeyImporter is an abstraction that can be leveraged to implement types which intend to import keys
 type KeyImporter interface {
 	ImportKey(key jwk.JWK) (string, error)
 }
@@ -92,6 +94,7 @@ func (k *LocalKeyManager) getPrivateJWK(keyID string) (jwk.JWK, error) {
 	return key, nil
 }
 
+// ExportKey exports the key specific by the key ID from the [LocalKeyManager]
 func (k *LocalKeyManager) ExportKey(keyID string) (jwk.JWK, error) {
 	key, err := k.getPrivateJWK(keyID)
 	if err != nil {
@@ -101,6 +104,7 @@ func (k *LocalKeyManager) ExportKey(keyID string) (jwk.JWK, error) {
 	return key, nil
 }
 
+// ImportKey imports the key into the [LocalKeyManager] and returns the key alias
 func (k *LocalKeyManager) ImportKey(key jwk.JWK) (string, error) {
 	keyAlias, err := key.ComputeThumbprint()
 	if err != nil {

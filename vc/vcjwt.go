@@ -22,9 +22,9 @@ func Verify[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 }
 
 // Decode decodes a vc-jwt as per the [spec] and returns [DecodedVCJWT].
-// 
-// # Note 
-// 
+//
+// # Note
+//
 // This function uses certain fields from the jwt claims to eagrly populate the vc model as described
 // in the encoding section of the spec. The jwt fields will clobber any values that exist in the vc model.
 // While the jwt claims should match the counterpart values in the vc model, it's possible that they don't
@@ -38,11 +38,11 @@ func Decode[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 	}
 
 	if decoded.Claims.Misc == nil {
-		return DecodedVCJWT[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+		return DecodedVCJWT[T]{}, errors.New("vc-jwt missing vc claim")
 	}
 
 	if _, ok := decoded.Claims.Misc["vc"]; ok == false {
-		return DecodedVCJWT[T]{}, fmt.Errorf("vc-jwt missing vc claim")
+		return DecodedVCJWT[T]{}, errors.New("vc-jwt missing vc claim")
 	}
 
 	bytes, err := json.Marshal(decoded.Claims.Misc["vc"])
@@ -92,57 +92,61 @@ type DecodedVCJWT[T CredentialSubject] struct {
 
 // Verify verifies the decoded vc-jwt. It checks for the presence of required fields and verifies the jwt.
 func (vcjwt DecodedVCJWT[T]) Verify() error {
+	if vcjwt.JWT.Header.TYP != "JWT" {
+		return errors.New("invalid typ")
+	}
+
 	if vcjwt.VC.Issuer == "" {
-		return errors.New("verification failed. missing issuer")
+		return errors.New("missing issuer")
 	}
 
 	if vcjwt.VC.ID == "" {
-		return errors.New("verification failed. missing id")
+		return errors.New("missing id")
 	}
 
 	if vcjwt.VC.IssuanceDate == "" {
-		return errors.New("verification failed. missing issuance date")
+		return errors.New("missing issuance date")
 	}
 
 	issuanceDate, err := time.Parse(time.RFC3339, vcjwt.VC.IssuanceDate)
 	if err != nil {
-		return fmt.Errorf("verification failed. failed to parse issuance date: %w", err)
+		return fmt.Errorf("failed to parse issuance date: %w", err)
 	}
 
 	if time.Now().UTC().Before(issuanceDate.UTC()) {
-		return fmt.Errorf("verification failed. vc cannot be used before %s", vcjwt.VC.IssuanceDate)
+		return fmt.Errorf("vc cannot be used before %s", vcjwt.VC.IssuanceDate)
 	}
 
 	if vcjwt.VC.ExpirationDate != "" {
 		exp, err := time.Parse(time.RFC3339, vcjwt.VC.ExpirationDate)
 		if err != nil {
-			return fmt.Errorf("verification failed. failed to parse expiration date: %w", err)
+			return fmt.Errorf("failed to parse expiration date: %w", err)
 		}
 
 		if time.Now().UTC().After(exp.UTC()) {
-			return fmt.Errorf("verification failed. vc expired on %s", vcjwt.VC.ExpirationDate)
+			return fmt.Errorf("vc expired on %s", vcjwt.VC.ExpirationDate)
 		}
 	}
 
 	if vcjwt.VC.Type == nil || len(vcjwt.VC.Type) == 0 {
-		return errors.New("verification failed. missing type")
+		return errors.New("missing type")
 	}
 
 	if slices.Contains(vcjwt.VC.Type, BaseType) == false {
-		return fmt.Errorf("verification failed. missing base type: %s", BaseType)
+		return fmt.Errorf("missing base type: %s", BaseType)
 	}
 
 	if vcjwt.VC.Context == nil || len(vcjwt.VC.Context) == 0 {
-		return errors.New("verification failed. missing @context")
+		return errors.New("missing @context")
 	}
 
 	if slices.Contains(vcjwt.VC.Context, BaseContext) == false {
-		return fmt.Errorf("verification failed. missing base @context: %s", BaseContext)
+		return fmt.Errorf("missing base @context: %s", BaseContext)
 	}
 
 	err = vcjwt.JWT.Verify()
 	if err != nil {
-		return fmt.Errorf("verification failed: %w", err)
+		return fmt.Errorf("integrity check mismatch: %w", err)
 	}
 
 	return nil

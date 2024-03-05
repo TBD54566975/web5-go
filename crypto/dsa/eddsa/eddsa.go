@@ -18,6 +18,7 @@ var algorithmIDs = map[string]bool{
 	ED25519AlgorithmID: true,
 }
 
+// GeneratePrivateKey generates an EdDSA private key for the given algorithm
 func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 	switch algorithmID {
 	case ED25519AlgorithmID:
@@ -27,6 +28,7 @@ func GeneratePrivateKey(algorithmID string) (jwk.JWK, error) {
 	}
 }
 
+// GetPublicKey builds an EdDSA public key from the given EdDSA private key
 func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 	return jwk.JWK{
 		KTY: privateKey.KTY,
@@ -35,6 +37,11 @@ func GetPublicKey(privateKey jwk.JWK) jwk.JWK {
 	}
 }
 
+// Sign generates a cryptographic signature for the given payload with the given private key
+//
+// # Note
+//
+// The function will automatically detect the given EdDSA cryptographic curve from the given private key
 func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	if privateKey.D == "" {
 		return nil, errors.New("d must be set")
@@ -48,6 +55,11 @@ func Sign(payload []byte, privateKey jwk.JWK) ([]byte, error) {
 	}
 }
 
+// Verify verifies the given signature over a given payload by the given public key
+//
+// # Note
+//
+// The function will automatically detect the given EdDSA cryptographic curve from the given public key
 func Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
 	switch publicKey.CRV {
 	case ED25519JWACurve:
@@ -57,10 +69,18 @@ func Verify(payload []byte, signature []byte, publicKey jwk.JWK) (bool, error) {
 	}
 }
 
+// GetJWA returns the [JWA] for the given EdDSA key
+//
+// # Note
+//
+// The only supported [JWA] is "EdDSA"
+//
+// [JWA]: https://datatracker.ietf.org/doc/html/rfc7518
 func GetJWA(jwk jwk.JWK) (string, error) {
 	return JWA, nil
 }
 
+// BytesToPublicKey deserializes the given byte array into a jwk.JWK for the given cryptographic algorithm
 func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
 	switch algorithmID {
 	case ED25519AlgorithmID:
@@ -70,6 +90,7 @@ func BytesToPublicKey(algorithmID string, input []byte) (jwk.JWK, error) {
 	}
 }
 
+// PublicKeyToBytes serializes the given public key into a byte array
 func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 	switch publicKey.CRV {
 	case ED25519JWACurve:
@@ -79,10 +100,12 @@ func PublicKeyToBytes(publicKey jwk.JWK) ([]byte, error) {
 	}
 }
 
+// SupportsAlgorithmID informs as to whether or not the given algorithm ID is supported by this package
 func SupportsAlgorithmID(id string) bool {
 	return algorithmIDs[id]
 }
 
+// AlgorithmID returns the algorithm ID for the given jwk.JWK
 func AlgorithmID(jwk *jwk.JWK) (string, error) {
 	switch jwk.CRV {
 	case ED25519JWACurve:
