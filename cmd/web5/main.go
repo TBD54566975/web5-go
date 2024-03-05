@@ -6,6 +6,10 @@ import (
 	"github.com/alecthomas/kong"
 )
 
+// CLI is the main command line interface for the web5 CLI.
+// more information about this struct can be found in the [kong documentation]
+//
+// [kong documentation]: https://github.com/alecthomas/kong
 type CLI struct {
 	DID struct {
 		Resolve didResolveCMD `cmd:"" help:"Resolve a DID."`
