@@ -9,6 +9,7 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/dids/diddht"
 	"github.com/tbd54566975/web5-go/dids/didjwk"
+	"github.com/tbd54566975/web5-go/dids/didweb"
 )
 
 // Resolve resolves the provided DID URI. This function is capable of resolving
@@ -30,8 +31,9 @@ func getDefaultResolver() *didResolver {
 	once.Do(func() {
 		instance = &didResolver{
 			resolvers: map[string]didcore.MethodResolver{
-				"jwk": didjwk.Resolver{},
 				"dht": diddht.NewResolver("", http.DefaultClient),
+				"jwk": didjwk.Resolver{},
+				"web": didweb.Resolver{},
 			},
 		}
 	})

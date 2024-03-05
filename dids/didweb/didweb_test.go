@@ -51,3 +51,11 @@ func TestCreate_WithOptions(t *testing.T) {
 	assert.Equal(t, "did:example:123", document.Controller[0])
 
 }
+
+func TestDecodeID(t *testing.T) {
+	portAndPathCase := didweb.DecodeID("localhost%3A8080:something")
+	assert.Equal(t, "https://localhost:8080/something/did.json", portAndPathCase)
+
+	wellKnownCase := didweb.DecodeID("localhost")
+	assert.Equal(t, "https://localhost/.well-known/did.json", wellKnownCase)
+}

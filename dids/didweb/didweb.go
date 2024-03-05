@@ -1,7 +1,12 @@
 package didweb
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -130,7 +135,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 
 	if parsedDomain.Path != "" {
 		idPath := strings.ReplaceAll(parsedDomain.Path, "/", ":")
-		methodSpecificID += idPath
+		methodSpecificID += strings.TrimSuffix(idPath, ":")
 	}
 
 	did, err := _did.Parse("did:web:" + methodSpecificID)
@@ -181,4 +186,77 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 		KeyManager: options.keyManager,
 		Document:   document,
 	}, nil
+}
+
+// DecodeID takes a did:web's identifier (the third part, after the method) and returns the web URL per the [spec]
+//
+// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
+func DecodeID(id string) string {
+	var domain string
+
+	// "1. Replace ":" with "/" in the method specific identifier to obtain the fully qualified domain name and optional path."
+	domain = strings.ReplaceAll(id, ":", "/")
+
+	// "2. If the domain contains a port percent decode the colon."
+	domain = strings.Replace(domain, "%3A", ":", 1)
+
+	// "3. Generate an HTTPS URL to the expected location of the DID document by prepending https://."
+	domain = "https://" + domain
+
+	// "4. If no path has been specified in the URL, append /.well-known."
+	if strings.Count(domain, "/") == 2 {
+		domain += "/.well-known"
+	}
+
+	// "5. Append /did.json to complete the URL."
+	domain += "/did.json"
+
+	return domain
+}
+
+type Resolver struct{}
+
+// ResolveWithContext the provided DID URI (must be a did:web) as per the [spec]
+//
+// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
+func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
+	return r.Resolve(uri)
+}
+
+// Resolve the provided DID URI (must be a did:web) as per the [spec]
+//
+// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
+func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
+	did, err := _did.Parse(uri)
+	if err != nil {
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+	}
+
+	if did.Method != "web" {
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+	}
+
+	domain := DecodeID(did.ID)
+
+	// TODO item 6 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/94
+	// TODO item 7 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/95
+
+	resp, err := http.Get(domain)
+	if err != nil {
+		return didcore.ResolutionResult{}, fmt.Errorf("failed to make GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return didcore.ResolutionResult{}, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var document didcore.Document
+	err = json.Unmarshal(body, &document)
+	if err != nil {
+		return didcore.ResolutionResult{}, fmt.Errorf("failed to deserialize document: %w", err)
+	}
+
+	return didcore.ResolutionResultWithDocument(document), errors.New("developing")
 }
