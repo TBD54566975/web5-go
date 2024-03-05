@@ -8,7 +8,7 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didweb"
 )
 
-type didCreateCmd struct {
+type didCreateCMD struct {
 	JWK didCreateJWKCmd `cmd:"" help:"Create did:jwk's."`
 	Web didCreateWebCmd `cmd:"" help:"Create did:web's."`
 }
