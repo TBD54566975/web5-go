@@ -214,19 +214,13 @@ func DecodeID(id string) string {
 	return domain
 }
 
+// Resolver is a type to implement resolution
 type Resolver struct{}
 
 // ResolveWithContext the provided DID URI (must be a did:web) as per the [spec]
 //
 // [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
 func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.ResolutionResult, error) {
-	return r.Resolve(uri)
-}
-
-// Resolve the provided DID URI (must be a did:web) as per the [spec]
-//
-// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
-func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	did, err := _did.Parse(uri)
 	if err != nil {
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
@@ -238,10 +232,24 @@ func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 
 	domain := DecodeID(did.ID)
 
+	parsedURL, err := url.ParseRequestURI(domain)
+	if err != nil {
+		return didcore.ResolutionResult{}, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	if parsedURL.Scheme != "https" {
+		return didcore.ResolutionResult{}, fmt.Errorf("invalid URL scheme: %s", parsedURL.Scheme)
+	}
+
 	// TODO item 6 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/94
 	// TODO item 7 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/95
 
-	resp, err := http.Get(domain)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, domain, nil)
+	if err != nil {
+		return didcore.ResolutionResult{}, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return didcore.ResolutionResult{}, fmt.Errorf("failed to make GET request: %w", err)
 	}
@@ -259,4 +267,11 @@ func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
 	}
 
 	return didcore.ResolutionResultWithDocument(document), errors.New("developing")
+}
+
+// Resolve the provided DID URI (must be a did:web) as per the [spec]
+//
+// [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
+func (r Resolver) Resolve(uri string) (didcore.ResolutionResult, error) {
+	return r.ResolveWithContext(context.Background(), uri)
 }
