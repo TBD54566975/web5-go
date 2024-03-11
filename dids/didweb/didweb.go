@@ -3,7 +3,6 @@ package didweb
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -234,7 +233,7 @@ func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.R
 
 	parsedURL, err := url.ParseRequestURI(domain)
 	if err != nil {
-		return didcore.ResolutionResult{}, fmt.Errorf("invalid URL: %w", err)
+		return didcore.ResolutionResult{}, err
 	}
 
 	if parsedURL.Scheme != "https" {
@@ -246,12 +245,12 @@ func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.R
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, domain, nil)
 	if err != nil {
-		return didcore.ResolutionResult{}, fmt.Errorf("failed to create request: %w", err)
+		return didcore.ResolutionResult{}, err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return didcore.ResolutionResult{}, fmt.Errorf("failed to make GET request: %w", err)
+		return didcore.ResolutionResult{}, err
 	}
 	defer resp.Body.Close()
 
@@ -266,7 +265,7 @@ func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.R
 		return didcore.ResolutionResult{}, fmt.Errorf("failed to deserialize document: %w", err)
 	}
 
-	return didcore.ResolutionResultWithDocument(document), errors.New("developing")
+	return didcore.ResolutionResultWithDocument(document), nil
 }
 
 // Resolve the provided DID URI (must be a did:web) as per the [spec]
