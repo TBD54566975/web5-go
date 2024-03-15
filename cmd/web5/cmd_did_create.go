@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
+	"github.com/tbd54566975/web5-go/dids/did"
+	"github.com/tbd54566975/web5-go/dids/diddht"
 	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/dids/didweb"
 )
@@ -11,6 +14,7 @@ import (
 type didCreateCMD struct {
 	JWK didCreateJWKCMD `cmd:"" help:"Create a did:jwk."`
 	Web didCreateWebCMD `cmd:"" help:"Create a did:web."`
+	DHT didCreateDHTCMD `cmd:"" help:"Create a did:dht's."`
 }
 
 type didCreateJWKCMD struct {
@@ -23,25 +27,7 @@ func (c *didCreateJWKCMD) Run() error {
 		return err
 	}
 
-	portableDID, err := did.ToPortableDID()
-	if err != nil {
-		return err
-	}
-
-	var jsonDID []byte
-	if c.NoIndent {
-		jsonDID, err = json.Marshal(portableDID)
-	} else {
-		jsonDID, err = json.MarshalIndent(portableDID, "", "  ")
-	}
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(jsonDID))
-
-	return nil
+	return printDID(did, c.NoIndent)
 }
 
 type didCreateWebCMD struct {
@@ -55,13 +41,29 @@ func (c *didCreateWebCMD) Run() error {
 		return err
 	}
 
-	portableDID, err := did.ToPortableDID()
+	return printDID(did, c.NoIndent)
+}
+
+type didCreateDHTCMD struct {
+}
+
+func (c *didCreateDHTCMD) Run() error {
+	did, err := diddht.CreateWithContext(context.Background())
+	if err != nil {
+		return err
+	}
+
+	return printDID(did, false)
+}
+
+func printDID(d did.BearerDID, noIndent bool) error {
+	portableDID, err := d.ToPortableDID()
 	if err != nil {
 		return err
 	}
 
 	var jsonDID []byte
-	if c.NoIndent {
+	if noIndent {
 		jsonDID, err = json.Marshal(portableDID)
 	} else {
 		jsonDID, err = json.MarshalIndent(portableDID, "", "  ")

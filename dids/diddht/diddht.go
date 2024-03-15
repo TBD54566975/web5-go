@@ -19,6 +19,8 @@ import (
 	"github.com/tv42/zbase32"
 )
 
+const defaultGatewayURL = "https://diddht.tbddev.org"
+
 // gateway is the internal interface used to publish Pakrr messages to the DHT
 type gateway interface {
 	Put(didID string, payload *bep44.Message) error
@@ -34,7 +36,7 @@ var once sync.Once
 // getDefaultGateway returns the default Pkarr relay client.
 func getDefaultGateway() gateway {
 	once.Do(func() {
-		defaultGateway = pkarr.NewClient("", http.DefaultClient)
+		defaultGateway = pkarr.NewClient(defaultGatewayURL, http.DefaultClient)
 	})
 
 	return defaultGateway
@@ -130,7 +132,8 @@ func Gateway(gatewayURL string, client *http.Client) CreateOption {
 
 // Create creates a new `did:dht` DID and publishes it to the DHT network via a Pkarr gateway.
 //
-// If no gateway is passed in the options, Create uses a default Pkarr gateway.
+// If no gateway is passed in the options, Create uses a default Pkarr gateway. (https://diddht.tbddev.org)
+//
 // Spec: https://did-dht.com/#create
 func Create(opts ...CreateOption) (did.BearerDID, error) {
 	return CreateWithContext(context.Background(), opts...)
