@@ -13,7 +13,8 @@ type vcJWTCMD struct {
 }
 
 type vcJWTVerifyCMD struct {
-	JWT string `arg:"" help:"The VC-JWT"`
+	JWT      string `arg:"" help:"The VC-JWT"`
+	NoIndent bool   `help:"Print the decoded VC-JWT without indentation." default:"false"`
 }
 
 func (c *vcJWTVerifyCMD) Run() error {
@@ -22,7 +23,12 @@ func (c *vcJWTVerifyCMD) Run() error {
 		return err
 	}
 
-	jsonVC, err := json.MarshalIndent(decoded.VC, "", "  ")
+	var jsonVC []byte
+	if c.NoIndent {
+		jsonVC, err = json.Marshal(decoded.VC)
+	} else {
+		jsonVC, err = json.MarshalIndent(decoded.VC, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
@@ -33,7 +39,8 @@ func (c *vcJWTVerifyCMD) Run() error {
 }
 
 type vcJWTDecodeCMD struct {
-	JWT string `arg:"" help:"The VC-JWT"`
+	JWT      string `arg:"" help:"The VC-JWT"`
+	NoIndent bool   `help:"Print the decoded VC-JWT without indentation." default:"false"`
 }
 
 func (c *vcJWTDecodeCMD) Run() error {
@@ -42,7 +49,12 @@ func (c *vcJWTDecodeCMD) Run() error {
 		return err
 	}
 
-	jsonVC, err := json.MarshalIndent(decoded.VC, "", "  ")
+	var jsonVC []byte
+	if c.NoIndent {
+		jsonVC, err = json.Marshal(decoded.VC)
+	} else {
+		jsonVC, err = json.MarshalIndent(decoded.VC, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
