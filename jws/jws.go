@@ -36,12 +36,6 @@ func Decode(jws string) (Decoded, error) {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
 	}
 
-	var payload Payload
-	err = json.Unmarshal(payloadBytes, &payload)
-	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to unmarshal payload: %w", err)
-	}
-
 	signature, err := DecodeSignature(parts[2])
 	if err != nil {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %w", err)
@@ -49,7 +43,7 @@ func Decode(jws string) (Decoded, error) {
 
 	return Decoded{
 		Header:    header,
-		Payload:   payload,
+		Payload:   payloadBytes,
 		Signature: signature,
 		Parts:     parts,
 	}, nil
@@ -159,12 +153,7 @@ func Sign(payload Payload, did _did.BearerDID, opts ...SignOpt) (string, error) 
 		return "", fmt.Errorf("failed to base64 url encode header: %w", err)
 	}
 
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal payload: %w", err)
-	}
-
-	base64UrlEncodedPayload := base64.RawURLEncoding.EncodeToString(payloadBytes)
+	base64UrlEncodedPayload := base64.RawURLEncoding.EncodeToString(payload)
 
 	toSign := base64UrlEncodedHeader + "." + base64UrlEncodedPayload
 	toSignBytes := []byte(toSign)
@@ -276,4 +265,4 @@ func (j Header) Encode() (string, error) {
 // Payload is a type to represent the [JWS Payload]
 //
 // [JWS Payload]: https://datatracker.ietf.org/doc/html/rfc7515#section-2
-type Payload any
+type Payload []byte
