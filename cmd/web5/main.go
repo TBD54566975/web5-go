@@ -15,6 +15,9 @@ type CLI struct {
 		Resolve didResolveCMD `cmd:"" help:"Resolve a DID."`
 		Create  didCreateCMD  `cmd:"" help:"Create a DID."`
 	} `cmd:"" help:"Interface with DID's."`
+	VC struct {
+		Create vcCreateCMD `cmd:"" help:"Create a VC."`
+	} `cmd:"" help:"Interface with VC's."`
 }
 
 func main() {

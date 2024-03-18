@@ -9,8 +9,8 @@ import (
 )
 
 type didCreateCMD struct {
-	JWK didCreateJWKCMD `cmd:"" help:"Create did:jwk's."`
-	Web didCreateWebCMD `cmd:"" help:"Create did:web's."`
+	JWK didCreateJWKCMD `cmd:"" help:"Create a did:jwk."`
+	Web didCreateWebCMD `cmd:"" help:"Create a did:web."`
 }
 
 type didCreateJWKCMD struct{}
