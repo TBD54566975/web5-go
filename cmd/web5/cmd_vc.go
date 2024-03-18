@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/tbd54566975/web5-go/dids/did"
 	"github.com/tbd54566975/web5-go/vc"
 )
 
@@ -16,6 +18,8 @@ type vcCreateCMD struct {
 	ID                  string    `help:"Override the default ID of format urn:vc:uuid:<uuid>."`
 	IssuanceDate        time.Time `help:"Override the default issuanceDate of time.Now()."`
 	ExpirationDate      time.Time `help:"Override the default expirationDate of nil."`
+	Sign                bool      `help:"Sign the VC with the provided --portable-did" default:"false"`
+	PortableDID         string    `help:"Portable DID used with --sign"`
 }
 
 func (c *vcCreateCMD) Run() error {
@@ -45,6 +49,33 @@ func (c *vcCreateCMD) Run() error {
 	claims["id"] = c.CredentialSubjectID
 
 	credential := vc.Create(claims, opts...)
+
+	if c.Sign {
+		if c.PortableDID == "" {
+			return errors.New("--portable-did must be provided with --sign")
+		}
+
+		var portableDID did.PortableDID
+		err = json.Unmarshal([]byte(c.PortableDID), &portableDID)
+		if err != nil {
+			return fmt.Errorf("%s: %w", "invalid portable DID", err)
+		}
+
+		bearerDID, err := did.FromPortableDID(portableDID)
+		if err != nil {
+			return err
+		}
+
+		// TODO sign opts
+		signed, err := credential.Sign(bearerDID)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(signed)
+
+		return nil
+	}
 
 	jsonDID, err := json.MarshalIndent(credential, "", "  ")
 	if err != nil {
