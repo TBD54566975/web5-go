@@ -17,6 +17,7 @@ type CLI struct {
 	} `cmd:"" help:"Interface with DID's."`
 	VC struct {
 		Create vcCreateCMD `cmd:"" help:"Create a VC."`
+		Sign   vcSignCMD   `cmd:"" help:"Sign a VC."`
 		JWT    vcJWTCMD    `cmd:"" help:"Tooling for VC-JWT's"`
 	} `cmd:"" help:"Interface with VC's."`
 }

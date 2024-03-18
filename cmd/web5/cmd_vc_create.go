@@ -18,8 +18,9 @@ type vcCreateCMD struct {
 	ID                  string    `help:"Override the default ID of format urn:vc:uuid:<uuid>."`
 	IssuanceDate        time.Time `help:"Override the default issuanceDate of time.Now()."`
 	ExpirationDate      time.Time `help:"Override the default expirationDate of nil."`
-	Sign                bool      `help:"Sign the VC with the provided --portable-did" default:"false"`
-	PortableDID         string    `help:"Portable DID used with --sign"`
+	Sign                bool      `help:"Sign the VC with the provided --portable-did." default:"false"`
+	PortableDID         string    `help:"Portable DID used with --sign. Value is a JSON string."`
+	NoIndent            bool      `help:"Print the VC without indentation." default:"false"`
 }
 
 func (c *vcCreateCMD) Run() error {
@@ -77,7 +78,12 @@ func (c *vcCreateCMD) Run() error {
 		return nil
 	}
 
-	jsonVC, err := json.MarshalIndent(credential, "", "  ")
+	var jsonVC []byte
+	if c.NoIndent {
+		jsonVC, err = json.Marshal(credential)
+	} else {
+		jsonVC, err = json.MarshalIndent(credential, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
