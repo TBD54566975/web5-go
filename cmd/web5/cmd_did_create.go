@@ -13,7 +13,9 @@ type didCreateCMD struct {
 	Web didCreateWebCMD `cmd:"" help:"Create a did:web."`
 }
 
-type didCreateJWKCMD struct{}
+type didCreateJWKCMD struct {
+	NoIndent bool `help:"Print the portable DID without indentation." default:"false"`
+}
 
 func (c *didCreateJWKCMD) Run() error {
 	did, err := didjwk.Create()
@@ -26,7 +28,13 @@ func (c *didCreateJWKCMD) Run() error {
 		return err
 	}
 
-	jsonDID, err := json.MarshalIndent(portableDID, "", "  ")
+	var jsonDID []byte
+	if c.NoIndent {
+		jsonDID, err = json.Marshal(portableDID)
+	} else {
+		jsonDID, err = json.MarshalIndent(portableDID, "", "  ")
+	}
+
 	if err != nil {
 		return err
 	}
@@ -37,7 +45,8 @@ func (c *didCreateJWKCMD) Run() error {
 }
 
 type didCreateWebCMD struct {
-	Domain string `arg:"" help:"The domain name for the DID." required:""`
+	Domain   string `arg:"" help:"The domain name for the DID." required:""`
+	NoIndent bool   `help:"Print the portable DID without indentation." default:"false"`
 }
 
 func (c *didCreateWebCMD) Run() error {
@@ -51,7 +60,13 @@ func (c *didCreateWebCMD) Run() error {
 		return err
 	}
 
-	jsonDID, err := json.MarshalIndent(portableDID, "", "  ")
+	var jsonDID []byte
+	if c.NoIndent {
+		jsonDID, err = json.Marshal(portableDID)
+	} else {
+		jsonDID, err = json.MarshalIndent(portableDID, "", "  ")
+	}
+
 	if err != nil {
 		return err
 	}
