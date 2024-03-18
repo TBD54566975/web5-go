@@ -77,12 +77,12 @@ func (c *vcCreateCMD) Run() error {
 		return nil
 	}
 
-	jsonDID, err := json.MarshalIndent(credential, "", "  ")
+	jsonVC, err := json.MarshalIndent(credential, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(jsonDID))
+	fmt.Println(string(jsonVC))
 
 	return nil
 }
