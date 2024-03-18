@@ -16,6 +16,9 @@
       "path": "jwt"
     },
     {
+      "path": "vc"
+    },
+    {
       "path": "cmd/web5",
       "name": "cli"
     },
