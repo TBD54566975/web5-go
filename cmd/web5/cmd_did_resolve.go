@@ -8,7 +8,8 @@ import (
 )
 
 type didResolveCMD struct {
-	URI string `arg:"" name:"uri" help:"The URI to resolve."`
+	URI      string `arg:"" name:"uri" help:"The URI to resolve."`
+	NoIndent bool   `help:"Print the DID Document without indentation." default:"false"`
 }
 
 func (c *didResolveCMD) Run() error {
@@ -17,12 +18,17 @@ func (c *didResolveCMD) Run() error {
 		return err
 	}
 
-	jsonDID, err := json.MarshalIndent(result.Document, "", "  ")
+	var jsonDIDDocument []byte
+	if c.NoIndent {
+		jsonDIDDocument, err = json.Marshal(result.Document)
+	} else {
+		jsonDIDDocument, err = json.MarshalIndent(result.Document, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(jsonDID))
+	fmt.Println(string(jsonDIDDocument))
 
 	return nil
 }
