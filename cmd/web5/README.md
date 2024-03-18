@@ -24,6 +24,9 @@ Commands:
   vc create <credential-subject-id>
     Create a VC.
 
+  vc sign <vc> <portable-did>
+    Sign a VC.
+
   vc jwt verify <jwt>
     Verify a VC-JWT.
 
