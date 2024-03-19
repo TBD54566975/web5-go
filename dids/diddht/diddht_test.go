@@ -254,7 +254,7 @@ func Test_Create(t *testing.T) {
 			var opts []CreateOption
 			opts = []CreateOption{Gateway(relay.URL, http.DefaultClient), KeyManager(keyMgr)}
 			for _, service := range didDoc.Service {
-				opts = append(opts, Service(service.ID, service.Type, service.ServiceEndpoint))
+				opts = append(opts, Service(service.ID, service.Type, service.ServiceEndpoint...))
 			}
 			for _, key := range test.keys {
 				opts = append(opts, PrivateKey(key.algorithmID, key.purposes...))
