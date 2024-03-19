@@ -48,7 +48,7 @@ func Service(id string, svcType string, endpoint string) CreateOption {
 			svcID = "#" + id
 		}
 
-		svc := didcore.Service{ID: svcID, Type: svcType, ServiceEndpoint: endpoint}
+		svc := didcore.Service{ID: svcID, Type: svcType, ServiceEndpoint: []string{endpoint}}
 		if o.services == nil {
 			o.services = make([]didcore.Service, 0)
 		}
