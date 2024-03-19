@@ -61,6 +61,24 @@ func TestSign(t *testing.T) {
 	assert.False(t, jwt == "", "expected jwt to not be empty")
 }
 
+func TestSign_IssuerOverridden(t *testing.T) {
+	did, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	claims := jwt.Claims{
+		Issuer: "something-not-equal-to-did.URI", // this will be overridden by the call to jwt.Sign()
+		Misc:   map[string]interface{}{"c_nonce": "abcd123"},
+	}
+
+	signed, err := jwt.Sign(claims, did)
+	assert.NoError(t, err)
+
+	decoded, err := jwt.Decode(signed)
+	assert.NoError(t, err)
+
+	assert.Equal(t, did.URI, decoded.Claims.Issuer)
+}
+
 func TestVerify(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
