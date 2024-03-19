@@ -9,7 +9,7 @@ import (
 
 func TestAddVerificationMethod(t *testing.T) {
 	doc := didcore.Document{
-		Context: "https://www.w3.org/ns/did/v1",
+		Context: []string{"https://www.w3.org/ns/did/v1"},
 		ID:      "did:example:123456789abcdefghi",
 	}
 

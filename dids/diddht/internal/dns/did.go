@@ -245,7 +245,7 @@ func UnmarshalService(data string, s *didcore.Service) error {
 				}
 				validEndpoints = append(validEndpoints, uri)
 			}
-			s.ServiceEndpoint = strings.Join(validEndpoints, ",")
+			s.ServiceEndpoint = validEndpoints
 		default:
 			continue
 		}
