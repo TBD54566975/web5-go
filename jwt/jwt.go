@@ -95,7 +95,12 @@ func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
 		jwsOpts = append(jwsOpts, jws.VMSelector(o.selector))
 	}
 
-	return jws.Sign(claims, did, jwsOpts...)
+	payload, err := json.Marshal(claims)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal jwt claims: %w", err)
+	}
+
+	return jws.Sign(payload, did, jwsOpts...)
 }
 
 // Verify verifies a JWT (JSON Web Token) as per the spec https://datatracker.ietf.org/doc/html/rfc7519
@@ -130,14 +135,19 @@ func (jwt Decoded) Verify() error {
 		return errors.New("JWT has expired")
 	}
 
+	claimsBytes, err := base64.RawURLEncoding.DecodeString(jwt.Parts[1])
+	if err != nil {
+		return fmt.Errorf("malformed JWT. Failed to decode claims: %w", err)
+	}
+
 	decodedJWS := jws.Decoded{
 		Header:    jwt.Header,
-		Payload:   jwt.Claims,
+		Payload:   claimsBytes,
 		Signature: jwt.Signature,
 		Parts:     jwt.Parts,
 	}
 
-	err := decodedJWS.Verify()
+	err = decodedJWS.Verify()
 	if err != nil {
 		return fmt.Errorf("JWT signature verification failed: %w", err)
 	}

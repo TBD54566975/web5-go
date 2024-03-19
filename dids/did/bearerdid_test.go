@@ -37,10 +37,12 @@ func TestFromPortableDID(t *testing.T) {
 	importedDID, err := did.FromPortableDID(portableDID)
 	assert.NoError(t, err)
 
-	compactJWS, err := jws.Sign("hi", bearerDID)
+	payload := []byte("hi")
+
+	compactJWS, err := jws.Sign(payload, bearerDID)
 	assert.NoError(t, err)
 
-	compactJWSAgane, err := jws.Sign("hi", importedDID)
+	compactJWSAgane, err := jws.Sign(payload, importedDID)
 	assert.NoError(t, err)
 
 	assert.Equal[string](t, compactJWS, compactJWSAgane, "failed to produce same signature with imported did")

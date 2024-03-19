@@ -17,16 +17,15 @@ func TestDecode(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	payloadJSON := map[string]interface{}{"hello": "world"}
-	compactJWS, err := jws.Sign(payloadJSON, did)
+	payload := []byte("hi")
+
+	compactJWS, err := jws.Sign(payload, did)
 	assert.NoError(t, err)
 
 	decoded, err := jws.Decode(compactJWS)
 	assert.NoError(t, err)
 
-	payload, ok := decoded.Payload.(map[string]any)
-	assert.True(t, ok)
-	assert.Equal(t, "world", payload["hello"])
+	assert.Equal(t, payload, decoded.Payload)
 }
 
 func TestDecode_Bad(t *testing.T) {
@@ -50,8 +49,11 @@ func TestSign(t *testing.T) {
 	did, err := didweb.Create("localhost:8080")
 	assert.NoError(t, err)
 
-	payload := map[string]interface{}{"hello": "world"}
-	compactJWS, err := jws.Sign(payload, did)
+	payload := map[string]any{"hello": "world"}
+	payloadBytes, err := json.Marshal(payload)
+	assert.NoError(t, err)
+
+	compactJWS, err := jws.Sign(payloadBytes, did)
 	assert.NoError(t, err)
 
 	assert.True(t, compactJWS != "", "expected signature to be non-empty")
@@ -71,9 +73,11 @@ func TestSign_Detached(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	payload := map[string]interface{}{"hello": "world"}
+	payload := map[string]any{"hello": "world"}
+	payloadBytes, err := json.Marshal(payload)
+	assert.NoError(t, err)
 
-	compactJWS, err := jws.Sign(payload, did, jws.DetachedPayload(true))
+	compactJWS, err := jws.Sign(payloadBytes, did, jws.DetachedPayload(true))
 	assert.NoError(t, err)
 
 	assert.True(t, compactJWS != "", "expected signature to be non-empty")
@@ -87,10 +91,13 @@ func TestSign_CustomType(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	payload := map[string]interface{}{"hello": "world"}
+	payload := map[string]any{"hello": "world"}
+	payloadBytes, err := json.Marshal(payload)
+	assert.NoError(t, err)
+
 	customType := "openid4vci-proof+jwt"
 
-	compactJWS, err := jws.Sign(payload, did, jws.Type(customType))
+	compactJWS, err := jws.Sign(payloadBytes, did, jws.Type(customType))
 	assert.NoError(t, err)
 
 	parts := strings.Split(compactJWS, ".")
@@ -105,8 +112,11 @@ func TestDecoded_Verify(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	payloadJSON := map[string]any{"hello": "world"}
-	compactJWS, err := jws.Sign(payloadJSON, did)
+	payload := map[string]any{"hello": "world"}
+	payloadBytes, err := json.Marshal(payload)
+	assert.NoError(t, err)
+
+	compactJWS, err := jws.Sign(payloadBytes, did)
 	assert.NoError(t, err)
 
 	decoded, err := jws.Decode(compactJWS)
@@ -139,8 +149,11 @@ func TestVerify(t *testing.T) {
 	did, err := didjwk.Create()
 	assert.NoError(t, err)
 
-	payloadJSON := map[string]any{"hello": "world"}
-	compactJWS, err := jws.Sign(payloadJSON, did)
+	payload := map[string]any{"hello": "world"}
+	payloadBytes, err := json.Marshal(payload)
+	assert.NoError(t, err)
+
+	compactJWS, err := jws.Sign(payloadBytes, did)
 	assert.NoError(t, err)
 
 	_, err = jws.Verify(compactJWS)
