@@ -130,7 +130,7 @@ func Type(typ string) SignOpt {
 // Sign signs the provided payload with a key associated to the provided DID.
 // if no purpose is provided, the default is "assertionMethod". Passing Detached(true)
 // will return a compact JWS with detached content
-func Sign(payload Payload, did _did.BearerDID, opts ...SignOpt) (string, error) {
+func Sign(payload []byte, did _did.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{selector: nil, detached: false}
 	for _, opt := range opts {
 		opt(&o)
@@ -191,7 +191,7 @@ func Verify(compactJWS string) (Decoded, error) {
 // Decoded is a compact JWS decoded into it's parts
 type Decoded struct {
 	Header    Header
-	Payload   Payload
+	Payload   []byte
 	Signature []byte
 	Parts     []string
 }
@@ -261,8 +261,3 @@ func (j Header) Encode() (string, error) {
 
 	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
-
-// Payload is a type to represent the [JWS Payload]
-//
-// [JWS Payload]: https://datatracker.ietf.org/doc/html/rfc7515#section-2
-type Payload []byte
