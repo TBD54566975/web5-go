@@ -65,7 +65,7 @@ type verificationMethodOption struct {
 
 // Service is used to add a service to the DID being created with the [Create] function.
 // Note: Service can be passed to [Create] multiple times to add multiple services.
-func Service(id string, svcType string, endpoint []string) CreateOption {
+func Service(id string, svcType string, endpoint ...string) CreateOption {
 	return func(o *createOptions) {
 		// ensure that id follows relative DID URL requirements defined in did core spec:
 		// https://www.w3.org/TR/did-core/#relative-did-urls
