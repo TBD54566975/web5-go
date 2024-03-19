@@ -14,7 +14,7 @@ type CLI struct {
 	JWT struct {
 		Sign   jwtSignCMD   `cmd:"" help:"Sign a JWT."`
 		Decode jwtDecodeCMD `cmd:"" help:"Decode a JWT."`
-		// todo verify
+		Verify jwtVerifyCMD `cmd:"" help:"Verify a JWT."`
 	} `cmd:"" help:"Interface with JWT's."`
 	DID struct {
 		Resolve didResolveCMD `cmd:"" help:"Resolve a DID."`
