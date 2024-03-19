@@ -200,7 +200,7 @@ func Test_Create(t *testing.T) {
 				  {
 					"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#dwn",
 					"type": "DecentralizedWebNode",
-					"serviceEndpoint": "https://example.com/dwn"
+					"serviceEndpoint": ["https://example.com/dwn1", "https://example.com/dwn2"]
 				  }
 				],
 				"authentication": [
