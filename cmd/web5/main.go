@@ -11,10 +11,20 @@ import (
 //
 // [kong documentation]: https://github.com/alecthomas/kong
 type CLI struct {
+	JWT struct {
+		Sign   jwtSignCMD   `cmd:"" help:"Sign a JWT."`
+		Decode jwtDecodeCMD `cmd:"" help:"Decode a JWT."`
+		Verify jwtVerifyCMD `cmd:"" help:"Verify a JWT."`
+	} `cmd:"" help:"Interface with JWT's."`
 	DID struct {
 		Resolve didResolveCMD `cmd:"" help:"Resolve a DID."`
 		Create  didCreateCMD  `cmd:"" help:"Create a DID."`
 	} `cmd:"" help:"Interface with DID's."`
+	VC struct {
+		Create vcCreateCMD `cmd:"" help:"Create a VC."`
+		Sign   vcSignCMD   `cmd:"" help:"Sign a VC."`
+		JWT    vcJWTCMD    `cmd:"" help:"Tooling for VC-JWT's"`
+	} `cmd:"" help:"Interface with VC's."`
 }
 
 func main() {
