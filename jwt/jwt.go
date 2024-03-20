@@ -82,9 +82,7 @@ func Type(t string) SignOpt {
 //
 // # Note
 //
-// Claims.Issuer will be set to the value of the provided BearerDID.URI
-// because this is required during [Verify], so if the value is set by the calling
-// code then it will be overridden in this function
+// claims.Issuer will be overridden to the value of did.URI within this function
 func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{selector: nil, typ: ""}
 	for _, opt := range opts {
