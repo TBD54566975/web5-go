@@ -3,11 +3,11 @@ package bep44
 import (
 	"crypto/ed25519"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/tbd54566975/web5-go/dids/diddht/internal/bencode"
 )
 
 func Test_newSignedBEP44Message(t *testing.T) {
@@ -57,14 +57,13 @@ func Test_newSignedBEP44Message(t *testing.T) {
 			}
 			assert.Equal(t, tt.args.publicKeyBytes, got.k)
 
-			bencoded := map[string]any{
-				"seq": got.Seq,
-				"v":   got.V,
-			}
-
-			bencodedBytes, err := bencode.Marshal(bencoded)
+			bencodedBytes, err := bencodeBepPayload(tt.args.seq, tt.args.payload)
 			assert.NoError(t, err)
-			assert.True(t, ed25519.Verify(tt.args.publicKeyBytes, bencodedBytes, got.sig))
+			verified := ed25519.Verify(tt.args.publicKeyBytes, bencodedBytes, got.sig)
+			if !verified {
+				fmt.Println(string(bencodedBytes), got.sig, tt)
+			}
+			assert.True(t, verified)
 		})
 	}
 }

@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-
-	"github.com/tbd54566975/web5-go/dids/diddht/internal/bencode"
 )
 
 // Message Represents a BEP44 message, which is used for storing and retrieving data in the Mainline DHT
@@ -41,20 +39,13 @@ type Signer func(payload []byte) ([]byte, error)
 
 // NewMessage bencodes the payload, signes it with the signer and creates a new BEP44 message with the given sequence number, public key.
 func NewMessage(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Signer) (*Message, error) {
-	bencoded := map[string]any{
-		"seq": seq,
-		"v":   dnsPayload,
-	}
-
-	bencodedBytes, err := bencode.Marshal(bencoded)
+	bencodedBytes, err := bencodeBepPayload(seq, dnsPayload)
 	if err != nil {
-		return nil, fmt.Errorf("failed to bencode: %w", err)
+		return nil, fmt.Errorf("failed to bencode payload: %w", err)
 	}
 
-	if len(bencodedBytes) > 1000 {
-		return nil, errors.New("bencoded payload is too large")
-	}
-
+	// remove the 1st (d) and last (e) byte from the bencoded bytes to conform to the BEP44 spec
+	// and sign the payload
 	signedBytes, err := signer(bencodedBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign: %w", err)
@@ -103,17 +94,14 @@ func UnmarshalMessage(data []byte, b *Message) error {
 	return nil
 }
 
-func bufferToSign(salt, bv []byte, seq int64) ([]byte, error) {
-	var bts []byte
-	if len(salt) != 0 {
-		bts = append(bts, []byte("4:salt")...)
-		x, err := bencode.Marshal(salt)
-		if err != nil {
-			return nil, err
-		}
-		bts = append(bts, x...)
+func bencodeBepPayload(seq int64, v []byte) ([]byte, error) {
+	if len(v) == 0 {
+		return nil, errors.New("v cannot be empty")
 	}
-	bts = append(bts, []byte(fmt.Sprintf("3:seqi%de1:v", seq))...)
-	bts = append(bts, bv...)
-	return bts, nil
+
+	re := fmt.Sprintf("3:seqi%de1:v%d:%s", seq, len(v), v)
+	if len(re) > 1000 {
+		return nil, errors.New("bencoded payload is too large")
+	}
+	return []byte(re), nil
 }
