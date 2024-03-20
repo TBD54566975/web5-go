@@ -79,6 +79,10 @@ func Type(t string) SignOpt {
 // The Purpose option can be provided to specify that a key from a given
 // DID Document Verification Relationship should be used (e.g. authentication).
 // defaults to using assertionMethod
+//
+// # Note
+//
+// claims.Issuer will be overridden to the value of did.URI within this function
 func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
 	o := signOpts{selector: nil, typ: ""}
 	for _, opt := range opts {
@@ -94,6 +98,9 @@ func Sign(claims Claims, did did.BearerDID, opts ...SignOpt) (string, error) {
 	if o.selector != nil {
 		jwsOpts = append(jwsOpts, jws.VMSelector(o.selector))
 	}
+
+	// `iss` is required to be equal to the DID's URI
+	claims.Issuer = did.URI
 
 	payload, err := json.Marshal(claims)
 	if err != nil {
