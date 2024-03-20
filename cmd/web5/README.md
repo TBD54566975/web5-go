@@ -6,12 +6,22 @@
 ➜ web5 -h
 Usage: web5 <command>
 
-Web5 - A decentralized web platform that puts you in control of your data and identity.
+Web5 - A decentralized web platform that puts you in control of your
+data and identity.
 
 Flags:
   -h, --help    Show context-sensitive help.
 
 Commands:
+  jwt sign <claims> <portable-did>
+    Sign a JWT.
+
+  jwt decode <jwt>
+    Decode a JWT.
+
+  jwt verify <jwt>
+    Verify a JWT.
+
   did resolve <uri>
     Resolve a DID.
 

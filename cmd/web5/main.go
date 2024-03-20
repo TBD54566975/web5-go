@@ -11,6 +11,11 @@ import (
 //
 // [kong documentation]: https://github.com/alecthomas/kong
 type CLI struct {
+	JWT struct {
+		Sign   jwtSignCMD   `cmd:"" help:"Sign a JWT."`
+		Decode jwtDecodeCMD `cmd:"" help:"Decode a JWT."`
+		Verify jwtVerifyCMD `cmd:"" help:"Verify a JWT."`
+	} `cmd:"" help:"Interface with JWT's."`
 	DID struct {
 		Resolve didResolveCMD `cmd:"" help:"Resolve a DID."`
 		Create  didCreateCMD  `cmd:"" help:"Create a DID."`
