@@ -51,7 +51,7 @@ func Marshal(input any) ([]byte, error) {
 		return b, nil
 	case map[string]any:
 		var b []byte
-		b = append(b, 'd')
+		// b = append(b, 'd')
 
 		for key, value := range v {
 			encodedKey, err := Marshal(key)
@@ -68,7 +68,7 @@ func Marshal(input any) ([]byte, error) {
 			b = append(b, encodedValue...)
 		}
 
-		b = append(b, 'e')
+		// b = append(b, 'e')
 
 		return b, nil
 	default:

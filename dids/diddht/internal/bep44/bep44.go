@@ -25,7 +25,7 @@ type Message struct {
 
 	// The sequence number of the message, used to ensure the latest version of the data is retrieved
 	// and updated. It's a monotonically increasing number.
-	seq int64
+	Seq int64
 
 	// The signature of the message, ensuring the authenticity and integrity of the data. It's
 	// computed over the bencoded sequence number and value.
@@ -33,7 +33,7 @@ type Message struct {
 
 	// The actual data being stored or retrieved from the DHT network, typically encoded in a format
 	// suitable for DNS packet representation of a DID Document.
-	v []byte
+	V []byte
 }
 
 // Signer is a function that signs a given payload and returns the signature.
@@ -62,40 +62,26 @@ func NewMessage(dnsPayload []byte, seq int64, publicKeyBytes []byte, signer Sign
 
 	bep := &Message{
 		k:   publicKeyBytes,
-		seq: seq,
+		Seq: seq,
 		sig: signedBytes,
-		v:   bencodedBytes,
+		V:   dnsPayload,
 	}
 
 	return bep, nil
 }
 
-// UnmarshalPayload decodes the payload of the BEP44 message from bencoded format. The payload is typically a bencoded DNS for DHT purposes
-func (msg *Message) UnmarshalPayload() ([]byte, error) {
-	var bdecoded = make(map[string]any)
-	if err := bencode.Unmarshal(msg.v, &bdecoded); err != nil {
-		return nil, fmt.Errorf("failed to decode bencoded payload: %w", err)
-	}
-
-	v, ok := bdecoded["v"].(string)
-	if !ok {
-		return nil, errors.New("failed to decode v value")
-	}
-	return []byte(v), nil
-}
-
 // Marshal encodes the BEP44 message into a byte slice, conforming to the Pkarr relay specification.
 func (msg *Message) Marshal() ([]byte, error) {
 	// Construct the body of the request according to the Pkarr relay specification.
-	body := make([]byte, 0, len(msg.v)+72)
+	body := make([]byte, 0, len(msg.V)+72)
 	body = append(body, msg.sig...)
-	seq := uint64(msg.seq)
 
 	// Convert the sequence number to a big-endian byte array.
+	seq := uint64(msg.Seq)
 	buf := make([]byte, 8) // uint64 is 8 bytes
 	binary.BigEndian.PutUint64(buf, seq)
 	body = append(body, buf...)
-	body = append(body, msg.v...)
+	body = append(body, msg.V...)
 
 	return body, nil
 }
@@ -111,8 +97,23 @@ func UnmarshalMessage(data []byte, b *Message) error {
 	}
 
 	b.sig = data[:64]
-	b.seq = int64(binary.BigEndian.Uint64(data[64:72]))
-	b.v = data[72:]
+	b.Seq = int64(binary.BigEndian.Uint64(data[64:72]))
+	b.V = data[72:]
 
 	return nil
+}
+
+func bufferToSign(salt, bv []byte, seq int64) ([]byte, error) {
+	var bts []byte
+	if len(salt) != 0 {
+		bts = append(bts, []byte("4:salt")...)
+		x, err := bencode.Marshal(salt)
+		if err != nil {
+			return nil, err
+		}
+		bts = append(bts, x...)
+	}
+	bts = append(bts, []byte(fmt.Sprintf("3:seqi%de1:v", seq))...)
+	bts = append(bts, bv...)
+	return bts, nil
 }
