@@ -11,6 +11,13 @@ import (
 	"github.com/tv42/zbase32"
 )
 
+// DefaultResolver uses the default Pkarr gateway client: https://diddht.tbddev.org
+func DefaultResolver() *Resolver {
+	return &Resolver{
+		relay: getDefaultGateway(),
+	}
+}
+
 // Resolver is a client for resolving DIDs using the DHT network.
 type Resolver struct {
 	relay gateway

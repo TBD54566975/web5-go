@@ -2,7 +2,6 @@ package dids
 
 import (
 	"context"
-	"net/http"
 	"sync"
 
 	"github.com/tbd54566975/web5-go/dids/did"
@@ -31,7 +30,7 @@ func getDefaultResolver() *didResolver {
 	once.Do(func() {
 		instance = &didResolver{
 			resolvers: map[string]didcore.MethodResolver{
-				"dht": diddht.NewResolver("", http.DefaultClient),
+				"dht": diddht.DefaultResolver(),
 				"jwk": didjwk.Resolver{},
 				"web": didweb.Resolver{},
 			},
