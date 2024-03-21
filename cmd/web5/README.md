@@ -6,8 +6,7 @@
 ➜ web5 -h
 Usage: web5 <command>
 
-Web5 - A decentralized web platform that puts you in control of your
-data and identity.
+Web5 - A decentralized web platform that puts you in control of your data and identity.
 
 Flags:
   -h, --help    Show context-sensitive help.
@@ -37,10 +36,10 @@ Commands:
   vc sign <vc> <portable-did>
     Sign a VC.
 
-  vc jwt verify <jwt>
+  vcjwt verify <jwt>
     Verify a VC-JWT.
 
-  vc jwt decode <jwt>
+  vcjwt decode <jwt>
     Decode a VC-JWT.
 
 Run "web5 <command> --help" for more information on a command.

@@ -10,7 +10,7 @@ import (
 type jwtVerifyCMD struct {
 	JWT      string `arg:"" help:"The base64 encoded JWT"`
 	Claims   bool   `help:"Only print the JWT Claims." default:"false"`
-	NoIndent bool   `help:"Print the decoded VC-JWT without indentation." default:"false"`
+	NoIndent bool   `help:"Print the decoded JWT without indentation." default:"false"`
 }
 
 func (c *jwtVerifyCMD) Run() error {
