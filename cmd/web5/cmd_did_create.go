@@ -45,6 +45,7 @@ func (c *didCreateWebCMD) Run() error {
 }
 
 type didCreateDHTCMD struct {
+	NoIndent bool `help:"Print the portable DID without indentation." default:"false"`
 }
 
 func (c *didCreateDHTCMD) Run() error {
@@ -53,7 +54,7 @@ func (c *didCreateDHTCMD) Run() error {
 		return err
 	}
 
-	return printDID(did, false)
+	return printDID(did, c.NoIndent)
 }
 
 func printDID(d did.BearerDID, noIndent bool) error {
