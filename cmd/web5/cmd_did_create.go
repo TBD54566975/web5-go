@@ -14,7 +14,7 @@ import (
 type didCreateCMD struct {
 	JWK didCreateJWKCMD `cmd:"" help:"Create a did:jwk."`
 	Web didCreateWebCMD `cmd:"" help:"Create a did:web."`
-	DHT didCreateDHTCMD `cmd:"" help:"Create a did:dht's."`
+	DHT didCreateDHTCMD `cmd:"" help:"Create a did:dht."`
 }
 
 type didCreateJWKCMD struct {
