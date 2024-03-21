@@ -42,16 +42,18 @@ func (r *Client) PutWithContext(ctx context.Context, didID string, msg *bep44.Me
 	// Concatenate the Pkarr relay URL with the identifier to form the full URL.
 	pkarrURL, err := url.JoinPath(r.relay, didID)
 	if err != nil {
-		// TODO log err
 		return err
 	}
 
+	fmt.Println("Publishing to pkarr: pkarrURL", pkarrURL)
 	// Serialize the BEP44 message to a byte slice.
-	body, _ := msg.Marshal()
+	body, err := msg.Marshal()
+	if err != nil {
+		return err
+	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, pkarrURL, strings.NewReader(string(body)))
 	if err != nil {
-		// TODO log err
 		return err
 	}
 
@@ -60,14 +62,16 @@ func (r *Client) PutWithContext(ctx context.Context, didID string, msg *bep44.Me
 	// Transmit the Put request to the Pkarr relay and get the response.
 	res, err := r.client.Do(req)
 	if err != nil {
-		// TODO log err
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		// TODO log err
-		return fmt.Errorf("failed to put message: %s", res.Status)
+		resBody, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("failed to put message: %s - %s", res.Status, string(resBody))
 	}
 
 	// Return `true` if the DHT request was successful, otherwise return `false`.

@@ -1,8 +1,9 @@
 package bep44
 
 import (
+	"crypto/ed25519"
 	"errors"
-	"strings"
+	"fmt"
 	"testing"
 	"time"
 
@@ -10,8 +11,10 @@ import (
 )
 
 func Test_newSignedBEP44Message(t *testing.T) {
-	payload := []byte(`a=1,b=2,c=3`)
+	payload := []byte(`v=1,b=2,c=3`)
 
+	pubKey, privKey, err := ed25519.GenerateKey(nil)
+	assert.NoError(t, err)
 	type args struct {
 		payload        []byte
 		seq            int64
@@ -26,9 +29,9 @@ func Test_newSignedBEP44Message(t *testing.T) {
 			args: args{
 				payload:        payload,
 				seq:            time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC).Unix() / 1000,
-				publicKeyBytes: []byte("YCcHYL2sYNPDlKaALcEmll2HHyT968M4UWbr-9CFGWE"),
+				publicKeyBytes: pubKey,
 				signer: func(payload []byte) ([]byte, error) {
-					return append(payload, []byte("signed")...), nil
+					return ed25519.Sign(privKey, payload), nil
 				},
 			},
 		},
@@ -52,12 +55,15 @@ func Test_newSignedBEP44Message(t *testing.T) {
 			if tt.wantErr {
 				return
 			}
-			assert.True(t, strings.HasSuffix(string(got.sig), "signed"))
 			assert.Equal(t, tt.args.publicKeyBytes, got.k)
 
-			decodedPayload, err := got.UnmarshalPayload()
+			bencodedBytes, err := bencodeBepPayload(tt.args.seq, tt.args.payload)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.args.payload, decodedPayload)
+			verified := ed25519.Verify(tt.args.publicKeyBytes, bencodedBytes, got.sig)
+			if !verified {
+				fmt.Println(string(bencodedBytes), got.sig, tt)
+			}
+			assert.True(t, verified)
 		})
 	}
 }

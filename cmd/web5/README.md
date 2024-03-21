@@ -43,5 +43,8 @@ Commands:
   vc jwt decode <jwt>
     Decode a VC-JWT.
 
+  did create dht
+    Create did:dht's using the default gateway.
+    
 Run "web5 <command> --help" for more information on a command.
 ```
