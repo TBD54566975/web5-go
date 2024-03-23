@@ -1,7 +1,6 @@
 package vc_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -158,10 +157,8 @@ func TestVerify(t *testing.T) {
 			_, err := vc.Verify[vc.Claims](tt.input)
 
 			if tt.errors == true {
-				fmt.Printf("true error: %v\n", err)
 				assert.Error(t, err)
 			} else {
-				fmt.Printf("false error: %v\n", err)
 				assert.NoError(t, err)
 			}
 		})

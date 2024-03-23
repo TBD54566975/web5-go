@@ -159,3 +159,18 @@ func TestVerify(t *testing.T) {
 	_, err = jws.Verify(compactJWS)
 	assert.NoError(t, err)
 }
+
+func TestVerify_Detached(t *testing.T) {
+	did, err := didjwk.Create()
+	assert.NoError(t, err)
+
+	payload := []byte("hi")
+
+	compactJWS, err := jws.Sign(payload, did, jws.DetachedPayload(true))
+	assert.NoError(t, err)
+
+	decoded, err := jws.Verify(compactJWS, jws.Payload(payload))
+	assert.NoError(t, err)
+
+	assert.Equal(t, payload, decoded.Payload)
+}

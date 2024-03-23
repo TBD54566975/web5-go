@@ -20,7 +20,13 @@ import (
 // The given JWS input is assumed to be a [compact JWS]
 //
 // [compact JWS]: https://datatracker.ietf.org/doc/html/rfc7515#section-7.1
-func Decode(jws string) (Decoded, error) {
+func Decode(jws string, opts ...DecodeOption) (Decoded, error) {
+	o := decodeOptions{}
+
+	for _, opt := range opts {
+		opt(&o)
+	}
+
 	parts := strings.Split(jws, ".")
 	if len(parts) != 3 {
 		return Decoded{}, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
@@ -31,9 +37,15 @@ func Decode(jws string) (Decoded, error) {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode header: %w", err)
 	}
 
-	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
+	var payload []byte
+	if o.payload == nil {
+		payload, err = base64.RawURLEncoding.DecodeString(parts[1])
+		if err != nil {
+			return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
+		}
+	} else {
+		payload = o.payload
+		parts[1] = base64.RawURLEncoding.EncodeToString(payload)
 	}
 
 	signature, err := DecodeSignature(parts[2])
@@ -43,10 +55,27 @@ func Decode(jws string) (Decoded, error) {
 
 	return Decoded{
 		Header:    header,
-		Payload:   payloadBytes,
+		Payload:   payload,
 		Signature: signature,
 		Parts:     parts,
 	}, nil
+}
+
+type decodeOptions struct {
+	payload []byte
+}
+
+// DecodeOption represents an option that can be passed to [Decode] or [Verify].
+type DecodeOption func(opts *decodeOptions)
+
+// Payload can be passed to [Decode] or [Verify] to provide a detached payload.
+// More info on detached payloads can be found [here].
+//
+// [here]: https://datatracker.ietf.org/doc/html/rfc7515#appendix-F
+func Payload(p []byte) DecodeOption {
+	return func(opts *decodeOptions) {
+		opts.payload = p
+	}
 }
 
 // DecodeHeader decodes the base64url encoded JWS header into a [Header]
@@ -111,7 +140,8 @@ func VMSelector(selector didcore.VMSelector) SignOpt {
 
 // DetachedPayload is an option that can be passed to [github.com/tbd54566975/web5-go/jws.Sign].
 // It is used to indicate whether the payload should be included in the signature.
-// More details can be found in [Specification].
+// More details can be found [here].
+//
 // [Specification]: https://datatracker.ietf.org/doc/html/rfc7515#appendix-F
 func DetachedPayload(detached bool) SignOpt {
 	return func(opts *signOpts) {
@@ -177,8 +207,8 @@ func Sign(payload []byte, did _did.BearerDID, opts ...SignOpt) (string, error) {
 
 // Verify verifies the given compactJWS by resolving the DID Document from the kid header value
 // and using the associated public key found by resolving the DID Document
-func Verify(compactJWS string) (Decoded, error) {
-	decodedJWS, err := Decode(compactJWS)
+func Verify(compactJWS string, opts ...DecodeOption) (Decoded, error) {
+	decodedJWS, err := Decode(compactJWS, opts...)
 	if err != nil {
 		return decodedJWS, fmt.Errorf("signature verification failed: %w", err)
 	}
@@ -220,6 +250,7 @@ func (jws Decoded) Verify() error {
 	}
 
 	toVerify := jws.Parts[0] + "." + jws.Parts[1]
+
 	verified, err := dsa.Verify([]byte(toVerify), jws.Signature, *verificationMethod.PublicKeyJwk)
 	if err != nil {
 		return fmt.Errorf("failed to verify signature: %w", err)
