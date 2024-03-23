@@ -48,27 +48,27 @@ func (r *Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.
 	}
 
 	if did.Method != "dht" {
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+		return didcore.ResolutionResultWithError("methodNotSupported"), didcore.ResolutionError{Code: "methodNotSupported"}
 	}
 
 	// 2. ensure did ID is zbase32
 	identifier, err := zbase32.DecodeString(did.ID)
 	if err != nil {
 		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+		return didcore.ResolutionResultWithError("invalidPublicKey"), didcore.ResolutionError{Code: "invalidPublicKey"}
 	}
 
 	if len(identifier) == 0 {
 		// return nil, fmt.Errorf("no bytes decoded from zbase32 identifier %s", did.ID)
 		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+		return didcore.ResolutionResultWithError("invalidPublicKey"), didcore.ResolutionError{Code: "invalidPublicKey"}
 	}
 
 	// 3. fetch from the relay
 	bep44Message, err := r.relay.FetchWithContext(ctx, did.ID)
 	if err != nil {
 		// TODO log err
-		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+		return didcore.ResolutionResultWithError("notFound"), didcore.ResolutionError{Code: "notFound"}
 	}
 
 	// get the dns payload from the bep44 message
