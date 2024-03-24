@@ -23,8 +23,11 @@ type CLI struct {
 	VC struct {
 		Create vcCreateCMD `cmd:"" help:"Create a VC."`
 		Sign   vcSignCMD   `cmd:"" help:"Sign a VC."`
-		JWT    vcJWTCMD    `cmd:"" help:"Tooling for VC-JWT's"`
 	} `cmd:"" help:"Interface with VC's."`
+	VCJWT struct {
+		Verify vcjwtVerifyCMD `cmd:"" help:"Verify a VC-JWT."`
+		Decode vcjwtDecodeCMD `cmd:"" help:"Decode a VC-JWT."`
+	} `cmd:"" help:"Interface with VC-JWT's."`
 }
 
 func main() {
