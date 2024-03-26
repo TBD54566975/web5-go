@@ -48,6 +48,18 @@ JWT signing and verification using DIDs
 # Development
 
 ## Prerequisites
+We use a submoduler for test vectors that make sure we follow the appropriate spec. Running tests will fail without it.
+To set up the submodule, clone using:
+
+```
+git clone --recurse-submodules git@github.com:TBD54566975/web5-go.git
+```
+
+If you've already cloned, add submodules: 
+
+```
+git submodule update --init
+```
 
 ### [`hermit`](https://cashapp.github.io/hermit/)
 This repo uses hermit to manage all environment dependencies (e.g. `just`, `go`). 
