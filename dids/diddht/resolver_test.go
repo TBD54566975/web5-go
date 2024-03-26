@@ -43,7 +43,7 @@ func initVector() ([]vector, error) {
 	return vectorData.Vectors, nil
 }
 
-func Test_resolve_failures(t *testing.T) {
+func Test_VectorsResolve(t *testing.T) {
 	vectors, err := initVector()
 	assert.NoError(t, err)
 
