@@ -22,6 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Fetches all history for all tags and branches
+          fetch-depth: 0
+          # Initializes submodules recursively
+          submodules: recursive
       - uses: ./.github/actions/setup
       - run: just test
       - name: Upload coverage reports to Codecov
