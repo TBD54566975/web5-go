@@ -17,7 +17,7 @@ type vcCreateCMD struct {
 	ID                  string    `help:"Override the default ID of format urn:vc:uuid:<uuid>."`
 	IssuanceDate        time.Time `help:"Override the default issuanceDate of time.Now()."`
 	ExpirationDate      time.Time `help:"Override the default expirationDate of nil."`
-	Sign                string    `help:"Portable DID used with --sign. Value is a JSON string."`
+	Sign                string    `help:"Portable DID used to sign the VC-JWT. Value is a JSON string."`
 	NoIndent            bool      `help:"Print the VC without indentation." default:"false"`
 }
 
