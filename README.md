@@ -48,7 +48,7 @@ JWT signing and verification using DIDs
 # Development
 
 ## Prerequisites
-We use a submoduler for test vectors that make sure we follow the appropriate spec. Running tests will fail without it.
+We use a submodule for test vectors that make sure we follow the appropriate spec. Running tests will fail without it.
 To set up the submodule, clone using:
 
 ```
