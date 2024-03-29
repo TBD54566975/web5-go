@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -18,8 +17,7 @@ type vcCreateCMD struct {
 	ID                  string    `help:"Override the default ID of format urn:vc:uuid:<uuid>."`
 	IssuanceDate        time.Time `help:"Override the default issuanceDate of time.Now()."`
 	ExpirationDate      time.Time `help:"Override the default expirationDate of nil."`
-	Sign                bool      `help:"Sign the VC with the provided --portable-did." default:"false"`
-	PortableDID         string    `help:"Portable DID used with --sign. Value is a JSON string."`
+	Sign                string    `help:"Portable DID used to sign the VC-JWT. Value is a JSON string."`
 	NoIndent            bool      `help:"Print the VC without indentation." default:"false"`
 }
 
@@ -51,13 +49,9 @@ func (c *vcCreateCMD) Run() error {
 
 	credential := vc.Create(claims, opts...)
 
-	if c.Sign {
-		if c.PortableDID == "" {
-			return errors.New("--portable-did must be provided with --sign")
-		}
-
+	if c.Sign != "" {
 		var portableDID did.PortableDID
-		err = json.Unmarshal([]byte(c.PortableDID), &portableDID)
+		err = json.Unmarshal([]byte(c.Sign), &portableDID)
 		if err != nil {
 			return fmt.Errorf("%s: %w", "invalid portable DID", err)
 		}
