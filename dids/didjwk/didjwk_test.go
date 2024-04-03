@@ -1,6 +1,7 @@
 package didjwk_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -40,11 +41,13 @@ func TestVector_Resolve(t *testing.T) {
 	testVectors, err :=
 		web5go.ReadTestVector[string, didcore.ResolutionResult]("../../web5-spec/test-vectors/did_jwk/resolve.json")
 	assert.NoError(t, err)
+	fmt.Println("Running test vectors: ", testVectors.Description)
 
 	resolver := &didjwk.Resolver{}
 
 	for _, vector := range testVectors.Vectors {
 		t.Run(vector.Description, func(t *testing.T) {
+			fmt.Println("Running test vector: ", vector.Description)
 			result, err := resolver.Resolve(vector.Input)
 
 			if vector.Errors {
