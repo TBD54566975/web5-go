@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
+	web5go "github.com/tbd54566975/web5-go"
 	"github.com/tbd54566975/web5-go/dids/didcore"
 	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jwk"
@@ -33,4 +34,25 @@ func TestResolveDIDJWK(t *testing.T) {
 
 	assert.Equal(t, 1, len(result.Document.Authentication))
 	assert.Equal(t, 1, len(result.Document.AssertionMethod))
+}
+
+func TestVector_Resolve(t *testing.T) {
+	testVectors, err :=
+		web5go.ReadTestVector[string, didcore.ResolutionResult]("../../web5-spec/test-vectors/did_jwk/resolve.json")
+	assert.NoError(t, err)
+
+	resolver := &didjwk.Resolver{}
+
+	for _, vector := range testVectors.Vectors {
+		t.Run(vector.Description, func(t *testing.T) {
+			result, err := resolver.Resolve(vector.Input)
+
+			if vector.Errors {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, vector.Output, result)
+			}
+		})
+	}
 }
