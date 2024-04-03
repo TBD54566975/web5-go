@@ -55,6 +55,10 @@ func Decode[T CredentialSubject](vcJWT string) (DecodedVCJWT[T], error) {
 		return DecodedVCJWT[T]{}, fmt.Errorf("failed to decode vc claim: %w", err)
 	}
 
+	if vc.Type == nil {
+		return DecodedVCJWT[T]{}, errors.New("vc-jwt missing vc type")
+	}
+
 	// the following conditionals are included to conform with the jwt decoding section
 	// of the specification defined here: https://www.w3.org/TR/vc-data-model/#jwt-decoding
 	if decoded.Claims.Issuer != "" {
