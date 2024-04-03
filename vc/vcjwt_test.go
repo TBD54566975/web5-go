@@ -84,6 +84,7 @@ func TestDecode_SetClaims(t *testing.T) {
 		Misc: map[string]any{
 			"vc": vc.DataModel[vc.Claims]{
 				CredentialSubject: subjectClaims,
+				Type:              []string{"Something"},
 			},
 		},
 	}
