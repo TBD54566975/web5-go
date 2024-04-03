@@ -1,10 +1,12 @@
 package vc_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/alecthomas/assert/v2"
+	web5go "github.com/tbd54566975/web5-go"
 	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jwt"
 	"github.com/tbd54566975/web5-go/vc"
@@ -157,6 +159,27 @@ func TestVerify(t *testing.T) {
 			_, err := vc.Verify[vc.Claims](tt.input)
 
 			if tt.errors == true {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestVector_Decode(t *testing.T) {
+	testVectors, err :=
+		web5go.ReadTestVector[string, any]("../web5-spec/test-vectors/vc_jwt/decode.json")
+	assert.NoError(t, err)
+	fmt.Println("Running test vectors: ", testVectors.Description)
+
+	for _, vector := range testVectors.Vectors {
+		t.Run(vector.Description, func(t *testing.T) {
+			fmt.Println("Running test vector: ", vector.Description)
+
+			_, err := vc.Decode[vc.Claims](vector.Input)
+
+			if vector.Errors {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
