@@ -1,4 +1,4 @@
-package web5go
+package web5
 
 import (
 	"encoding/json"
@@ -19,8 +19,8 @@ type TestVector[T, U any] struct {
 	Errors      bool   `json:"errors"`
 }
 
-// ReadTestVector is for reading the vector at the given path
-func ReadTestVector[T, U any](path string) (TestVectors[T, U], error) {
+// LoadTestVectors is for reading the vector at the given path
+func LoadTestVectors[T, U any](path string) (TestVectors[T, U], error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return TestVectors[T, U]{}, err

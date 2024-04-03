@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/assert/v2"
-	web5go "github.com/tbd54566975/web5-go"
+	"github.com/tbd54566975/web5-go"
 	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/jwt"
 	"github.com/tbd54566975/web5-go/vc"
@@ -170,7 +170,7 @@ func TestVerify(t *testing.T) {
 
 func TestVector_Decode(t *testing.T) {
 	testVectors, err :=
-		web5go.ReadTestVector[string, any]("../web5-spec/test-vectors/vc_jwt/decode.json")
+		web5.LoadTestVectors[string, any]("../web5-spec/test-vectors/vc_jwt/decode.json")
 	assert.NoError(t, err)
 	fmt.Println("Running test vectors: ", testVectors.Description)
 
