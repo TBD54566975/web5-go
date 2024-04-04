@@ -188,3 +188,24 @@ func TestVector_Decode(t *testing.T) {
 		})
 	}
 }
+
+func TestVector_Verify(t *testing.T) {
+	testVectors, err :=
+		web5.LoadTestVectors[string, any]("../web5-spec/test-vectors/vc_jwt/verify.json")
+	assert.NoError(t, err)
+	fmt.Println("Running test vectors: ", testVectors.Description)
+
+	for _, vector := range testVectors.Vectors {
+		t.Run(vector.Description, func(t *testing.T) {
+			fmt.Println("Running test vector: ", vector.Description)
+
+			_, err := vc.Verify[vc.Claims](vector.Input)
+
+			if vector.Errors {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
