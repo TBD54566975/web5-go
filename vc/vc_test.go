@@ -41,6 +41,7 @@ func TestCreate_Options(t *testing.T) {
 		vc.Types("StreetCredential"),
 		vc.IssuanceDate(issuanceDate),
 		vc.ExpirationDate(expirationDate),
+		vc.Schemas("https://example.org/examples/degree.json"),
 	)
 
 	assert.Equal(t, 2, len(cred.Context))
@@ -54,6 +55,11 @@ func TestCreate_Options(t *testing.T) {
 	assert.Equal(t, "hehecustomid", cred.ID)
 
 	assert.NotZero(t, cred.ExpirationDate)
+
+	assert.Equal(t, 1, len(cred.CredentialSchema))
+	assert.Equal(t, "https://example.org/examples/degree.json", cred.CredentialSchema[0].ID)
+	assert.Equal(t, "JsonSchema", cred.CredentialSchema[0].Type)
+
 }
 
 func TestSign(t *testing.T) {
