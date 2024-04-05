@@ -24,13 +24,14 @@ const (
 //
 // [here]: https://www.w3.org/TR/vc-data-model/
 type DataModel[T CredentialSubject] struct {
-	Context           []string `json:"@context"`                 // https://www.w3.org/TR/vc-data-model/#contexts
-	Type              []string `json:"type"`                     // https://www.w3.org/TR/vc-data-model/#dfn-type
-	Issuer            string   `json:"issuer"`                   // https://www.w3.org/TR/vc-data-model/#issuer
-	CredentialSubject T        `json:"credentialSubject"`        // https://www.w3.org/TR/vc-data-model/#credential-subject
-	ID                string   `json:"id,omitempty"`             // https://www.w3.org/TR/vc-data-model/#identifiers
-	IssuanceDate      string   `json:"issuanceDate"`             // https://www.w3.org/TR/vc-data-model/#issuance-date
-	ExpirationDate    string   `json:"expirationDate,omitempty"` // https://www.w3.org/TR/vc-data-model/#expiration
+	Context           []string           `json:"@context"`                   // https://www.w3.org/TR/vc-data-model/#contexts
+	Type              []string           `json:"type"`                       // https://www.w3.org/TR/vc-data-model/#dfn-type
+	Issuer            string             `json:"issuer"`                     // https://www.w3.org/TR/vc-data-model/#issuer
+	CredentialSubject T                  `json:"credentialSubject"`          // https://www.w3.org/TR/vc-data-model/#credential-subject
+	ID                string             `json:"id,omitempty"`               // https://www.w3.org/TR/vc-data-model/#identifiers
+	IssuanceDate      string             `json:"issuanceDate"`               // https://www.w3.org/TR/vc-data-model/#issuance-date
+	ExpirationDate    string             `json:"expirationDate,omitempty"`   // https://www.w3.org/TR/vc-data-model/#expiration
+	CredentialSchema  []CredentialSchema `json:"credentialSchema,omitempty"` // https://www.w3.org/TR/vc-data-model-2.0/#data-schemas
 }
 
 // CredentialSubject is implemented by any type that can be used as the CredentialSubject
@@ -49,6 +50,15 @@ type DataModel[T CredentialSubject] struct {
 type CredentialSubject interface {
 	GetID() string
 	SetID(id string)
+}
+
+// CredentialSchema represents the credentialSchema property of a Verifiable Credential.
+// more information can be found [here]
+//
+// [here]: https://www.w3.org/TR/vc-data-model-2.0/#data-schemas
+type CredentialSchema struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
 }
 
 // Claims is a type alias for a map[string]any that can be used to represent the claims of a Verifiable Credential
@@ -73,6 +83,7 @@ type createOptions struct {
 	id             string
 	issuanceDate   time.Time
 	expirationDate time.Time
+	schemas        []CredentialSchema
 }
 
 // CreateOption is the return type of all Option functions that can be passed to [Create]
@@ -85,6 +96,22 @@ func Contexts(contexts ...string) CreateOption {
 			o.contexts = append(o.contexts, contexts...)
 		} else {
 			o.contexts = contexts
+		}
+	}
+}
+
+// Schemas can be used to include JSON Schemas within the Verifiable Credential created by [Create]
+// more information can be found [here]
+//
+// [here]: https://www.w3.org/TR/vc-data-model-2.0/#data-schemas
+func Schemas(schemas ...string) CreateOption {
+	return func(o *createOptions) {
+		if o.schemas != nil {
+			o.schemas = make([]CredentialSchema, 0, len(schemas))
+		}
+
+		for _, schema := range schemas {
+			o.schemas = append(o.schemas, CredentialSchema{Type: "JsonSchema", ID: schema})
 		}
 	}
 }
@@ -150,6 +177,10 @@ func Create[T CredentialSubject](claims T, opts ...CreateOption) DataModel[T] {
 		ID:                o.id,
 		IssuanceDate:      o.issuanceDate.UTC().Format(time.RFC3339),
 		CredentialSubject: claims,
+	}
+
+	if len(o.schemas) > 0 {
+		cred.CredentialSchema = o.schemas
 	}
 
 	if (o.expirationDate != time.Time{}) {
