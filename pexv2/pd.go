@@ -8,7 +8,6 @@ type PresentationDefinition struct {
 	ID               string            `json:"id"`
 	Name             string            `json:"name,omitempty"`
 	Purpose          string            `json:"purpose,omitempty"`
-	Format           string            `json:"format,omitempty"`
 	InputDescriptors []InputDescriptor `json:"input_descriptors"`
 }
 
