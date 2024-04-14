@@ -185,6 +185,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 			URI:    "did:dht:" + zbase32Encoded,
 			ID:     zbase32Encoded,
 		},
+		KeyManager: keyMgr,
 	}
 
 	document := didcore.Document{
