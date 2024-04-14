@@ -200,7 +200,7 @@ func Test_Create(t *testing.T) {
 				  {
 					"id": "did:dht:1wiaaaoagzceggsnwfzmx5cweog5msg4u536mby8sqy3mkp3wyko#dwn",
 					"type": "DecentralizedWebNode",
-					"serviceEndpoint": "https://example.com/dwn"
+					"serviceEndpoint": ["https://example.com/dwn1", "https://example.com/dwn2"]
 				  }
 				],
 				"authentication": [
@@ -254,7 +254,7 @@ func Test_Create(t *testing.T) {
 			var opts []CreateOption
 			opts = []CreateOption{Gateway(relay.URL, http.DefaultClient), KeyManager(keyMgr)}
 			for _, service := range didDoc.Service {
-				opts = append(opts, Service(service.ID, service.Type, service.ServiceEndpoint))
+				opts = append(opts, Service(service.ID, service.Type, service.ServiceEndpoint...))
 			}
 			for _, key := range test.keys {
 				opts = append(opts, PrivateKey(key.algorithmID, key.purposes...))

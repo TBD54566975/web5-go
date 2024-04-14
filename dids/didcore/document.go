@@ -27,7 +27,7 @@ const (
 // A DID Document can be retrieved by resolving a DID URI.
 type Document struct {
 	// Context is a URI that defines the schema version used in the document.
-	Context string `json:"@context,omitempty"`
+	Context []string `json:"@context,omitempty"`
 
 	// Id is the DID URI for a particular DID subject, expressed using the id property in the DID document.
 	ID string `json:"id"`
@@ -39,7 +39,6 @@ type Document struct {
 	// Controller defines an entity that is authorized to make changes to a DID document.
 	// The process of authorizing a DID controller is defined by the DID method.
 	// It can be a string or a list of strings.
-	// TODO: figure out how to handle string or list of strings
 	Controller []string `json:"controller,omitempty"`
 
 	// VerificationMethod is a list of cryptographic public keys, which can be used to authenticate or authorize
@@ -248,7 +247,7 @@ type DocumentMetadata struct {
 	// In this case, the DID method specification might need to express one or
 	// more DIDs that are logically equivalent to the resolved DID as a property
 	// of the DID document. This is the purpose of the equivalentId property.
-	EquivalentID string `json:"equivalentId,omitempty"`
+	EquivalentID []string `json:"equivalentId,omitempty"`
 	// The canonicalId property is identical to the equivalentId property except:
 	//   * it is associated with a single value rather than a set
 	//   * the DID is defined to be the canonical ID for the DID subject within
@@ -274,7 +273,7 @@ type Service struct {
 
 	// ServiceEndpoint is a network address, such as an HTTP URL, at which services
 	// operate on behalf of a DID subject.
-	ServiceEndpoint string `json:"serviceEndpoint"`
+	ServiceEndpoint []string `json:"serviceEndpoint"`
 }
 
 // VerificationMethod expresses verification methods, such as cryptographic
