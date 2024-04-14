@@ -45,7 +45,6 @@ func (r *Client) PutWithContext(ctx context.Context, didID string, msg *bep44.Me
 		return err
 	}
 
-	fmt.Println("Publishing to pkarr: pkarrURL", pkarrURL)
 	// Serialize the BEP44 message to a byte slice.
 	body, err := msg.Marshal()
 	if err != nil {

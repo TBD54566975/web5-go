@@ -165,7 +165,7 @@ func TestDHTResolve(t *testing.T) {
 	}
 }
 
-func Test_Create(t *testing.T) {
+func TestCreate(t *testing.T) {
 	tests := map[string]struct {
 		didURI         string
 		expectedResult string
@@ -262,6 +262,7 @@ func Test_Create(t *testing.T) {
 
 			createdDid, err := Create(opts...)
 			assert.NoError(t, err)
+			assert.NotZero(t, createdDid.KeyManager)
 			resolver := NewResolver(relay.URL, http.DefaultClient)
 			result, err := resolver.Resolve(createdDid.URI)
 			assert.Equal(t, len(createdDid.Document.VerificationMethod), 2)
