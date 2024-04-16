@@ -141,12 +141,20 @@ func MarshalVerificationMethod(vm *didcore.VerificationMethod) (string, error) {
 		return "", errors.New("unsupported algorithm")
 	}
 
+	// TODO: clean this up. smol monkey patch that accommodates
+	// the possibility that vm.ID may or may not have a '#'.
+	// Technically it always should but i can't confirm that given that
+	// this fix is blocking other work. did:dht will be refactored in
+	// a subsequent PR  soon (Moe: 2024-04-16)
+	splitID := strings.Split(vm.ID, "#")
+	fragment := splitID[len(splitID)-1]
 	props := []string{
-		"id=" + vm.ID,
+		"id=" + fragment,
 		"t=" + t,
 		"k=" + base64.RawURLEncoding.EncodeToString(keyBytes),
 	}
 
+	// TODO: controller should only be set in the TXT record if the value is different from document.id (Moe: 2024-04-16)
 	if len(vm.Controller) > 0 {
 		props = append(props, "c="+vm.Controller)
 	}
@@ -170,7 +178,7 @@ func MarshalService(dhtDNSkey string, s *didcore.Service, msg *dnsmessage.Messag
 }
 
 // UnmarshalVerificationMethod unpacks the TXT DNS resource encoded verification method
-func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) error {
+func UnmarshalVerificationMethod(data string, did string, vm *didcore.VerificationMethod) error {
 	propertyMap, err := parseTXTRecordData(data)
 	if err != nil {
 		return err
@@ -184,7 +192,7 @@ func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) er
 		switch property {
 		// According to https://did-dht.com/#verification-methods, this should not be a list
 		case "id":
-			vm.ID = strings.Join(v, "")
+			vm.ID = did + "#" + strings.Join(v, "")
 		case "t": // Index of the key type https://did-dht.com/registry/index.html#key-type-index
 			algorithmID, _ = dhtIndexToAlg[strings.Join(v, "")]
 		case "k": // unpadded base64URL representation of the public key
@@ -194,6 +202,11 @@ func UnmarshalVerificationMethod(data string, vm *didcore.VerificationMethod) er
 		default:
 			continue
 		}
+	}
+
+	// if controller is omitted from the record, it is assumed that controller is document.ID
+	if vm.Controller == "" {
+		vm.Controller = did
 	}
 
 	if len(key) == 0 || len(algorithmID) == 0 {

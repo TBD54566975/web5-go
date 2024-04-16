@@ -2,7 +2,6 @@ package dns
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -50,7 +49,6 @@ func Test_MarshalDIDDocument(t *testing.T) {
 	assert.NotZero(t, len(buf))
 
 	rec, _ := parseDNSDID(buf)
-	fmt.Println(rec)
 	reParsedDoc, err := rec.DIDDocument()
 	assert.NoError(t, err)
 	assert.NotZero(t, reParsedDoc)

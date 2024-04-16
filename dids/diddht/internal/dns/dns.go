@@ -39,7 +39,7 @@ func (rec *decoder) DIDDocument() (*didcore.Document, error) {
 		switch {
 		case strings.HasPrefix(name, "_k"):
 			var vMethod didcore.VerificationMethod
-			if err := UnmarshalVerificationMethod(data, &vMethod); err != nil {
+			if err := UnmarshalVerificationMethod(data, document.ID, &vMethod); err != nil {
 				// TODO handle error
 				continue
 			}
