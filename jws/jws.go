@@ -13,14 +13,14 @@ import (
 	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
-// Decode decodes the given JWS string into a [Decoded] type
+// Decode decodes the given JWS string into a [DecodedJWS] type
 //
 // # Note
 //
 // The given JWS input is assumed to be a [compact JWS]
 //
 // [compact JWS]: https://datatracker.ietf.org/doc/html/rfc7515#section-7.1
-func Decode(jws string, opts ...DecodeOption) (Decoded, error) {
+func Decode(jws string, opts ...DecodeOption) (DecodedJWS, error) {
 	o := decodeOptions{}
 
 	for _, opt := range opts {
@@ -29,19 +29,19 @@ func Decode(jws string, opts ...DecodeOption) (Decoded, error) {
 
 	parts := strings.Split(jws, ".")
 	if len(parts) != 3 {
-		return Decoded{}, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
+		return DecodedJWS{}, fmt.Errorf("malformed JWS. Expected 3 parts, got %d", len(parts))
 	}
 
 	header, err := DecodeHeader(parts[0])
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode header: %w", err)
+		return DecodedJWS{}, fmt.Errorf("malformed JWS. Failed to decode header: %w", err)
 	}
 
 	var payload []byte
 	if o.payload == nil {
 		payload, err = base64.RawURLEncoding.DecodeString(parts[1])
 		if err != nil {
-			return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
+			return DecodedJWS{}, fmt.Errorf("malformed JWS. Failed to decode payload: %w", err)
 		}
 	} else {
 		payload = o.payload
@@ -50,14 +50,24 @@ func Decode(jws string, opts ...DecodeOption) (Decoded, error) {
 
 	signature, err := DecodeSignature(parts[2])
 	if err != nil {
-		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %w", err)
+		return DecodedJWS{}, fmt.Errorf("malformed JWS. Failed to decode signature: %w", err)
 	}
 
-	return Decoded{
+	if header.KID == "" {
+		return DecodedJWS{}, errors.New("malformed JWS. Expected header to contain kid.")
+	}
+
+	signerDID, err := _did.Parse(header.KID)
+	if err != nil {
+		return DecodedJWS{}, fmt.Errorf("malformed JWS. Failed to parse kid: %w", err)
+	}
+
+	return DecodedJWS{
 		Header:    header,
 		Payload:   payload,
 		Signature: signature,
 		Parts:     parts,
+		SignerDid: signerDID.URI,
 	}, nil
 }
 
@@ -207,7 +217,7 @@ func Sign(payload []byte, did _did.BearerDID, opts ...SignOpt) (string, error) {
 
 // Verify verifies the given compactJWS by resolving the DID Document from the kid header value
 // and using the associated public key found by resolving the DID Document
-func Verify(compactJWS string, opts ...DecodeOption) (Decoded, error) {
+func Verify(compactJWS string, opts ...DecodeOption) (DecodedJWS, error) {
 	decodedJWS, err := Decode(compactJWS, opts...)
 	if err != nil {
 		return decodedJWS, fmt.Errorf("signature verification failed: %w", err)
@@ -218,17 +228,18 @@ func Verify(compactJWS string, opts ...DecodeOption) (Decoded, error) {
 	return decodedJWS, err
 }
 
-// Decoded is a compact JWS decoded into it's parts
-type Decoded struct {
+// DecodedJWS is a compact JWS decoded into its parts
+type DecodedJWS struct {
 	Header    Header
 	Payload   []byte
 	Signature []byte
 	Parts     []string
+	SignerDid string
 }
 
 // Verify verifies the given compactJWS by resolving the DID Document from the kid header value
 // and using the associated public key found by resolving the DID Document
-func (jws Decoded) Verify() error {
+func (jws DecodedJWS) Verify() error {
 	if jws.Header.ALG == "" || jws.Header.KID == "" {
 		return errors.New("malformed JWS header. alg and kid are required")
 	}

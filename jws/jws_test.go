@@ -41,7 +41,7 @@ func TestDecode_Bad(t *testing.T) {
 		decoded, err := jws.Decode(vector)
 
 		assert.Error(t, err, "expected verification error. vector: %s", vector)
-		assert.Equal(t, jws.Decoded{}, decoded, "expected empty DecodedJWS")
+		assert.Equal(t, jws.DecodedJWS{}, decoded, "expected empty DecodedJWS")
 	}
 }
 
@@ -121,7 +121,7 @@ func TestDecoded_Verify(t *testing.T) {
 
 	decoded, err := jws.Decode(compactJWS)
 	assert.NoError(t, err)
-	assert.NotEqual(t, jws.Decoded{}, decoded, "expected decoded to not be empty")
+	assert.NotEqual(t, jws.DecodedJWS{}, decoded, "expected decoded to not be empty")
 }
 
 func TestDecoded_Verify_Bad(t *testing.T) {

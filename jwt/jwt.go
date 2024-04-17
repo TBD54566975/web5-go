@@ -147,7 +147,7 @@ func (jwt Decoded) Verify() error {
 		return fmt.Errorf("malformed JWT. Failed to decode claims: %w", err)
 	}
 
-	decodedJWS := jws.Decoded{
+	decodedJWS := jws.DecodedJWS{
 		Header:    jwt.Header,
 		Payload:   claimsBytes,
 		Signature: jwt.Signature,
