@@ -54,9 +54,8 @@ func TestDecode_SuccessWithTestJwtWithPayload(t *testing.T) {
 	var payloadMap map[string]interface{}
 
 	err = json.Unmarshal(decoded.Payload, &payloadMap)
-	if err != nil {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+
 	if iss, ok := payloadMap["iss"].(string); ok {
 		assert.Equal(t, "did:jwk:eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6Imdl"+
 			"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", iss)
@@ -109,9 +108,8 @@ func TestDecode_SuccessWithTestJwtWithDetachedPayload(t *testing.T) {
 	var payloadMap map[string]interface{}
 
 	err = json.Unmarshal(decoded.Payload, &payloadMap)
-	if err != nil {
-		t.Fail()
-	}
+	assert.NoError(t, err)
+
 	if iss, ok := payloadMap["iss"].(string); ok {
 		assert.Equal(t, "did:jwk:eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6Imdl"+
 			"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", iss)
