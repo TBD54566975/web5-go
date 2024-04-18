@@ -53,11 +53,21 @@ func Decode(jws string, opts ...DecodeOption) (Decoded, error) {
 		return Decoded{}, fmt.Errorf("malformed JWS. Failed to decode signature: %w", err)
 	}
 
+	if header.KID == "" {
+		return Decoded{}, errors.New("malformed JWS. Expected header to contain kid.")
+	}
+
+	signerDID, err := _did.Parse(header.KID)
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWS. Failed to parse kid: %w", err)
+	}
+
 	return Decoded{
 		Header:    header,
 		Payload:   payload,
 		Signature: signature,
 		Parts:     parts,
+		SignerDID: signerDID,
 	}, nil
 }
 
@@ -218,12 +228,13 @@ func Verify(compactJWS string, opts ...DecodeOption) (Decoded, error) {
 	return decodedJWS, err
 }
 
-// Decoded is a compact JWS decoded into it's parts
+// Decoded is a compact JWS decoded into its parts
 type Decoded struct {
 	Header    Header
 	Payload   []byte
 	Signature []byte
 	Parts     []string
+	SignerDID _did.DID
 }
 
 // Verify verifies the given compactJWS by resolving the DID Document from the kid header value
