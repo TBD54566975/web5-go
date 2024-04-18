@@ -66,12 +66,12 @@ func (rec *decoder) DIDDocument() (*didcore.Document, error) {
 				didcore.Purposes(opts...),
 			)
 		case strings.HasPrefix(name, "_s"):
-			var s didcore.Service
-			if err := UnmarshalService(data, &s); err != nil {
+			var service didcore.Service
+			if err := UnmarshalService(data, &service); err != nil {
 				// TODO handle error
 				continue
 			}
-			document.AddService(&s)
+			document.AddService(service)
 		case strings.HasPrefix(name, "_cnt"):
 			// TODO add controller https://did-dht.com/#controller
 			// optional field

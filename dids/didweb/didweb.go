@@ -177,7 +177,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 	}
 
 	for _, svc := range options.services {
-		document.AddService(&svc) //nolint:gosec
+		document.AddService(svc) //nolint:gosec
 	}
 
 	return _did.BearerDID{

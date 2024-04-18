@@ -191,7 +191,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 	document := didcore.Document{
 		Context:            []string{"https://www.w3.org/ns/did/v1"},
 		ID:                 bdid.URI,
-		Service:            []*didcore.Service{},
+		Service:            []didcore.Service{},
 		VerificationMethod: []didcore.VerificationMethod{},
 	}
 
@@ -247,8 +247,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 		document.AddVerificationMethod(newVM, didcore.Purposes(pk.purposes...))
 	}
 
-	for i := range o.services {
-		service := &o.services[i]
+	for _, service := range o.services {
 		document.AddService(service)
 	}
 

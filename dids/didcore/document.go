@@ -48,7 +48,7 @@ type Document struct {
 	// Service expresses ways of communicating with the DID subject or associated entities.
 	// A service can be any type of service the DID subject wants to advertise.
 	// spec reference: https://www.w3.org/TR/did-core/#verification-methods
-	Service []*Service `json:"service,omitempty"`
+	Service []Service `json:"service,omitempty"`
 
 	// AssertionMethod is used to specify how the DID subject is expected to express claims,
 	// such as for the purposes of issuing a Verifiable Credential.
@@ -193,7 +193,7 @@ func (d *Document) SelectVerificationMethod(selector VMSelector) (VerificationMe
 }
 
 // AddService will append the given Service to the Document.Services array
-func (d *Document) AddService(service *Service) {
+func (d *Document) AddService(service Service) {
 	d.Service = append(d.Service, service)
 }
 
