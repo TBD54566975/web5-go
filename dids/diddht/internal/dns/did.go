@@ -68,15 +68,15 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 	msg.Answers = append(msg.Answers, resource)
 
 	// add verification methods to dns message
-	for _, v := range d.VerificationMethod {
-		vm := v
+	for i := range d.VerificationMethod {
+		vm := &d.VerificationMethod[i]
 		// look for the key after the # in the verification method ID
-		key, ok := vmIDToK[v.ID]
+		key, ok := vmIDToK[vm.ID]
 		if !ok {
 			// TODO handle error
 			continue
 		}
-		buf, err := MarshalVerificationMethod(&vm)
+		buf, err := MarshalVerificationMethod(vm)
 		if err != nil {
 			return nil, err
 		}

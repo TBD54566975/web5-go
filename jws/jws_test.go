@@ -53,7 +53,10 @@ func TestDecode_SuccessWithTestJwtWithPayload(t *testing.T) {
 		"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", decoded.SignerDID.URI)
 	var payloadMap map[string]interface{}
 
-	json.Unmarshal(decoded.Payload, &payloadMap)
+	err = json.Unmarshal(decoded.Payload, &payloadMap)
+	if err != nil {
+		t.Fail()
+	}
 	if iss, ok := payloadMap["iss"].(string); ok {
 		assert.Equal(t, "did:jwk:eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6Imdl"+
 			"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", iss)
@@ -105,7 +108,10 @@ func TestDecode_SuccessWithTestJwtWithDetachedPayload(t *testing.T) {
 		"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", decoded.SignerDID.URI)
 	var payloadMap map[string]interface{}
 
-	json.Unmarshal(decoded.Payload, &payloadMap)
+	err = json.Unmarshal(decoded.Payload, &payloadMap)
+	if err != nil {
+		t.Fail()
+	}
 	if iss, ok := payloadMap["iss"].(string); ok {
 		assert.Equal(t, "did:jwk:eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6Imdl"+
 			"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", iss)

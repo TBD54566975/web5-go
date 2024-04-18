@@ -247,9 +247,9 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 		document.AddVerificationMethod(newVM, didcore.Purposes(pk.purposes...))
 	}
 
-	for _, service := range o.services {
-		s := service
-		document.AddService(&s)
+	for i := range o.services {
+		service := &o.services[i]
+		document.AddService(service)
 	}
 
 	// 5. Map the output DID Document to a DNS packet
