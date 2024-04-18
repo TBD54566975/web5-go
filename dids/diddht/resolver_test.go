@@ -60,8 +60,7 @@ func Test_VectorsResolve(t *testing.T) {
 
 	r := NewResolver(ts.URL, http.DefaultClient)
 
-	for i := range vectors {
-		vector := &vectors[i]
+	for _, vector := range vectors {
 		t.Run(vector.Description, func(t *testing.T) {
 			res, err := r.Resolve(vector.Input.DIDUri)
 			if vector.Errors {
