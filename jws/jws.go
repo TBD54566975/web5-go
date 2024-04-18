@@ -54,7 +54,7 @@ func Decode(jws string, opts ...DecodeOption) (Decoded, error) {
 	}
 
 	if header.KID == "" {
-		return Decoded{}, errors.New("malformed JWS. Expected header to contain kid.")
+		return Decoded{}, errors.New("malformed JWS. Expected header to contain kid")
 	}
 
 	signerDID, err := _did.Parse(header.KID)

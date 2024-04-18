@@ -68,10 +68,9 @@ func MarshalDIDDocument(d *didcore.Document) ([]byte, error) {
 	msg.Answers = append(msg.Answers, resource)
 
 	// add verification methods to dns message
-	for _, v := range d.VerificationMethod {
-		vm := v
+	for _, vm := range d.VerificationMethod {
 		// look for the key after the # in the verification method ID
-		key, ok := vmIDToK[v.ID]
+		key, ok := vmIDToK[vm.ID]
 		if !ok {
 			// TODO handle error
 			continue
@@ -166,7 +165,7 @@ func MarshalVerificationMethod(vm *didcore.VerificationMethod) (string, error) {
 }
 
 // MarshalService packs a service into a TXT DNS resource record and adds to the DNS message Answers
-func MarshalService(dhtDNSkey string, s *didcore.Service, msg *dnsmessage.Message) error {
+func MarshalService(dhtDNSkey string, s didcore.Service, msg *dnsmessage.Message) error {
 	rawData := fmt.Sprintf("id=%s;t=%s;se=%s", s.ID, s.Type, strings.Join(s.ServiceEndpoint, ","))
 
 	resource, err := newResource(fmt.Sprintf("_%s._did.", dhtDNSkey), rawData)

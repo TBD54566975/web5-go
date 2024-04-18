@@ -1,11 +1,6 @@
 run:
   tests: true
   timeout: 5m
-  skip-dirs:
-    - resources
-    - old
-  skip-files:
-    - cmd/protopkg/main.go
 
 output:
   print-issued-lines: false
@@ -73,12 +68,11 @@ linters:
     - nolintlint
     - wrapcheck # We might want to re-enable this if we manually wrap all the existing errors with fmt.Errorf
     - testableexamples
+    
 
 linters-settings:
   exhaustive:
     default-signifies-exhaustive: true
-  govet:
-    check-shadowing: true
   dupl:
     threshold: 100
   goconst:
@@ -101,9 +95,9 @@ linters-settings:
             desc: "use fmt.Errorf or errors.New"
           - pkg: braces.dev/errtrace
             desc: "use fmt.Errorf or errors.New"
-  # wrapcheck:
-  #   ignorePackageGlobs:
-  #     - github.com/TBD54566975/ftl/*
+  gosec:
+    excludes:
+      - G601
 
 issues:
   max-same-issues: 0

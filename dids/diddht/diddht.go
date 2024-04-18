@@ -191,7 +191,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 	document := didcore.Document{
 		Context:            []string{"https://www.w3.org/ns/did/v1"},
 		ID:                 bdid.URI,
-		Service:            []*didcore.Service{},
+		Service:            []didcore.Service{},
 		VerificationMethod: []didcore.VerificationMethod{},
 	}
 
@@ -248,8 +248,7 @@ func CreateWithContext(ctx context.Context, opts ...CreateOption) (did.BearerDID
 	}
 
 	for _, service := range o.services {
-		s := service
-		document.AddService(&s)
+		document.AddService(service)
 	}
 
 	// 5. Map the output DID Document to a DNS packet
