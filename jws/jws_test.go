@@ -50,7 +50,7 @@ func TestDecode_SuccessWithTestJwtWithPayload(t *testing.T) {
 	assert.Equal(t, "EdDSA", decoded.Header.ALG)
 	assert.Equal(t, "JWT", decoded.Header.TYP)
 	assert.Equal(t, "did:jwk:eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6Imdl"+
-		"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", decoded.SignerDid)
+		"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", decoded.SignerDID.URI)
 	var payloadMap map[string]interface{}
 
 	json.Unmarshal(decoded.Payload, &payloadMap)
@@ -102,7 +102,7 @@ func TestDecode_SuccessWithTestJwtWithDetachedPayload(t *testing.T) {
 	assert.Equal(t, "EdDSA", decoded.Header.ALG)
 	assert.Equal(t, "JWT", decoded.Header.TYP)
 	assert.Equal(t, "did:jwk:eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6Imdl"+
-		"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", decoded.SignerDid)
+		"Z29acnY5czlnUkpOZkhPeTkyNmhkWk50U1lYZ2hhYl9RRmhFNTM3Yk0ifQ", decoded.SignerDID.URI)
 	var payloadMap map[string]interface{}
 
 	json.Unmarshal(decoded.Payload, &payloadMap)

@@ -67,7 +67,7 @@ func Decode(jws string, opts ...DecodeOption) (Decoded, error) {
 		Payload:   payload,
 		Signature: signature,
 		Parts:     parts,
-		SignerDid: signerDID.URI,
+		SignerDID: signerDID,
 	}, nil
 }
 
@@ -234,7 +234,7 @@ type Decoded struct {
 	Payload   []byte
 	Signature []byte
 	Parts     []string
-	SignerDid string
+	SignerDID _did.DID
 }
 
 // Verify verifies the given compactJWS by resolving the DID Document from the kid header value
