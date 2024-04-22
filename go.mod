@@ -9,7 +9,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0
 	github.com/google/uuid v1.6.0
 	github.com/tv42/zbase32 v0.0.0-20220222190657-f76a9fc892fa
-	golang.org/x/net v0.20.0
+	golang.org/x/net v0.23.0
 )
 
 require (
@@ -19,5 +19,5 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 )
