@@ -12,24 +12,24 @@ type TestVectors[T, U any] struct {
 }
 
 // TestVector is an individual test vector case
-type TestVector[T, U any] struct {
+type TestVector[I, O any] struct {
 	Description string `json:"description"`
-	Input       T      `json:"input"`
-	Output      U      `json:"output"`
+	Input       I      `json:"input"`
+	Output      O      `json:"output"`
 	Errors      bool   `json:"errors"`
 }
 
 // LoadTestVectors is for reading the vector at the given path
-func LoadTestVectors[T, U any](path string) (TestVectors[T, U], error) {
+func LoadTestVectors[I, O any](path string) (TestVectors[I, O], error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return TestVectors[T, U]{}, err
+		return TestVectors[I, O]{}, err
 	}
 
-	var testVectors TestVectors[T, U]
+	var testVectors TestVectors[I, O]
 	err = json.Unmarshal(data, &testVectors)
 	if err != nil {
-		return TestVectors[T, U]{}, err
+		return TestVectors[I, O]{}, err
 	}
 
 	return testVectors, nil

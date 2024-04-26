@@ -9,3 +9,6 @@ test:
 build:
     @echo "Building..."
     @go build ./...
+
+submodule:
+  @git submodule update --remote --merge

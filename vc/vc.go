@@ -32,6 +32,14 @@ type DataModel[T CredentialSubject] struct {
 	IssuanceDate      string             `json:"issuanceDate"`               // https://www.w3.org/TR/vc-data-model/#issuance-date
 	ExpirationDate    string             `json:"expirationDate,omitempty"`   // https://www.w3.org/TR/vc-data-model/#expiration
 	CredentialSchema  []CredentialSchema `json:"credentialSchema,omitempty"` // https://www.w3.org/TR/vc-data-model-2.0/#data-schemas
+	Evidence          []Evidence         `json:"evidence,omitempty"`         // https://www.w3.org/TR/vc-data-model/#evidence
+}
+
+// todo is `AdditionalFields` the right name?
+type Evidence struct {
+	ID          string `json:"id,omitempty"`
+	Type        string `json:"type,omitempty"`
+	AdditionalFields map[string]interface{}
 }
 
 // CredentialSubject is implemented by any type that can be used as the CredentialSubject

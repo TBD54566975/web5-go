@@ -29,12 +29,22 @@ type Constraints struct {
 
 // Field contains the requirements for a given field within a proof
 type Field struct {
-	ID      string   `json:"id,omitempty"`
-	Name    string   `json:"name,omitempty"`
-	Path    []string `json:"path,omitempty"`
-	Purpose string   `json:"purpose,omitempty"`
-	Filter  Filter   `json:"filter,omitempty"`
+	ID        string       `json:"id,omitempty"`
+	Name      string       `json:"name,omitempty"`
+	Path      []string     `json:"path,omitempty"`
+	Purpose   string       `json:"purpose,omitempty"`
+	Filter    *Filter       `json:"filter,omitempty"`
+	Optional  bool         `json:"optional,omitempty"`
+	Predicate *Optionality `json:"predicate,omitempty"`
 }
+
+type Optionality string
+
+// Constants for Optionality values
+const (
+	Required  Optionality = "required"
+	Preferred Optionality = "preferred"
+)
 
 // Filter is a JSON Schema that is applied against the value of a field.
 type Filter struct {
