@@ -45,7 +45,7 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 		}
 		for _, fieldToken := range fieldTokens {
 			for _, path := range fieldToken.Paths {
-				marshaledVcJwt, _ := json.Marshal(decoded.VC)
+				marshaledVcJwt, _ := json.Marshal(decoded.JWT.Claims)
 				var jsondata interface{}
 				err := json.Unmarshal(marshaledVcJwt, &jsondata)
 				if err != nil {
@@ -55,7 +55,7 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 				fmt.Printf("Trying to find %s in %+v\n\n", path, decoded.VC)
 				result, err := jsonpath.Get(path, jsondata)
 				if err != nil {
-					fmt.Printf("for path %s\n field was NOT found in VC: %+v\n\n", path, decoded.VC.CredentialSubject)
+					fmt.Printf("for path %s\n field was NOT found in VC: %+v\n\n", path, decoded.VC)
 					continue
 				}
 
@@ -68,10 +68,10 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 	}
 
 	var answer []string
-	for vcJwt, gjsonResult := range selectionCandidates {
+	for vcJwt, result := range selectionCandidates {
 
 		for _, jsonSchema := range jsonSchemas {
-			filterSatisfied := satisfiesFieldFilter(gjsonResult, jsonSchema)
+			filterSatisfied := satisfiesFieldFilter(result, jsonSchema)
 			if filterSatisfied {
 				fmt.Println("Filter satisfied!")
 				answer = append(answer, vcJwt)

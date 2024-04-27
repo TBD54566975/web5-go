@@ -22,7 +22,27 @@ type PresentationOutput struct {
 
 func TestDecode(t *testing.T) {
 	assert.True(t, true, "test")
-	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../../web5-spec/test-vectors/presentation_exchange/select_credentials.json")
+	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials.json")
+	assert.NoError(t, err)
+
+	for _, vector := range testVectors.Vectors {
+		t.Run(vector.Description, func(t *testing.T) {
+			fmt.Println("Running test vector: ", vector.Description)
+
+			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
+
+			assert.NoError(t, err)
+			fmt.Printf("Selected credentials: %s\n\n\n expected output %s\n\n\n", vcJwts, vector.Output.SelectedCredentials)
+			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
+
+		})
+	}
+
+}
+
+func TestDecode_WithFilter(t *testing.T) {
+	assert.True(t, true, "test")
+	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_with_filter.json")
 	assert.NoError(t, err)
 
 	for _, vector := range testVectors.Vectors {
