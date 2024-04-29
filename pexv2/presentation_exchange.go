@@ -11,21 +11,21 @@ import (
 	"github.com/tbd54566975/web5-go/vc"
 )
 
-type FieldToken struct {
-	Token string
+type FieldPath struct {
 	Paths []string
 }
 
 func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, error) {
 
-	fieldPaths := make(map[string]FieldToken)
+	fieldPaths := make(map[string]FieldPath)
 	fieldFilters := make(map[string]Filter)
 
+	// Extract the field paths and filters from the input descriptors
 	for _, inputDescriptor := range pd.InputDescriptors {
 		for _, field := range inputDescriptor.Constraints.Fields {
-			token := generateRandomToken() // field.ID
+			token := generateRandomToken()
 			paths := field.Path
-			fieldPaths[token] = FieldToken{Token: token, Paths: paths}
+			fieldPaths[token] = FieldPath{Paths: paths}
 
 			if field.Filter != nil {
 				fieldFilters[token] = *field.Filter
@@ -34,6 +34,7 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 	}
 
 	selectionCandidates := make(map[string]interface{})
+	// Find vcJwts whose fields match the fieldPaths
 	for _, vcJwt := range vcJwts {
 
 		decoded, err := vc.Decode[vc.Claims](vcJwt)
@@ -50,45 +51,46 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 					continue
 				}
 				fmt.Printf("Trying to find %s in %+v\n\n", path, decoded.VC)
-				result, err := jsonpath.Get(path, jsondata)
+				value, err := jsonpath.Get(path, jsondata)
 				if err != nil {
 					fmt.Printf("for path %s\n field was NOT found in VC: %+v\n\n", path, decoded.VC)
 					continue
 				}
 
 				// selectionCandidates[fieldToken.Token] = result
-				selectionCandidates[vcJwt] = result
+				selectionCandidates[vcJwt] = value
 				fmt.Printf("for path %s\n field WAS found in VC: %+v\n\n", path, decoded.VC.CredentialSubject)
 				break
 			}
 		}
 	}
 
-	var answer []string
-	for vcJwt, result := range selectionCandidates {
+	var matchingVcJWTs []string
 
-		for _, jsonSchema := range fieldFilters {
-			fmt.Println(result)
-			filterSatisfied := satisfiesFieldFilter(result, jsonSchema)
+	// If no field filters are specified in PD, return all the vcJwts that matched the fieldPaths (selectionCandidates keys)
+	if len(fieldFilters) == 0 {
+		for vcJwt := range selectionCandidates {
+			matchingVcJWTs = append(matchingVcJWTs, vcJwt)
+		}
+		return matchingVcJWTs, nil
+	}
+
+	// Filter further for vcJwts whose fields match the fieldFilters
+	for vcJwt, value := range selectionCandidates {
+
+		for _, filter := range fieldFilters {
+			fmt.Println(value)
+			filterSatisfied := satisfiesFieldFilter(value, filter)
 			if filterSatisfied {
-				fmt.Printf("Filter satisfied! %v", result)
-				answer = append(answer, vcJwt)
-				// return answer, nil
+				fmt.Printf("Filter satisfied! %v", value)
+				matchingVcJWTs = append(matchingVcJWTs, vcJwt)
 			} else {
-				fmt.Println("Filter not satisfied")
-				// return []string{}, nil
+				fmt.Printf("Filter NOT satisfied. %v", value)
 			}
 		}
 	}
 
-	if len(answer) == 0 {
-		// Iterate over the map and append each key to the keys slice
-		for key := range selectionCandidates {
-			answer = append(answer, key)
-		}
-	}
-
-	return answer, nil
+	return matchingVcJWTs, nil
 }
 
 func satisfiesFieldFilter(fieldValue interface{}, filter Filter) bool {
@@ -135,6 +137,7 @@ func satisfiesFieldFilter(fieldValue interface{}, filter Filter) bool {
 			if filter.Contains != nil {
 				oneMatch := false
 				for _, item := range arrayVal {
+					// recursively check for filter.Contains in each item
 					if satisfiesFieldFilter(item, *filter.Contains) {
 						oneMatch = true
 					}
@@ -161,14 +164,4 @@ func generateRandomToken() string {
 
 	// Encode the byte slice to a hexadecimal string.
 	return hex.EncodeToString(b)
-}
-
-/*
-loop 1: create json schema using PD
-loop 2: loop through
-*/
-
-type JwtNodePair struct {
-	VcJwt string
-	Node  []byte
 }
