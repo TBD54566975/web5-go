@@ -18,32 +18,29 @@ type FieldToken struct {
 
 func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, error) {
 
-	fieldTokens := make(map[string]FieldToken)
-	jsonSchemas := make(map[string]Filter)
+	fieldPaths := make(map[string]FieldToken)
+	fieldFilters := make(map[string]Filter)
 
 	for _, inputDescriptor := range pd.InputDescriptors {
 		for _, field := range inputDescriptor.Constraints.Fields {
 			token := generateRandomToken() // field.ID
 			paths := field.Path
-			fieldTokens[token] = FieldToken{Token: token, Paths: paths}
+			fieldPaths[token] = FieldToken{Token: token, Paths: paths}
 
 			if field.Filter != nil {
-				jsonSchemas[token] = *field.Filter
+				fieldFilters[token] = *field.Filter
 			}
 		}
 	}
 
 	selectionCandidates := make(map[string]interface{})
-	for i, vcJwt := range vcJwts {
-		if i == 1 || i == 3 {
-			fmt.Printf("Decoding VC JWT input index, this one should match %d\n\n", i)
-		}
+	for _, vcJwt := range vcJwts {
 
 		decoded, err := vc.Decode[vc.Claims](vcJwt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode vcJwt: %w", err)
 		}
-		for _, fieldToken := range fieldTokens {
+		for _, fieldToken := range fieldPaths {
 			for _, path := range fieldToken.Paths {
 				marshaledVcJwt, _ := json.Marshal(decoded.JWT.Claims)
 				var jsondata interface{}
@@ -70,15 +67,16 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 	var answer []string
 	for vcJwt, result := range selectionCandidates {
 
-		for _, jsonSchema := range jsonSchemas {
+		for _, jsonSchema := range fieldFilters {
+			fmt.Println(result)
 			filterSatisfied := satisfiesFieldFilter(result, jsonSchema)
 			if filterSatisfied {
-				fmt.Println("Filter satisfied!")
+				fmt.Printf("Filter satisfied! %v", result)
 				answer = append(answer, vcJwt)
-				return answer, nil
+				// return answer, nil
 			} else {
 				fmt.Println("Filter not satisfied")
-				return []string{}, nil
+				// return []string{}, nil
 			}
 		}
 	}
@@ -103,8 +101,12 @@ func satisfiesFieldFilter(fieldValue interface{}, filter Filter) bool {
 	// Check if the field value matches the constant if specified
 	if filter.Const != "" {
 		var fieldValue string
-		if err := json.Unmarshal(resultBytes, &fieldValue); err == nil && fieldValue == filter.Const {
+		err := json.Unmarshal(resultBytes, &fieldValue)
+		fmt.Printf("fieldValue: %s filter.Const %s\n", fieldValue, filter.Const)
+		if err == nil && fieldValue == filter.Const {
 			return true
+		} else {
+			return false
 		}
 	}
 
@@ -131,11 +133,13 @@ func satisfiesFieldFilter(fieldValue interface{}, filter Filter) bool {
 				return false
 			}
 			if filter.Contains != nil {
+				oneMatch := false
 				for _, item := range arrayVal {
-					if satisfiesFieldFilter(item, *filter.Contains) { // Assuming recursive check on each item
-						return true
+					if satisfiesFieldFilter(item, *filter.Contains) {
+						oneMatch = true
 					}
 				}
+				return oneMatch
 			}
 		default:
 			// Unsupported type
