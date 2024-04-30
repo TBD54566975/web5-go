@@ -52,16 +52,13 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 					fmt.Println("Error unmarshaling JSON:", err)
 					continue
 				}
-				fmt.Printf("Trying to find %s in %+v\n\n", path, decoded.VC)
 				value, err := jsonpath.Get(path, jsondata)
 				if err != nil {
-					fmt.Printf("for path %s\n field was NOT found in VC: %+v\n\n", path, decoded.VC)
 					continue
 				}
 
 				// selectionCandidates[fieldToken.Token] = result
 				selectionCandidates[vcJwt] = value
-				fmt.Printf("for path %s\n field WAS found in VC: %+v\n\n", path, decoded.VC.CredentialSubject)
 				break
 			}
 		}
@@ -81,13 +78,9 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 	for vcJwt, value := range selectionCandidates {
 
 		for _, filter := range fieldFilters {
-			fmt.Println(value)
 			filterSatisfied := satisfiesFieldFilter(value, filter)
 			if filterSatisfied {
-				fmt.Printf("Filter satisfied! %v", value)
 				matchingVcJWTs = append(matchingVcJWTs, vcJwt)
-			} else {
-				fmt.Printf("Filter NOT satisfied. %v", value)
 			}
 		}
 	}
@@ -106,7 +99,6 @@ func satisfiesFieldFilter(fieldValue interface{}, filter Filter) bool {
 	if filter.Const != "" {
 		var fieldValue string
 		err := json.Unmarshal(resultBytes, &fieldValue)
-		fmt.Printf("fieldValue: %s filter.Const %s\n", fieldValue, filter.Const)
 		if err == nil && fieldValue == filter.Const {
 			return true
 		}

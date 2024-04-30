@@ -31,7 +31,6 @@ func TestDecode(t *testing.T) {
 			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
 
 			assert.NoError(t, err)
-			fmt.Printf("Selected credentials: %s\n\n\n expected output %s\n\n\n", vcJwts, vector.Output.SelectedCredentials)
 			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
 
 		})
@@ -50,7 +49,6 @@ func TestDecode_WithArrayFilter(t *testing.T) {
 			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
 
 			assert.NoError(t, err)
-			fmt.Printf("Selected credentials: %s\n\n\n expected output %s\n\n\n", vcJwts, vector.Output.SelectedCredentials)
 			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
 
 		})
@@ -69,7 +67,6 @@ func TestDecode_WithConstFilter(t *testing.T) {
 			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
 
 			assert.NoError(t, err)
-			fmt.Printf("Selected credentials: %s\n\n\n expected output %s\n\n\n", vcJwts, vector.Output.SelectedCredentials)
 			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
 
 		})
@@ -87,7 +84,6 @@ func TestDecode_WithStringRegexFilter(t *testing.T) {
 			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
 
 			assert.NoError(t, err)
-			fmt.Printf("Selected credentials: %s\n\n\n expected output %s\n\n\n", vcJwts, vector.Output.SelectedCredentials)
 			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
 
 		})
@@ -105,7 +101,6 @@ func TestDecode_WithNumberFilter(t *testing.T) {
 			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
 
 			assert.NoError(t, err)
-			fmt.Printf("Selected credentials: %s\n\n\n expected output %s\n\n\n", vcJwts, vector.Output.SelectedCredentials)
 			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
 
 		})
