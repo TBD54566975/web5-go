@@ -33,7 +33,7 @@ type Field struct {
 	Name      string       `json:"name,omitempty"`
 	Path      []string     `json:"path,omitempty"`
 	Purpose   string       `json:"purpose,omitempty"`
-	Filter    *Filter       `json:"filter,omitempty"`
+	Filter    *Filter      `json:"filter,omitempty"`
 	Optional  bool         `json:"optional,omitempty"`
 	Predicate *Optionality `json:"predicate,omitempty"`
 }
