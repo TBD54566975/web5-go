@@ -89,8 +89,6 @@ linters-settings:
         deny:
           - pkg: github.com/pkg/errors
             desc: "use fmt.Errorf or errors.New"
-          - pkg: github.com/stretchr/testify
-            desc: "use fmt.Errorf or errors.New"
           - pkg: github.com/alecthomas/errors
             desc: "use fmt.Errorf or errors.New"
           - pkg: braces.dev/errtrace

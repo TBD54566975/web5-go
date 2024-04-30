@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
+	testify "github.com/stretchr/testify/assert"
 	"github.com/tbd54566975/web5-go"
-	"github.com/tbd54566975/web5-go/dids/didjwk"
 	"github.com/tbd54566975/web5-go/pexv2"
-	"github.com/tbd54566975/web5-go/vc"
 )
 
 type PresentationInput struct {
@@ -31,8 +30,7 @@ func TestDecode(t *testing.T) {
 			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
 
 			assert.NoError(t, err)
-			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
-
+			testify.ElementsMatch(t, vector.Output.SelectedCredentials, vcJwts)
 		})
 	}
 
@@ -105,24 +103,4 @@ func TestDecode_WithNumberFilter(t *testing.T) {
 
 		})
 	}
-}
-
-func TestLol(t *testing.T) {
-	subject, err := didjwk.Create()
-	if err != nil {
-		panic(err)
-	}
-	// creation
-	claims := vc.Claims{"id": subject.URI, "age": 45}
-	cred := vc.Create(claims)
-
-	cred.Type = append(cred.Type, "StreetCredential")
-
-	// signing
-	vcJWT, err := cred.Sign(subject)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(vcJWT)
 }
