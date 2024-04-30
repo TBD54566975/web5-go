@@ -35,10 +35,11 @@ type DataModel[T CredentialSubject] struct {
 	Evidence          []Evidence         `json:"evidence,omitempty"`         // https://www.w3.org/TR/vc-data-model/#evidence
 }
 
-// todo is `AdditionalFields` the right name?
+// Evidence represents the evidence property of a Verifiable Credential.
 type Evidence struct {
 	ID          string `json:"id,omitempty"`
 	Type        string `json:"type,omitempty"`
+	// todo is `AdditionalFields` the right name?
 	AdditionalFields map[string]interface{}
 }
 

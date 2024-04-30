@@ -38,6 +38,7 @@ type Field struct {
 	Predicate *Optionality `json:"predicate,omitempty"`
 }
 
+// Optionality is a type alias for the possible values of the predicate field
 type Optionality string
 
 // Constants for Optionality values

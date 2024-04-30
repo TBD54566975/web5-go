@@ -11,10 +11,12 @@ import (
 	"github.com/tbd54566975/web5-go/vc"
 )
 
+// FieldPath represents the valid paths to a field in a VC
 type FieldPath struct {
 	Paths []string
 }
 
+// SelectCredentials selects the VCs that satisfy the constraints specified in the Presentation Definition
 func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, error) {
 
 	fieldPaths := make(map[string]FieldPath)
@@ -107,9 +109,8 @@ func satisfiesFieldFilter(fieldValue interface{}, filter Filter) bool {
 		fmt.Printf("fieldValue: %s filter.Const %s\n", fieldValue, filter.Const)
 		if err == nil && fieldValue == filter.Const {
 			return true
-		} else {
-			return false
 		}
+		return false
 	}
 
 	// Type checking and pattern matching
