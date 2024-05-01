@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/tbd54566975/web5-go/vc"
+
+	"github.com/tbd54566975/web5-go/dids/didjwk"
+
 	"github.com/alecthomas/assert/v2"
 	testify "github.com/stretchr/testify/assert"
 	"github.com/tbd54566975/web5-go"
@@ -103,4 +107,22 @@ func TestDecode_WithNumberFilter(t *testing.T) {
 
 		})
 	}
+}
+
+func TestLol(t *testing.T) {
+	subject, err := didjwk.Create()
+	if err != nil {
+		panic(err)
+	}
+	// creation
+	claims := vc.Claims{"id": subject.URI, "dogeAddress": "dogeAddress456"}
+	cred := vc.Create(claims)
+
+	// signing
+	vcJWT, err := cred.Sign(subject)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(vcJWT)
 }

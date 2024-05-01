@@ -5,145 +5,141 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"regexp"
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/tbd54566975/web5-go/vc"
+	jsonschema "github.com/xeipuuv/gojsonschema"
 )
 
 // FieldPath represents the valid paths to a field in a VC
 type FieldPath struct {
+	Token string
 	Paths []string
 }
 
+// todo only need to meet one of the input descriptors for a vcjwt to be selected
+// 	for selectCredentials, if there are multiple input descriptors, each vcJwt must meet at least 1 of them
+
+// for satisfiesPD() to not throw, i need to pass in 
+// 1. a vc with btcAddress + a vc with dogeAddress
+// 2. a vc with BOTH btcAddress and dogeAddress
+// 3. a combination of the above (can also throw in a vc with other stuff i.e. name)
 // SelectCredentials selects the VCs that satisfy the constraints specified in the Presentation Definition
 func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, error) {
 
-	fieldPaths := make(map[string]FieldPath)
-	fieldFilters := make(map[string]Filter)
+	fieldTokens := make(map[string]FieldPath)
+	schema := map[string]interface{}{
+		"$schema":    "http://json-schema.org/draft-07/schema#",
+		"type":       "object",
+		"properties": map[string]interface{}{},
+	}
 
 	// Extract the field paths and filters from the input descriptors
 	for _, inputDescriptor := range pd.InputDescriptors {
 		for _, field := range inputDescriptor.Constraints.Fields {
 			token := generateRandomToken()
 			paths := field.Path
-			fieldPaths[token] = FieldPath{Paths: paths}
+			fieldTokens[token] = FieldPath{Token: token, Paths: paths}
 
 			if field.Filter != nil {
-				fieldFilters[token] = *field.Filter
+				addFieldToSchema(schema, token, field)
 			}
 		}
 	}
 
-	selectionCandidates := make(map[string]interface{})
-	// Find vcJwts whose fields match the fieldPaths
-	for _, vcJwt := range vcJwts {
+	fieldTokensJson, _ := json.MarshalIndent(fieldTokens, "", "    ")
+	fmt.Printf("Token to Paths: %+v\n\n\n\n", string(fieldTokensJson))
 
+	
+	var matchingVcJWTs []string
+
+	// Find vcJwts whose fields match the fieldPaths
+	for i, vcJwt := range vcJwts {
+		fmt.Printf("\tvcJwt: number %d, %s\n\n\n\n\n\n", i, vcJwt)
 		decoded, err := vc.Decode[vc.Claims](vcJwt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode vcJwt: %w", err)
 		}
-		for _, fieldToken := range fieldPaths {
-			for _, path := range fieldToken.Paths {
-				marshaledVcJwt, _ := json.Marshal(decoded.JWT.Claims)
-				var jsondata interface{}
-				err := json.Unmarshal(marshaledVcJwt, &jsondata)
+		selectionCandidates := make(map[string]interface{})
+		for _, tokenPath := range fieldTokens {
+			for _, path := range tokenPath.Paths {
+				vcJson := getVcJsonData(decoded)
+				value, err := jsonpath.Get(path, vcJson)
 				if err != nil {
-					fmt.Println("Error unmarshaling JSON:", err)
-					continue
-				}
-				value, err := jsonpath.Get(path, jsondata)
-				if err != nil {
+					fmt.Printf("Unable to find value in the path %s in vcJson %+v. Error: %v\n\n\n", path, vcJson, err)
 					continue
 				}
 
-				// selectionCandidates[fieldToken.Token] = result
-				selectionCandidates[vcJwt] = value
+				fmt.Printf("putting token %s and paths %s with value %s in selectionCandidates\n", tokenPath.Token, tokenPath.Paths, value)
+
+				selectionCandidates[tokenPath.Token] = value
 				break
 			}
 		}
-	}
 
-	var matchingVcJWTs []string
+		if len(fieldTokens) == len(selectionCandidates) {
 
-	// If no field filters are specified in PD, return all the vcJwts that matched the fieldPaths (selectionCandidates keys)
-	if len(fieldFilters) == 0 {
-		for vcJwt := range selectionCandidates {
-			matchingVcJWTs = append(matchingVcJWTs, vcJwt)
-		}
-		return matchingVcJWTs, nil
-	}
+			properties, _ := schema["properties"].(map[string]interface{})
 
-	// Filter further for vcJwts whose fields match the fieldFilters
-	for vcJwt, value := range selectionCandidates {
+			if len(properties) > 0 {
+				schemaLoader := getSchemaLoader(schema, selectionCandidates)
+				documentLoader := jsonschema.NewGoLoader(selectionCandidates)
 
-		for _, filter := range fieldFilters {
-			filterSatisfied := satisfiesFieldFilter(value, filter)
-			if filterSatisfied {
+				result, err := jsonschema.Validate(schemaLoader, documentLoader)
+				if err != nil {
+					fmt.Println("Error validating schema:", err)
+				}
+
+				if result.Valid() {
+					fmt.Printf("The document is valid\n\n\n\n")
+					matchingVcJWTs = append(matchingVcJWTs, vcJwt)
+
+				} else {
+					fmt.Printf("The document is not valid. see errors :")
+					for _, desc := range result.Errors() {
+						fmt.Printf("- %s\n", desc)
+					}
+					fmt.Print("\n\n\n\n")
+				}
+			} else {
 				matchingVcJWTs = append(matchingVcJWTs, vcJwt)
 			}
 		}
 	}
 
 	return matchingVcJWTs, nil
+
 }
 
-func satisfiesFieldFilter(fieldValue interface{}, filter Filter) bool {
-	resultBytes, err := json.Marshal(fieldValue)
+func getSchemaLoader(schema map[string]interface{}, selectionCandidates map[string]interface{}) jsonschema.JSONLoader {
+	schemaJSON, err := json.MarshalIndent(schema, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshaling result:", err)
-		return false
+		fmt.Println("Error marshalling schema:", err)
 	}
+	fmt.Printf("Schema: %s\n", string(schemaJSON))
+	fmt.Printf("Selection Candidates: %v\n", selectionCandidates)
 
-	// Check if the field value matches the constant if specified
-	if filter.Const != "" {
-		var fieldValue string
-		err := json.Unmarshal(resultBytes, &fieldValue)
-		if err == nil && fieldValue == filter.Const {
-			return true
-		}
-		return false
+	schemaLoader := jsonschema.NewStringLoader(string(schemaJSON))
+	return schemaLoader
+}
+
+func addFieldToSchema(schema map[string]interface{}, token string, field Field) {
+	properties, ok := schema["properties"].(map[string]interface{})
+	if !ok {
+		fmt.Printf("unable to assert 'properties' as map[string]interface{}")
 	}
+	properties[token] = field.Filter
+}
 
-	// Type checking and pattern matching
-	if filter.Type != "" || filter.Pattern != "" {
-		switch filter.Type {
-		case "string":
-			var strVal string
-			if err := json.Unmarshal(resultBytes, &strVal); err != nil {
-				return false
-			}
-			if filter.Pattern != "" {
-				match, _ := regexp.MatchString(filter.Pattern, strVal)
-				return match
-			}
-		case "number":
-			var numVal float64
-			if err := json.Unmarshal(resultBytes, &numVal); err != nil {
-				return false
-			}
-		case "array":
-			var arrayVal []interface{}
-			if err := json.Unmarshal(resultBytes, &arrayVal); err != nil {
-				return false
-			}
-			if filter.Contains != nil {
-				oneMatch := false
-				for _, item := range arrayVal {
-					// recursively check for filter.Contains in each item
-					if satisfiesFieldFilter(item, *filter.Contains) {
-						oneMatch = true
-					}
-				}
-				return oneMatch
-			}
-		default:
-			// Unsupported type
-			return false
-		}
+func getVcJsonData(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
+	marshaledVcJwt, _ := json.Marshal(decoded.JWT.Claims)
+	var jsondata interface{}
+	err := json.Unmarshal(marshaledVcJwt, &jsondata)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+		return interface{}(nil)
 	}
-
-	return true
+	return jsondata
 }
 
 func generateRandomToken() string {
