@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -66,7 +67,7 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 
 		properties, ok := schema["properties"].(map[string]interface{})
 		if !ok {
-			fmt.Printf("unable to assert 'properties' type as map[string]interface{}")
+			return []string{}, errors.New("unable to assert 'properties' type as map[string]interface{}")
 		}
 
 		if field.Filter != nil {
@@ -85,8 +86,8 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 
 	}
 
-	for _, vcJwt := range vcJWTs {
-		decoded, err := vc.Decode[vc.Claims](vcJwt)
+	for _, vcJWT := range vcJWTs {
+		decoded, err := vc.Decode[vc.Claims](vcJWT)
 		if err != nil {
 			fmt.Println("Error decoding VC:", err)
 			continue
@@ -110,11 +111,11 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 
 		validationResult, err := validateWithSchema(schema, selectionCandidate)
 		if err != nil {
-			fmt.Println("Error validating schema:", err)
+			return []string{}, fmt.Errorf("error validating schema: %w", err)
 		}
 
 		if validationResult.Valid() {
-			answer = append(answer, vcJwt)
+			answer = append(answer, vcJWT)
 		}
 
 	}
