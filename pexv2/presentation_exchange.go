@@ -77,6 +77,7 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 			}
 		}
 
+		// todo this is enforcing that 1 vcJwt must match ALL input descriptor paths. need to change this to 1 vcJwt must match at least 1 input descriptor path
 		if len(fieldTokens) == len(selectionCandidates) {
 
 			properties, _ := schema["properties"].(map[string]interface{})
