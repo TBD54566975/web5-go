@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tbd54566975/web5-go/vc"
-
-	"github.com/tbd54566975/web5-go/dids/didjwk"
-
 	"github.com/alecthomas/assert/v2"
 	testify "github.com/stretchr/testify/assert"
 	"github.com/tbd54566975/web5-go"
@@ -23,7 +19,7 @@ type PresentationOutput struct {
 	SelectedCredentials []string `json:"selectedCredentials"`
 }
 
-func TestDecode(t *testing.T) {
+func TestDecode_MultipleInputDescriptors(t *testing.T) {
 	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials.json")
 	assert.NoError(t, err)
 
@@ -109,20 +105,18 @@ func TestDecode_WithNumberFilter(t *testing.T) {
 	}
 }
 
-func TestLol(t *testing.T) {
-	subject, err := didjwk.Create()
-	if err != nil {
-		panic(err)
-	}
-	// creation
-	claims := vc.Claims{"id": subject.URI, "dogeAddress": "dogeAddress456"}
-	cred := vc.Create(claims)
+func TestDecode_NotAllInputDescriptorsSatisfied(t *testing.T) {
+	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_not_all_input_descriptors_satisfied.json")
+	assert.NoError(t, err)
 
-	// signing
-	vcJWT, err := cred.Sign(subject)
-	if err != nil {
-		panic(err)
-	}
+	for _, vector := range testVectors.Vectors {
+		t.Run(vector.Description, func(t *testing.T) {
+			fmt.Println("Running test vector: ", vector.Description)
 
-	fmt.Println(vcJWT)
+			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
+
+			assert.NoError(t, err)
+			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
+		})
+	}
 }

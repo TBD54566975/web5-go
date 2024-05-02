@@ -17,16 +17,21 @@ type PresentationDefinition struct {
 	InputDescriptors []InputDescriptor `json:"input_descriptors"`
 }
 
+type a struct {
+	Schema          map[string]interface{} `json:"schema"`
+	TokenPath       []TokenPath            `json:"tokenPath"`
+	InputDescriptor InputDescriptor
+}
+
 // InputDescriptor represents a DIF Input Descriptor defined [here].
 // Input Descriptors are used to describe the information a Verifier requires of a Holder.
 //
 // [here]: https://identity.foundation/presentation-exchange/#input-descriptor
 type InputDescriptor struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name,omitempty"`
-	Purpose     string               `json:"purpose,omitempty"`
-	Constraints Constraints          `json:"constraints"`
-	FieldPaths  map[string]TokenPath `json:"fieldPaths"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name,omitempty"`
+	Purpose     string      `json:"purpose,omitempty"`
+	Constraints Constraints `json:"constraints"`
 }
 
 type TokenPath struct {
@@ -34,46 +39,35 @@ type TokenPath struct {
 	Paths []string
 }
 
-func (i *InputDescriptor) BuildSchema() (map[string]interface{}, error) {
-	tokenPaths := make(map[string]TokenPath)
+func (i *InputDescriptor) BuildSchema(token string, filter *Filter) map[string]interface{} {
 	schema := map[string]interface{}{
 		"$schema":    "http://json-schema.org/draft-07/schema#",
 		"type":       "object",
 		"properties": map[string]interface{}{},
 	}
 
-	for _, field := range i.Constraints.Fields {
-		token := i.generateRandomToken()
-		paths := field.Path
-		tokenPaths[token] = TokenPath{Token: token, Paths: paths}
-
-		if field.Filter != nil {
-			i.addFieldToSchema(schema, token, field)
-		}
+	if filter != nil {
+		i.addFieldToSchema(schema, token, filter)
 	}
 
-	return schema, nil
-
+	return schema
 }
 
-func (i *InputDescriptor) addFieldToSchema(schema map[string]interface{}, token string, field Field) {
+func (i *InputDescriptor) addFieldToSchema(schema map[string]interface{}, token string, filter *Filter) {
 	properties, ok := schema["properties"].(map[string]interface{})
 	if !ok {
 		fmt.Printf("unable to assert 'properties' as map[string]interface{}")
 	}
-	properties[token] = field.Filter
+	properties[token] = filter
 }
 
 func (i *InputDescriptor) generateRandomToken() string {
-	// Create a byte slice of length 16.
 	b := make([]byte, 16)
 
-	// Read random bytes into the slice.
 	if _, err := rand.Read(b); err != nil {
 		panic(err)
 	}
 
-	// Encode the byte slice to a hexadecimal string.
 	return hex.EncodeToString(b)
 }
 
