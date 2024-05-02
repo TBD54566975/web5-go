@@ -23,14 +23,14 @@ func SelectCredentials(vcJWTs []string, pd PresentationDefinition) ([]string, er
 
 	result := make([]string, 0)
 	for _, inputDescriptor := range pd.InputDescriptors {
-		matchedVcJwts, err := selectCredentialsPerInputDescriptor(vcJWTs, inputDescriptor)
+		matchedVcJWTs, err := selectCredentialsPerInputDescriptor(vcJWTs, inputDescriptor)
 		if err != nil {
 			return []string{}, err
 		}
-		if len(matchedVcJwts) == 0 {
+		if len(matchedVcJWTs) == 0 {
 			return []string{}, nil
 		}
-		result = append(result, matchedVcJwts...)
+		result = append(result, matchedVcJWTs...)
 
 	}
 
@@ -50,7 +50,7 @@ func dedupeResult(input []string) []string {
 	return result
 }
 
-// selectCredentialsPerInputDescriptor selects vcJwts based on the constraints defined in the input descriptor
+// selectCredentialsPerInputDescriptor selects vcJWTs based on the constraints defined in the input descriptor
 func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputDescriptor) ([]string, error) {
 	answer := make([]string, 0)
 	tokenizedField := make([]tokenPath, 0)
@@ -143,13 +143,13 @@ func getSchemaLoader(schema map[string]interface{}) jsonschema.JSONLoader {
 }
 
 func getVcJSON(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
-	marshaledVcJwt, err := json.Marshal(decoded.JWT.Claims)
+	marshaledVcJWT, err := json.Marshal(decoded.JWT.Claims)
 	if err != nil {
 		fmt.Println("Error marshaling VC JWT:", err)
 		return interface{}(nil)
 	}
 	var jsondata interface{}
-	err = json.Unmarshal(marshaledVcJwt, &jsondata)
+	err = json.Unmarshal(marshaledVcJWT, &jsondata)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
 		return interface{}(nil)
