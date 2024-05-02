@@ -12,16 +12,17 @@ import (
 	jsonschema "github.com/xeipuuv/gojsonschema"
 )
 
-type TokenPath struct {
+type tokenPath struct {
 	Token string
 	Paths []string
 }
 
-func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, error) {
+// SelectCredentials selects vcJWTs based on the constraints defined in the presentation definition
+func SelectCredentials(vcJWTs []string, pd PresentationDefinition) ([]string, error) {
 
 	result := make([]string, 0)
 	for _, inputDescriptor := range pd.InputDescriptors {
-		matchedVcJwts, err := selectCredentialsPerId(vcJwts, inputDescriptor)
+		matchedVcJwts, err := selectCredentialsPerInputDescriptor(vcJWTs, inputDescriptor)
 		if err != nil {
 			return []string{}, err
 		}
@@ -48,9 +49,10 @@ func dedupeResult(input []string) []string {
 	return result
 }
 
-func selectCredentialsPerId(vcJwts []string, inputDescriptor InputDescriptor) ([]string, error) {
+// selectCredentialsPerInputDescriptor selects vcJwts based on the constraints defined in the input descriptor
+func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputDescriptor) ([]string, error) {
 	answer := make([]string, 0)
-	tokenizedField := make([]TokenPath, 0)
+	tokenizedField := make([]tokenPath, 0)
 	schema := map[string]interface{}{
 		"$schema":    "http://json-schema.org/draft-07/schema#",
 		"type":       "object",
@@ -60,7 +62,7 @@ func selectCredentialsPerId(vcJwts []string, inputDescriptor InputDescriptor) ([
 
 	for _, field := range inputDescriptor.Constraints.Fields {
 		token := generateRandomToken()
-		tokenizedField = append(tokenizedField, TokenPath{Token: token, Paths: field.Path})
+		tokenizedField = append(tokenizedField, tokenPath{Token: token, Paths: field.Path})
 
 		properties, ok := schema["properties"].(map[string]interface{})
 		if !ok {
@@ -83,20 +85,21 @@ func selectCredentialsPerId(vcJwts []string, inputDescriptor InputDescriptor) ([
 
 	}
 
-	for _, vcJwt := range vcJwts {
+	for _, vcJwt := range vcJWTs {
 		decoded, err := vc.Decode[vc.Claims](vcJwt)
 		if err != nil {
 			fmt.Println("Error decoding VC:", err)
 			continue
 		}
-		vcJson := getVcJson(decoded)
+		vcJSON := getVcJSON(decoded)
 
 		selectionCandidate := make(map[string]interface{})
 
 		for _, tokenPath := range tokenizedField {
 			for _, path := range tokenPath.Paths {
-				value, err := jsonpath.Get(path, vcJson)
+				value, err := jsonpath.Get(path, vcJSON)
 				if err != nil {
+					fmt.Println("Error getting value from JSON path:", err)
 					continue
 				}
 
@@ -138,7 +141,7 @@ func getSchemaLoader(schema map[string]interface{}) jsonschema.JSONLoader {
 	return schemaLoader
 }
 
-func getVcJson(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
+func getVcJSON(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
 	marshaledVcJwt, err := json.Marshal(decoded.JWT.Claims)
 	if err != nil {
 		fmt.Println("Error marshaling VC JWT:", err)
