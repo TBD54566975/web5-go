@@ -20,26 +20,27 @@ type FieldPath struct {
 // todo only need to meet one of the input descriptors for a vcjwt to be selected
 // 	for selectCredentials, if there are multiple input descriptors, each vcJwt must meet at least 1 of them
 
-// for satisfiesPD() to not throw, i need to pass in 
+// for satisfiesPD() to not throw, i need to pass in
 // 1. a vc with btcAddress + a vc with dogeAddress
 // 2. a vc with BOTH btcAddress and dogeAddress
 // 3. a combination of the above (can also throw in a vc with other stuff i.e. name)
 // SelectCredentials selects the VCs that satisfy the constraints specified in the Presentation Definition
 func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, error) {
 
-	fieldTokens := make(map[string]FieldPath)
-	schema := map[string]interface{}{
-		"$schema":    "http://json-schema.org/draft-07/schema#",
-		"type":       "object",
-		"properties": map[string]interface{}{},
-	}
+	fieldTokens := make(map[string]TokenPath)
 
 	// Extract the field paths and filters from the input descriptors
 	for _, inputDescriptor := range pd.InputDescriptors {
+		schema := map[string]interface{}{
+			"$schema":    "http://json-schema.org/draft-07/schema#",
+			"type":       "object",
+			"properties": map[string]interface{}{},
+		}
+
 		for _, field := range inputDescriptor.Constraints.Fields {
 			token := generateRandomToken()
 			paths := field.Path
-			fieldTokens[token] = FieldPath{Token: token, Paths: paths}
+			fieldTokens[token] = TokenPath{Token: token, Paths: paths}
 
 			if field.Filter != nil {
 				addFieldToSchema(schema, token, field)
@@ -50,7 +51,6 @@ func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, er
 	fieldTokensJson, _ := json.MarshalIndent(fieldTokens, "", "    ")
 	fmt.Printf("Token to Paths: %+v\n\n\n\n", string(fieldTokensJson))
 
-	
 	var matchingVcJWTs []string
 
 	// Find vcJwts whose fields match the fieldPaths
