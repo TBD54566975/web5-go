@@ -1,11 +1,5 @@
 package pexv2
 
-import (
-	"crypto/rand"
-	"encoding/hex"
-	"fmt"
-)
-
 // PresentationDefinition represents a DIF Presentation Definition defined [here].
 // Presentation Definitions are objects that articulate what proofs a Verifier requires
 //
@@ -17,12 +11,6 @@ type PresentationDefinition struct {
 	InputDescriptors []InputDescriptor `json:"input_descriptors"`
 }
 
-type a struct {
-	Schema          map[string]interface{} `json:"schema"`
-	TokenPath       []TokenPath            `json:"tokenPath"`
-	InputDescriptor InputDescriptor
-}
-
 // InputDescriptor represents a DIF Input Descriptor defined [here].
 // Input Descriptors are used to describe the information a Verifier requires of a Holder.
 //
@@ -32,43 +20,6 @@ type InputDescriptor struct {
 	Name        string      `json:"name,omitempty"`
 	Purpose     string      `json:"purpose,omitempty"`
 	Constraints Constraints `json:"constraints"`
-}
-
-type TokenPath struct {
-	Token string
-	Paths []string
-}
-
-func (i *InputDescriptor) BuildSchema(token string, filter *Filter) map[string]interface{} {
-	schema := map[string]interface{}{
-		"$schema":    "http://json-schema.org/draft-07/schema#",
-		"type":       "object",
-		"properties": map[string]interface{}{},
-	}
-
-	if filter != nil {
-		i.addFieldToSchema(schema, token, filter)
-	}
-
-	return schema
-}
-
-func (i *InputDescriptor) addFieldToSchema(schema map[string]interface{}, token string, filter *Filter) {
-	properties, ok := schema["properties"].(map[string]interface{})
-	if !ok {
-		fmt.Printf("unable to assert 'properties' as map[string]interface{}")
-	}
-	properties[token] = filter
-}
-
-func (i *InputDescriptor) generateRandomToken() string {
-	b := make([]byte, 16)
-
-	if _, err := rand.Read(b); err != nil {
-		panic(err)
-	}
-
-	return hex.EncodeToString(b)
 }
 
 // Constraints contains the requirements for a given Input Descriptor.

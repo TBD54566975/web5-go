@@ -1,6 +1,8 @@
 package pexv2
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -10,11 +12,19 @@ import (
 	jsonschema "github.com/xeipuuv/gojsonschema"
 )
 
+type TokenPath struct {
+	Token string
+	Paths []string
+}
+
 func SelectCredentials(vcJwts []string, pd PresentationDefinition) ([]string, error) {
 
 	result := make([]string, 0)
 	for _, inputDescriptor := range pd.InputDescriptors {
-		matchedVcJwts, _ := selectCredentialsPerId(vcJwts, inputDescriptor)
+		matchedVcJwts, err := selectCredentialsPerId(vcJwts, inputDescriptor)
+		if err != nil {
+			return []string{}, err
+		}
 		if len(matchedVcJwts) == 0 {
 			return []string{}, nil
 		}
@@ -49,18 +59,18 @@ func selectCredentialsPerId(vcJwts []string, inputDescriptor InputDescriptor) ([
 	}
 
 	for _, field := range inputDescriptor.Constraints.Fields {
-		token := inputDescriptor.generateRandomToken()
+		token := generateRandomToken()
 		tokenizedField = append(tokenizedField, TokenPath{Token: token, Paths: field.Path})
 
 		properties, ok := schema["properties"].(map[string]interface{})
 		if !ok {
-			fmt.Printf("unable to assert 'properties' as map[string]interface{}")
+			fmt.Printf("unable to assert 'properties' type as map[string]interface{}")
 		}
 
 		if field.Filter != nil {
 			properties[token] = field.Filter
 		} else {
-			// null is omitted
+			// null is intentionally omitted as a possible type
 			anyType := map[string]interface{}{
 				"type": []string{"string", "number", "boolean", "object", "array"},
 			}
@@ -72,20 +82,17 @@ func selectCredentialsPerId(vcJwts []string, inputDescriptor InputDescriptor) ([
 		}
 
 	}
-	fmt.Printf("TokenPaths: %v\n", tokenizedField)
-	schemaJSON, err := json.MarshalIndent(schema, "", "  ")
-	if err != nil {
-		fmt.Println("Error marshalling schema:", err)
-	}
-	fmt.Printf("Schema: %s\n", string(schemaJSON))
-	// schema only has one property
 
 	for _, vcJwt := range vcJwts {
-		decoded, _ := vc.Decode[vc.Claims](vcJwt)
+		decoded, err := vc.Decode[vc.Claims](vcJwt)
+		if err != nil {
+			fmt.Println("Error decoding VC:", err)
+			continue
+		}
 		vcJson := getVcJson(decoded)
 
 		selectionCandidate := make(map[string]interface{})
-		// { "asdfghj": "mybtcaddress", "qwert": "mydogeaddress"}
+
 		for _, tokenPath := range tokenizedField {
 			for _, path := range tokenPath.Paths {
 				value, err := jsonpath.Get(path, vcJson)
@@ -93,24 +100,17 @@ func selectCredentialsPerId(vcJwts []string, inputDescriptor InputDescriptor) ([
 					continue
 				}
 
-				fmt.Printf("putting token %s and paths %s with value %s in pathMatchedCandidates\n", tokenPath.Token, tokenPath.Paths, value)
-
 				selectionCandidate[tokenPath.Token] = value
 				break
 			}
 		}
 
-		fmt.Printf("Selection Candidate: %v\n", selectionCandidate)
-		// { "asdfghj": "mybtcaddress", "qwert": "mydogeaddress"}
-
-		fmt.Println("Properties exist, validating with schema")
 		validationResult, err := validateWithSchema(schema, selectionCandidate)
 		if err != nil {
 			fmt.Println("Error validating schema:", err)
 		}
 
 		if validationResult.Valid() {
-			fmt.Printf("The vcJWT is valid against schema!!!!\n\n\n\n")
 			answer = append(answer, vcJwt)
 		}
 
@@ -120,33 +120,45 @@ func selectCredentialsPerId(vcJwts []string, inputDescriptor InputDescriptor) ([
 
 }
 
-func validateWithSchema(schema map[string]interface{}, pathMatchedCandidates map[string]interface{}) (*jsonschema.Result, error) {
-	schemaLoader := getSchemaLoader(schema, pathMatchedCandidates)
-	documentLoader := jsonschema.NewGoLoader(pathMatchedCandidates)
+func validateWithSchema(schema map[string]interface{}, selectionCandidate map[string]interface{}) (*jsonschema.Result, error) {
+	schemaLoader := getSchemaLoader(schema)
+	documentLoader := jsonschema.NewGoLoader(selectionCandidate)
 
 	result, err := jsonschema.Validate(schemaLoader, documentLoader)
 	return result, err
 }
 
-func getSchemaLoader(schema map[string]interface{}, selectionCandidates map[string]interface{}) jsonschema.JSONLoader {
-	schemaJSON, err := json.MarshalIndent(schema, "", "  ")
+func getSchemaLoader(schema map[string]interface{}) jsonschema.JSONLoader {
+	schemaJSON, err := json.Marshal(schema)
 	if err != nil {
 		fmt.Println("Error marshalling schema:", err)
 	}
-	fmt.Printf("Schema: %s\n", string(schemaJSON))
-	fmt.Printf("Selection Candidates: %v\n", selectionCandidates)
 
 	schemaLoader := jsonschema.NewStringLoader(string(schemaJSON))
 	return schemaLoader
 }
 
 func getVcJson(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
-	marshaledVcJwt, _ := json.Marshal(decoded.JWT.Claims)
+	marshaledVcJwt, err := json.Marshal(decoded.JWT.Claims)
+	if err != nil {
+		fmt.Println("Error marshaling VC JWT:", err)
+		return interface{}(nil)
+	}
 	var jsondata interface{}
-	err := json.Unmarshal(marshaledVcJwt, &jsondata)
+	err = json.Unmarshal(marshaledVcJwt, &jsondata)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
 		return interface{}(nil)
 	}
 	return jsondata
+}
+
+func generateRandomToken() string {
+	b := make([]byte, 16)
+
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(b)
 }
