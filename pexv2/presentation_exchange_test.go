@@ -19,7 +19,7 @@ type PresentationOutput struct {
 	SelectedCredentials []string `json:"selectedCredentials"`
 }
 
-func TestDecode_MultipleInputDescriptors(t *testing.T) {
+func TestSelectCredentials(t *testing.T) {
 	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials.json")
 	assert.NoError(t, err)
 
@@ -34,89 +34,4 @@ func TestDecode_MultipleInputDescriptors(t *testing.T) {
 		})
 	}
 
-}
-
-func TestDecode_WithArrayFilter(t *testing.T) {
-	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_with_filter_array.json")
-	assert.NoError(t, err)
-
-	for _, vector := range testVectors.Vectors {
-		t.Run(vector.Description, func(t *testing.T) {
-			fmt.Println("Running test vector: ", vector.Description)
-
-			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
-
-			assert.NoError(t, err)
-			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
-
-		})
-	}
-
-}
-
-func TestDecode_WithConstFilter(t *testing.T) {
-	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_with_filter_string.json")
-	assert.NoError(t, err)
-
-	for _, vector := range testVectors.Vectors {
-		t.Run(vector.Description, func(t *testing.T) {
-			fmt.Println("Running test vector: ", vector.Description)
-
-			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
-
-			assert.NoError(t, err)
-			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
-
-		})
-	}
-}
-
-func TestDecode_WithStringRegexFilter(t *testing.T) {
-	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_with_filter_string_pattern.json")
-	assert.NoError(t, err)
-
-	for _, vector := range testVectors.Vectors {
-		t.Run(vector.Description, func(t *testing.T) {
-			fmt.Println("Running test vector: ", vector.Description)
-
-			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
-
-			assert.NoError(t, err)
-			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
-
-		})
-	}
-}
-
-func TestDecode_WithNumberFilter(t *testing.T) {
-	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_with_filter_number.json")
-	assert.NoError(t, err)
-
-	for _, vector := range testVectors.Vectors {
-		t.Run(vector.Description, func(t *testing.T) {
-			fmt.Println("Running test vector: ", vector.Description)
-
-			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
-
-			assert.NoError(t, err)
-			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
-
-		})
-	}
-}
-
-func TestDecode_NotAllInputDescriptorsSatisfied(t *testing.T) {
-	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_not_all_input_descriptors_satisfied.json")
-	assert.NoError(t, err)
-
-	for _, vector := range testVectors.Vectors {
-		t.Run(vector.Description, func(t *testing.T) {
-			fmt.Println("Running test vector: ", vector.Description)
-
-			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
-
-			assert.NoError(t, err)
-			assert.Equal(t, vector.Output.SelectedCredentials, vcJwts)
-		})
-	}
 }
