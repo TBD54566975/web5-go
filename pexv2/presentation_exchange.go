@@ -50,7 +50,6 @@ func dedupeResult(input []string) []string {
 	return result
 }
 
-// selectCredentialsPerInputDescriptor selects vcJWTs based on the constraints defined in the input descriptor
 func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputDescriptor) ([]string, error) {
 	answer := make([]string, 0)
 	tokenizedField := make([]tokenPath, 0)
@@ -100,7 +99,7 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 			for _, path := range tokenPath.Paths {
 				value, err := jsonpath.Get(path, vcJSON)
 				if err != nil {
-					fmt.Println("Error getting value from JSON path:", err)
+					fmt.Printf("Unable to find value at JSON path: %s. Error: %v\n", path, err)
 					continue
 				}
 
