@@ -61,7 +61,10 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 	}
 
 	for _, field := range inputDescriptor.Constraints.Fields {
-		token := generateRandomToken()
+		token, err := generateRandomToken()
+		if err != nil {
+			return []string{}, fmt.Errorf("error generating random token: %w", err)
+		}
 		tokenizedField = append(tokenizedField, tokenPath{Token: token, Paths: field.Path})
 
 		properties, ok := schema["properties"].(map[string]interface{})
@@ -145,9 +148,9 @@ func getVcJSON(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
 	marshaledVcJWT, err := json.Marshal(decoded.JWT.Claims)
 	if err != nil {
 		fmt.Println("Error marshaling VC JWT:", err)
-		return interface{}(nil)
+		return any(nil)
 	}
-	var jsondata interface{}
+	var jsondata any
 	err = json.Unmarshal(marshaledVcJWT, &jsondata)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
@@ -156,12 +159,12 @@ func getVcJSON(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
 	return jsondata
 }
 
-func generateRandomToken() string {
+func generateRandomToken() (string, error) {
 	b := make([]byte, 16)
 
 	if _, err := rand.Read(b); err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return hex.EncodeToString(b)
+	return hex.EncodeToString(b), nil
 }
