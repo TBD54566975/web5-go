@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/tbd54566975/web5-go/vc"
@@ -20,34 +19,29 @@ type tokenPath struct {
 
 // SelectCredentials selects vcJWTs based on the constraints defined in the presentation definition
 func SelectCredentials(vcJWTs []string, pd PresentationDefinition) ([]string, error) {
+	matchSet := make(map[string]bool, len(vcJWTs))
+	matched := make([]string, 0, len(matchSet))
 
-	result := make([]string, 0)
 	for _, inputDescriptor := range pd.InputDescriptors {
 		matchedVcJWTs, err := selectCredentialsPerInputDescriptor(vcJWTs, inputDescriptor)
 		if err != nil {
-			return []string{}, err
+			return nil, err
 		}
+
+		for _, vcJWT := range matchedVcJWTs {
+			matchSet[vcJWT] = true
+		}
+
 		if len(matchedVcJWTs) == 0 {
-			return []string{}, nil
-		}
-		result = append(result, matchedVcJWTs...)
-
-	}
-
-	result = dedupeResult(result)
-	return result, nil
-}
-
-func dedupeResult(input []string) []string {
-	sort.Strings(input)
-	var result []string
-
-	for i, item := range input {
-		if i == 0 || input[i-1] != item {
-			result = append(result, item)
+			return matched, nil
 		}
 	}
-	return result
+
+	for k := range matchSet {
+		matched = append(matched, k)
+	}
+
+	return matched, nil
 }
 
 func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputDescriptor) ([]string, error) {
