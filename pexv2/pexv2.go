@@ -53,10 +53,10 @@ func dedupeResult(input []string) []string {
 func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputDescriptor) ([]string, error) {
 	answer := make([]string, 0)
 	tokenizedField := make([]tokenPath, 0)
-	schema := map[string]interface{}{
+	schema := map[string]any{
 		"$schema":    "http://json-schema.org/draft-07/schema#",
 		"type":       "object",
-		"properties": map[string]interface{}{},
+		"properties": map[string]any{},
 		"required":   []string{},
 	}
 
@@ -67,16 +67,16 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 		}
 		tokenizedField = append(tokenizedField, tokenPath{Token: token, Paths: field.Path})
 
-		properties, ok := schema["properties"].(map[string]interface{})
+		properties, ok := schema["properties"].(map[string]any)
 		if !ok {
-			return []string{}, errors.New("unable to assert 'properties' type as map[string]interface{}")
+			return []string{}, errors.New("unable to assert 'properties' type as map[string]any")
 		}
 
 		if field.Filter != nil {
 			properties[token] = field.Filter
 		} else {
 			// null is intentionally omitted as a possible type
-			anyType := map[string]interface{}{
+			anyType := map[string]any{
 				"type": []string{"string", "number", "boolean", "object", "array"},
 			}
 			properties[token] = anyType
@@ -96,7 +96,7 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 		}
 		vcJSON := getVcJSON(decoded)
 
-		selectionCandidate := make(map[string]interface{})
+		selectionCandidate := make(map[string]any)
 
 		for _, tokenPath := range tokenizedField {
 			for _, path := range tokenPath.Paths {
@@ -126,7 +126,7 @@ func selectCredentialsPerInputDescriptor(vcJWTs []string, inputDescriptor InputD
 
 }
 
-func validateWithSchema(schema map[string]interface{}, selectionCandidate map[string]interface{}) (*jsonschema.Result, error) {
+func validateWithSchema(schema map[string]any, selectionCandidate map[string]any) (*jsonschema.Result, error) {
 	schemaLoader := getSchemaLoader(schema)
 	documentLoader := jsonschema.NewGoLoader(selectionCandidate)
 
@@ -134,7 +134,7 @@ func validateWithSchema(schema map[string]interface{}, selectionCandidate map[st
 	return result, err
 }
 
-func getSchemaLoader(schema map[string]interface{}) jsonschema.JSONLoader {
+func getSchemaLoader(schema map[string]any) jsonschema.JSONLoader {
 	schemaJSON, err := json.Marshal(schema)
 	if err != nil {
 		fmt.Println("Error marshalling schema:", err)
@@ -144,7 +144,7 @@ func getSchemaLoader(schema map[string]interface{}) jsonschema.JSONLoader {
 	return schemaLoader
 }
 
-func getVcJSON(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
+func getVcJSON(decoded vc.DecodedVCJWT[vc.Claims]) any {
 	marshaledVcJWT, err := json.Marshal(decoded.JWT.Claims)
 	if err != nil {
 		fmt.Println("Error marshaling VC JWT:", err)
@@ -154,7 +154,7 @@ func getVcJSON(decoded vc.DecodedVCJWT[vc.Claims]) interface{} {
 	err = json.Unmarshal(marshaledVcJWT, &jsondata)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
-		return interface{}(nil)
+		return any(nil)
 	}
 	return jsondata
 }
