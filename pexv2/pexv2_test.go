@@ -33,7 +33,6 @@ func TestSelectCredentials(t *testing.T) {
 			testify.ElementsMatch(t, vector.Output.SelectedCredentials, vcJwts)
 		})
 	}
-
 }
 
 func TestSelectCredentials_MoreVectors(t *testing.T) {
@@ -50,6 +49,4 @@ func TestSelectCredentials_MoreVectors(t *testing.T) {
 			testify.ElementsMatch(t, vector.Output.SelectedCredentials, vcJwts)
 		})
 	}
-
 }
-
