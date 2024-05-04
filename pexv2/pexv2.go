@@ -13,6 +13,10 @@ func SelectCredentials(vcJWTs []string, pd PresentationDefinition) ([]string, er
 			return nil, fmt.Errorf("failed to satisfy input descriptor constraints %s: %w", inputDescriptor.ID, err)
 		}
 
+		if len(matches) == 0 {
+			return matched, nil
+		}
+
 		// Add all matches to the match set
 		for _, vcJWT := range matches {
 			matchSet[vcJWT] = true
