@@ -39,8 +39,9 @@ type tokenizedField struct {
 	path  string
 }
 
+// SelectCredentials selects vcJWTs based on the constraints defined in the input descriptor
 func (ind InputDescriptor) SelectCredentials(vcJWTs []string) ([]string, error) {
-	jsonSchema := JsonSchema{
+	jsonSchema := JSONSchema{
 		Schema:     "http://json-schema.org/draft-07/schema#",
 		Type:       "object",
 		Properties: make(map[string]Filter, len(ind.Constraints.Fields)),
@@ -158,13 +159,15 @@ type Filter struct {
 	Contains *Filter `json:"contains,omitempty"`
 }
 
-type JsonSchema struct {
+// JSONSchema represents a minimal JSON Schema
+type JSONSchema struct {
 	Schema     string            `json:"$schema"`
 	Type       string            `json:"type"`
 	Properties map[string]Filter `json:"properties"`
 	Required   []string          `json:"required"`
 }
 
-func (j *JsonSchema) AddProperty(name string, value Filter) {
+// AddProperty adds the provided Filter with the provided name to the JsonSchema
+func (j *JSONSchema) AddProperty(name string, value Filter) {
 	j.Properties[name] = value
 }
