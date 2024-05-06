@@ -61,7 +61,7 @@ func (ind InputDescriptor) SelectCredentials(vcJWTs []string) ([]string, error) 
 		}
 
 		if field.Filter != nil {
-			jsonSchema.AddProperty(token, *field.Filter)
+			jsonSchema.AddProperty(token, *field.Filter, true)
 		}
 	}
 
@@ -168,6 +168,10 @@ type JSONSchema struct {
 }
 
 // AddProperty adds the provided Filter with the provided name to the JsonSchema
-func (j *JSONSchema) AddProperty(name string, value Filter) {
+func (j *JSONSchema) AddProperty(name string, value Filter, required bool) {
 	j.Properties[name] = value
+
+	if required {
+		j.Required = append(j.Required, name)
+	}
 }
