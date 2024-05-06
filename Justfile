@@ -4,8 +4,11 @@ lint:
 
 test:
     @echo "Running tests..."
-    @go test -cover ./...
+    @go clean -testcache && go test -cover ./...
 
 build:
     @echo "Building..."
     @go build ./...
+
+submodule:
+  @git submodule update --remote --merge
