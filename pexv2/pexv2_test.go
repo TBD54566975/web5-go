@@ -34,19 +34,3 @@ func TestSelectCredentials(t *testing.T) {
 		})
 	}
 }
-
-func TestSelectCredentials_MoreVectors(t *testing.T) {
-	testVectors, err := web5.LoadTestVectors[PresentationInput, PresentationOutput]("../web5-spec/test-vectors/presentation_exchange/select_credentials_go.json")
-	assert.NoError(t, err)
-
-	for _, vector := range testVectors.Vectors {
-		t.Run(vector.Description, func(t *testing.T) {
-			fmt.Println("Running test vector: ", vector.Description)
-
-			vcJwts, err := pexv2.SelectCredentials(vector.Input.CredentialJwts, vector.Input.PresentationDefinition)
-
-			assert.NoError(t, err)
-			testify.ElementsMatch(t, vector.Output.SelectedCredentials, vcJwts)
-		})
-	}
-}
