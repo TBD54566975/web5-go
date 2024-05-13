@@ -235,6 +235,9 @@ func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.R
 	}
 
 	url, err := TransformID(did.ID)
+	if err != nil {
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
+	}
 
 	// TODO item 6 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/94
 	// TODO item 7 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/95
