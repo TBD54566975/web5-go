@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
-	"net/url"
+	liburl "net/url"
 	"strconv"
 	"strings"
 
@@ -122,7 +123,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 		normalizedDomain = domain
 	}
 
-	parsedDomain, err := url.Parse(normalizedDomain)
+	parsedDomain, err := liburl.Parse(normalizedDomain)
 	if err != nil {
 		return _did.BearerDID{}, fmt.Errorf("failed to parse domain: %w", err)
 	}
@@ -187,30 +188,34 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 	}, nil
 }
 
-// DecodeID takes a did:web's identifier (the third part, after the method) and returns the web URL per the [spec]
+// TransformID takes a did:web's identifier (the third part, after the method) and returns the web URL per the [spec]
 //
 // [spec]: https://w3c-ccg.github.io/did-method-web/#read-resolve
-func DecodeID(id string) string {
-	var domain string
+func TransformID(id string) (string, error) {
+	domain := strings.ReplaceAll(id, ":", "/")
 
-	// "1. Replace ":" with "/" in the method specific identifier to obtain the fully qualified domain name and optional path."
-	domain = strings.ReplaceAll(id, ":", "/")
-
-	// "2. If the domain contains a port percent decode the colon."
-	domain = strings.Replace(domain, "%3A", ":", 1)
-
-	// "3. Generate an HTTPS URL to the expected location of the DID document by prepending https://."
-	domain = "https://" + domain
-
-	// "4. If no path has been specified in the URL, append /.well-known."
-	if strings.Count(domain, "/") == 2 {
-		domain += "/.well-known"
+	temp, err := liburl.PathUnescape("https://" + domain)
+	if err != nil {
+		return "", err
 	}
 
-	// "5. Append /did.json to complete the URL."
-	domain += "/did.json"
+	url, err := liburl.Parse(temp)
+	if err != nil {
+		return "", err
+	}
 
-	return domain
+	//! temporarily diverging from spec in order to make local development easier (Moe - 2024-05-13)
+	//! set url scheme to http if hostname is localhost or an ipv4 address
+	if url.Hostname() == "localhost" || net.ParseIP(url.Hostname()) != nil {
+		url.Scheme = "http"
+	}
+
+	if url.Path == "" || url.Path == "/" {
+		url.Path += "/.well-known"
+	}
+	url.Path += "/did.json"
+
+	return url.String(), nil
 }
 
 // Resolver is a type to implement resolution
@@ -229,21 +234,15 @@ func (r Resolver) ResolveWithContext(ctx context.Context, uri string) (didcore.R
 		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
-	domain := DecodeID(did.ID)
-
-	parsedURL, err := url.ParseRequestURI(domain)
+	url, err := TransformID(did.ID)
 	if err != nil {
-		return didcore.ResolutionResult{}, err
-	}
-
-	if parsedURL.Scheme != "https" {
-		return didcore.ResolutionResult{}, fmt.Errorf("invalid URL scheme: %s", parsedURL.Scheme)
+		return didcore.ResolutionResultWithError("invalidDid"), didcore.ResolutionError{Code: "invalidDid"}
 	}
 
 	// TODO item 6 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/94
 	// TODO item 7 from https://w3c-ccg.github.io/did-method-web/#read-resolve https://github.com/TBD54566975/web5-go/issues/95
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, domain, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return didcore.ResolutionResult{}, err
 	}
