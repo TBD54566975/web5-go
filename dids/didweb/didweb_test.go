@@ -53,9 +53,38 @@ func TestCreate_WithOptions(t *testing.T) {
 }
 
 func TestDecodeID(t *testing.T) {
-	portAndPathCase := didweb.DecodeID("localhost%3A8080:something")
-	assert.Equal(t, "https://localhost:8080/something/did.json", portAndPathCase)
+	var vectors = []struct {
+		input  string
+		output string
+		err    bool
+	}{
+		{
+			input:  "example.com:user:alice",
+			output: "https://example.com/user/alice/did.json",
+			err:    false,
+		},
+		{
+			input:  "localhost%3A8080:user:alice",
+			output: "http://localhost:8080/user/alice/did.json",
+			err:    false,
+		},
+		{
+			input:  "192.168.1.100%3A8892:ingress",
+			output: "http://192.168.1.100:8892/ingress/did.json",
+			err:    false,
+		},
+		{
+			input:  "www.linkedin.com",
+			output: "https://www.linkedin.com/.well-known/did.json",
+			err:    false,
+		},
+	}
 
-	wellKnownCase := didweb.DecodeID("localhost")
-	assert.Equal(t, "https://localhost/.well-known/did.json", wellKnownCase)
+	for _, v := range vectors {
+		t.Run(v.input, func(t *testing.T) {
+			output, err := didweb.TransformID(v.input)
+			assert.NoError(t, err)
+			assert.Equal(t, v.output, output)
+		})
+	}
 }
