@@ -52,7 +52,7 @@ func TestCreate_WithOptions(t *testing.T) {
 
 }
 
-func TestDecodeID(t *testing.T) {
+func TestTransformID(t *testing.T) {
 	var vectors = []struct {
 		input  string
 		output string
