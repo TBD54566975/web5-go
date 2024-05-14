@@ -50,6 +50,9 @@ func TestCreate_WithOptions(t *testing.T) {
 	assert.Equal(t, "did:example:123", document.AlsoKnownAs[0])
 	assert.Equal(t, "did:example:123", document.Controller[0])
 
+	assert.Equal(t, 1, len(document.VerificationMethod))
+	assert.Contains(t, document.VerificationMethod[0].ID, document.ID)
+
 }
 
 func TestTransformID(t *testing.T) {

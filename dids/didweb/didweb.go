@@ -167,7 +167,7 @@ func Create(domain string, opts ...CreateOption) (_did.BearerDID, error) {
 		}
 
 		vm := didcore.VerificationMethod{
-			ID:           "#" + strconv.Itoa(idx),
+			ID:           did.URI + "#" + strconv.Itoa(idx),
 			Type:         "JsonWebKey",
 			Controller:   did.URI,
 			PublicKeyJwk: &publicKeyJWK,
