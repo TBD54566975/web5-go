@@ -42,6 +42,14 @@ func TestCreate_Options(t *testing.T) {
 		vc.IssuanceDate(issuanceDate),
 		vc.ExpirationDate(expirationDate),
 		vc.Schemas("https://example.org/examples/degree.json"),
+		vc.Evidences(vc.Evidence{
+			ID:   "evidenceID",
+			Type: "Insufficient",
+			AdditionalFields: map[string]interface{}{
+				"kind":   "circumstantial",
+				"checks": []string{"motive", "cell_tower_logs"},
+			},
+		}),
 	)
 
 	assert.Equal(t, 2, len(cred.Context))
@@ -60,6 +68,11 @@ func TestCreate_Options(t *testing.T) {
 	assert.Equal(t, "https://example.org/examples/degree.json", cred.CredentialSchema[0].ID)
 	assert.Equal(t, "JsonSchema", cred.CredentialSchema[0].Type)
 
+	assert.Equal(t, 1, len(cred.Evidence))
+	assert.Equal(t, "evidenceID", cred.Evidence[0].ID)
+	assert.Equal(t, "Insufficient", cred.Evidence[0].Type)
+	assert.Equal(t, "circumstantial", cred.Evidence[0].AdditionalFields["kind"])
+	assert.Equal(t, []string{"motive", "cell_tower_logs"}, cred.Evidence[0].AdditionalFields["checks"].([]string)) // nolint:forcetypeassert
 }
 
 func TestSign(t *testing.T) {
