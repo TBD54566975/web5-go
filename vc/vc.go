@@ -37,8 +37,8 @@ type DataModel[T CredentialSubject] struct {
 
 // Evidence represents the evidence property of a Verifiable Credential.
 type Evidence struct {
-	ID          string `json:"id,omitempty"`
-	Type        string `json:"type,omitempty"`
+	ID   string `json:"id,omitempty"`
+	Type string `json:"type,omitempty"`
 	// todo is `AdditionalFields` the right name?
 	AdditionalFields map[string]interface{}
 }
@@ -93,6 +93,7 @@ type createOptions struct {
 	issuanceDate   time.Time
 	expirationDate time.Time
 	schemas        []CredentialSchema
+	evidence       []Evidence
 }
 
 // CreateOption is the return type of all Option functions that can be passed to [Create]
@@ -157,6 +158,13 @@ func ExpirationDate(expirationDate time.Time) CreateOption {
 	}
 }
 
+// Evidences can be used to set the evidence array of the Verifiable Credential created by [Create]
+func Evidences(evidence ...Evidence) CreateOption {
+	return func(o *createOptions) {
+		o.evidence = evidence
+	}
+}
+
 // Create returns a new Verifiable Credential with the provided claims and options.
 // if no options are provided, the following defaults will be used:
 //   - ID: urn:vc:uuid:<uuid>
@@ -186,6 +194,7 @@ func Create[T CredentialSubject](claims T, opts ...CreateOption) DataModel[T] {
 		ID:                o.id,
 		IssuanceDate:      o.issuanceDate.UTC().Format(time.RFC3339),
 		CredentialSubject: claims,
+		Evidence:          o.evidence,
 	}
 
 	if len(o.schemas) > 0 {
