@@ -4,12 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/tbd54566975/web5-go/vc"
+	"math/rand"
+	"strconv"
 )
 
 // PresentationDefinition represents a DIF Presentation Definition defined [here].
@@ -35,8 +34,8 @@ type InputDescriptor struct {
 }
 
 type tokenizedField struct {
-	token string
-	path  string
+	name string
+	path string
 }
 
 // SelectCredentials selects vcJWTs based on the constraints defined in the input descriptor
@@ -48,20 +47,17 @@ func (ind InputDescriptor) SelectCredentials(vcJWTs []string) ([]string, error) 
 		Required:   make([]string, 0, len(ind.Constraints.Fields)),
 	}
 
+	// Each Field can have multiple Paths. Add a 'tokenizedField' for each Path, and add the Filter to the JSON Schema
 	tokenizedFields := make([]tokenizedField, 0, len(ind.Constraints.Fields))
-	tokens := make([]string, len(ind.Constraints.Fields))
-
-	for i, field := range ind.Constraints.Fields {
-		token := strconv.FormatInt(time.Now().UnixNano(), 10)
-		tokens[i] = token
-
+	for _, field := range ind.Constraints.Fields {
+		name := strconv.FormatInt(rand.Int63(), 10)
 		for _, path := range field.Path {
-			tf := tokenizedField{token: token, path: path}
+			tf := tokenizedField{name: name, path: path}
 			tokenizedFields = append(tokenizedFields, tf)
 		}
 
 		if field.Filter != nil {
-			jsonSchema.AddProperty(token, *field.Filter, true)
+			jsonSchema.AddProperty(name, *field.Filter, true)
 		}
 	}
 
@@ -97,7 +93,7 @@ func (ind InputDescriptor) SelectCredentials(vcJWTs []string) ([]string, error) 
 
 		selectionCandidate := make(map[string]any)
 		for _, tf := range tokenizedFields {
-			if ok := tokensFound[tf.token]; ok {
+			if ok := tokensFound[tf.name]; ok {
 				continue
 			}
 
@@ -107,12 +103,12 @@ func (ind InputDescriptor) SelectCredentials(vcJWTs []string) ([]string, error) 
 			}
 
 			if value != nil {
-				selectionCandidate[tf.token] = value
-				tokensFound[tf.token] = true
+				selectionCandidate[tf.name] = value
+				tokensFound[tf.name] = true
 			}
 		}
 
-		if len(selectionCandidate) != len(tokens) {
+		if len(selectionCandidate) != len(ind.Constraints.Fields) {
 			continue
 		}
 
