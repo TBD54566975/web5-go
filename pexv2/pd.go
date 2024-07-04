@@ -50,7 +50,7 @@ func (ind InputDescriptor) SelectCredentials(vcJWTs []string) ([]string, error) 
 	// Each Field can have multiple Paths. Add a 'tokenizedField' for each Path, and add the Filter to the JSON Schema
 	tokenizedFields := make([]tokenizedField, 0, len(ind.Constraints.Fields))
 	for _, field := range ind.Constraints.Fields {
-		name := strconv.FormatInt(rand.Int63(), 10)
+		name := strconv.FormatInt(rand.Int63(), 10) //nolint:gosec
 		for _, path := range field.Path {
 			tf := tokenizedField{name: name, path: path}
 			tokenizedFields = append(tokenizedFields, tf)
