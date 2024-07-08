@@ -3,6 +3,7 @@ package diddht
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -72,6 +73,10 @@ func Test_VectorsResolve(t *testing.T) {
 				r = DefaultResolver()
 				res, err := r.Resolve(vector.Input.DIDUri)
 				assert.NoError(t, err)
+				print, err := json.MarshalIndent(res.Document, "", "  ")
+				assert.NoError(t, err)
+
+				fmt.Printf("RESP: %s\n", print)
 				assert.Equal(t, res.Document, vector.Output.Document)
 			}
 		})
