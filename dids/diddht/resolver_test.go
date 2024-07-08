@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
+	"github.com/tbd54566975/web5-go/dids/didcore"
 )
 
 const dhtSpecVectors string = "../../web5-spec/test-vectors/did_dht/resolve.json"
@@ -19,6 +20,7 @@ type vector struct {
 		DIDUri string `json:"didUri"`
 	} `json:"input"`
 	Output struct {
+		Document              didcore.Document `json:"document"`
 		DIDResolutionMetadata struct {
 			Error string `json:"error"`
 		} `json:"didResolutionMetadata"`
@@ -62,10 +64,15 @@ func Test_VectorsResolve(t *testing.T) {
 
 	for _, vector := range vectors {
 		t.Run(vector.Description, func(t *testing.T) {
-			res, err := r.Resolve(vector.Input.DIDUri)
 			if vector.Errors {
+				res, err := r.Resolve(vector.Input.DIDUri)
 				assert.True(t, err != nil)
 				assert.Equal(t, res.ResolutionMetadata.Error, vector.Output.DIDResolutionMetadata.Error)
+			} else {
+				r = DefaultResolver()
+				res, err := r.Resolve(vector.Input.DIDUri)
+				assert.NoError(t, err)
+				assert.Equal(t, res.Document, vector.Output.Document)
 			}
 		})
 	}
