@@ -22,7 +22,7 @@ func Decode(jwt string) (Decoded, error) {
 
 	header, err := jws.DecodeHeader(parts[0])
 	if err != nil {
-		return Decoded{}, err
+		return Decoded{}, fmt.Errorf("malformed JWT. Failed to decode header: %w", err)
 	}
 
 	claimsBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
@@ -41,11 +41,17 @@ func Decode(jwt string) (Decoded, error) {
 		return Decoded{}, fmt.Errorf("malformed JWT. Failed to decode signature: %w", err)
 	}
 
+	signerDid, err := did.Parse(header.KID)
+	if err != nil {
+		return Decoded{}, fmt.Errorf("malformed JWT. Failed to parse signer DID: %w", err)
+	}
+
 	return Decoded{
 		Header:    header,
 		Claims:    claims,
 		Signature: signature,
 		Parts:     parts,
+		SignerDID: signerDid,
 	}, nil
 }
 
