@@ -134,6 +134,7 @@ type Decoded struct {
 	Claims    Claims
 	Signature []byte
 	Parts     []string
+	SignerDID did.DID
 }
 
 // Verify verifies a JWT (JSON Web Token)
