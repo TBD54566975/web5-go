@@ -67,6 +67,7 @@ func (d *DID) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// Scan implements the Scanner interface
 func (d *DID) Scan(src any) error {
 	switch obj := src.(type) {
 	case nil:
@@ -81,6 +82,7 @@ func (d *DID) Scan(src any) error {
 	}
 }
 
+// Value implements the driver Valuer interface
 func (d DID) Value() (driver.Value, error) {
 	return d.String(), nil
 }

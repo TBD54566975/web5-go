@@ -157,7 +157,9 @@ func TestDID_ScanValueRoundtrip(t *testing.T) {
 
 			value, err := d.Value()
 			assert.NoError(t, err)
-			assert.Equal(t, tt.raw, value.(string))
+			actual, ok := value.(string)
+			assert.True(t, ok)
+			assert.Equal(t, tt.raw, actual)
 		})
 	}
 }
