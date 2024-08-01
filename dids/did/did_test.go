@@ -115,3 +115,59 @@ func TestParse(t *testing.T) {
 		}
 	}
 }
+
+func TestDID_ScanValueRoundtrip(t *testing.T) {
+	tests := []struct {
+		object  did.DID
+		raw     string
+		wantErr bool
+	}{
+		{
+			raw:    "did:example:123456789abcdefghi",
+			object: MustParse("did:example:123456789abcdefghi"),
+		},
+		{
+			raw:    "did:example:123456789abcdefghi;foo=bar;baz=qux",
+			object: MustParse("did:example:123456789abcdefghi;foo=bar;baz=qux"),
+		},
+		{
+			raw:    "did:example:123456789abcdefghi?foo=bar&baz=qux",
+			object: MustParse("did:example:123456789abcdefghi?foo=bar&baz=qux"),
+		},
+		{
+			raw:    "did:example:123456789abcdefghi#keys-1",
+			object: MustParse("did:example:123456789abcdefghi#keys-1"),
+		},
+		{
+			raw:    "did:example:123456789abcdefghi?foo=bar&baz=qux#keys-1",
+			object: MustParse("did:example:123456789abcdefghi?foo=bar&baz=qux#keys-1"),
+		},
+		{
+			raw:    "did:example:123456789abcdefghi;foo=bar;baz=qux?foo=bar&baz=qux#keys-1",
+			object: MustParse("did:example:123456789abcdefghi;foo=bar;baz=qux?foo=bar&baz=qux#keys-1"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.raw, func(t *testing.T) {
+			var d did.DID
+			if err := d.Scan(tt.raw); (err != nil) != tt.wantErr {
+				t.Errorf("Scan() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			assert.Equal(t, tt.object, d)
+
+			value, err := d.Value()
+			assert.NoError(t, err)
+			actual, ok := value.(string)
+			assert.True(t, ok)
+			assert.Equal(t, tt.raw, actual)
+		})
+	}
+}
+
+func MustParse(input string) did.DID {
+	d, err := did.Parse(input)
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
