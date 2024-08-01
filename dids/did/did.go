@@ -1,7 +1,9 @@
 package did
 
 import (
+	"database/sql/driver"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -63,6 +65,24 @@ func (d *DID) UnmarshalText(text []byte) error {
 	}
 	*d = did
 	return nil
+}
+
+func (d *DID) Scan(src any) error {
+	switch obj := src.(type) {
+	case nil:
+		return nil
+	case string:
+		if src == "" {
+			return nil
+		}
+		return d.UnmarshalText([]byte(obj))
+	default:
+		return fmt.Errorf("unsupported scan type %T", obj)
+	}
+}
+
+func (d DID) Value() (driver.Value, error) {
+	return d.String(), nil
 }
 
 // relevant ABNF rules: https://www.w3.org/TR/did-core/#did-syntax
