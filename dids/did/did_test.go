@@ -124,27 +124,27 @@ func TestDID_ScanValueRoundtrip(t *testing.T) {
 	}{
 		{
 			raw:    "did:example:123456789abcdefghi",
-			object: MustParse("did:example:123456789abcdefghi"),
+			object: did.MustParse("did:example:123456789abcdefghi"),
 		},
 		{
 			raw:    "did:example:123456789abcdefghi;foo=bar;baz=qux",
-			object: MustParse("did:example:123456789abcdefghi;foo=bar;baz=qux"),
+			object: did.MustParse("did:example:123456789abcdefghi;foo=bar;baz=qux"),
 		},
 		{
 			raw:    "did:example:123456789abcdefghi?foo=bar&baz=qux",
-			object: MustParse("did:example:123456789abcdefghi?foo=bar&baz=qux"),
+			object: did.MustParse("did:example:123456789abcdefghi?foo=bar&baz=qux"),
 		},
 		{
 			raw:    "did:example:123456789abcdefghi#keys-1",
-			object: MustParse("did:example:123456789abcdefghi#keys-1"),
+			object: did.MustParse("did:example:123456789abcdefghi#keys-1"),
 		},
 		{
 			raw:    "did:example:123456789abcdefghi?foo=bar&baz=qux#keys-1",
-			object: MustParse("did:example:123456789abcdefghi?foo=bar&baz=qux#keys-1"),
+			object: did.MustParse("did:example:123456789abcdefghi?foo=bar&baz=qux#keys-1"),
 		},
 		{
 			raw:    "did:example:123456789abcdefghi;foo=bar;baz=qux?foo=bar&baz=qux#keys-1",
-			object: MustParse("did:example:123456789abcdefghi;foo=bar;baz=qux?foo=bar&baz=qux#keys-1"),
+			object: did.MustParse("did:example:123456789abcdefghi;foo=bar;baz=qux?foo=bar&baz=qux#keys-1"),
 		},
 	}
 	for _, tt := range tests {
@@ -162,12 +162,4 @@ func TestDID_ScanValueRoundtrip(t *testing.T) {
 			assert.Equal(t, tt.raw, actual)
 		})
 	}
-}
-
-func MustParse(input string) did.DID {
-	d, err := did.Parse(input)
-	if err != nil {
-		panic(err)
-	}
-	return d
 }

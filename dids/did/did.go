@@ -141,3 +141,11 @@ func Parse(input string) (DID, error) {
 
 	return did, nil
 }
+
+func MustParse(input string) DID {
+	did, err := Parse(input)
+	if err != nil {
+		panic(err)
+	}
+	return did
+}
