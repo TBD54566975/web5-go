@@ -142,6 +142,7 @@ func Parse(input string) (DID, error) {
 	return did, nil
 }
 
+// MustParse parses a DID URI with Parse, and panics on error
 func MustParse(input string) DID {
 	did, err := Parse(input)
 	if err != nil {
