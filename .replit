@@ -1,0 +1,14 @@
+run = ["just", "test"]
+
+modules = ["go-1.21:v2-20231201-3b22c78"]
+
+[nix]
+channel = "stable-23_05"
+
+[gitHubImport]
+requiredFiles = [".replit"]
+
+[deployment]
+run = ["sh", "-c", "just test"]
+ignorePorts = false
+deploymentTarget = "gce"

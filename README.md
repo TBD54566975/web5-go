@@ -94,3 +94,5 @@ See [cmd/web5/README.md](cmd/web5/README.md) for more information.
 
 ### Contributing
 Each package's README contains in-depth information about the package's structure and suggestions on how add features specific to that package
+
+You can develop web5-go on [Replit](https://replit.com/github/TBD54566975/web5-go).
