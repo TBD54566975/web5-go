@@ -254,7 +254,7 @@ func (jws Decoded) Verify() error {
 		return fmt.Errorf("failed to resolve DID: %w", err)
 	}
 
-	vmSelector := didcore.ID(did.URL)
+	vmSelector := didcore.ID(did.URL())
 	verificationMethod, err := resolutionResult.Document.SelectVerificationMethod(vmSelector)
 	if err != nil {
 		return fmt.Errorf("kid does not match any verification method %w", err)

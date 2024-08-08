@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/tbd54566975/web5-go/dids/did"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -160,6 +161,23 @@ func TestDHTResolve(t *testing.T) {
 			assert.EqualError(t, err, test.expectedErrorMessage)
 
 			test.assertResult(t, &result.Document)
+
+			parsedDID, err := did.Parse(test.didURI)
+			assert.NoError(t, err)
+			assert.Equal(t, test.didURI, parsedDID.URI)
+
+			// String -> Parse roundtrip
+			stringParsedDID, err := did.Parse(parsedDID.String())
+			assert.NoError(t, err)
+			assert.Equal(t, parsedDID, stringParsedDID)
+
+			// Value -> Scan roundtrip
+			value, err := parsedDID.Value()
+			assert.NoError(t, err)
+			var scannedDID did.DID
+			err = scannedDID.Scan(value)
+			assert.NoError(t, err)
+			assert.Equal(t, parsedDID, scannedDID)
 		})
 
 	}

@@ -2,6 +2,7 @@ package didjwk_test
 
 import (
 	"fmt"
+	"github.com/tbd54566975/web5-go/dids/did"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
@@ -21,6 +22,30 @@ func TestCreate(t *testing.T) {
 	assert.True(t, did.Query == "", "expected query to be empty")
 	assert.True(t, did.ID != "", "expected id to be non-empty")
 	assert.Equal(t, "did:jwk:"+did.ID, did.URI)
+}
+
+func TestParse(t *testing.T) {
+	source, err := didjwk.Create()
+	assert.NoError(t, err)
+	original := source.DID
+
+	// URI -> Parse
+	parseURIDID, err := did.Parse(original.URI)
+	assert.NoError(t, err)
+	assert.Equal(t, original, parseURIDID)
+
+	// String -> Parse
+	parseStringDID, err := did.Parse(original.String())
+	assert.NoError(t, err)
+	assert.Equal(t, original, parseStringDID)
+
+	// Value -> Scan
+	var scanDID did.DID
+	value, err := original.Value()
+	assert.NoError(t, err)
+	err = scanDID.Scan(value)
+	assert.NoError(t, err)
+	assert.Equal(t, original, scanDID)
 }
 
 func TestResolveDIDJWK(t *testing.T) {
