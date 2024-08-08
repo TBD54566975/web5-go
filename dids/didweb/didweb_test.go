@@ -18,6 +18,36 @@ func TestCreate(t *testing.T) {
 	document := bearerDID.Document
 	assert.Equal(t, "did:web:localhost%3A8080", document.ID)
 	assert.Equal(t, 1, len(document.VerificationMethod))
+
+	did := bearerDID.DID
+	assert.Equal(t, "web", did.Method)
+	assert.Equal(t, "localhost%3A8080", did.ID)
+	assert.Equal(t, "did:web:localhost%3A8080", did.URI)
+	assert.Equal(t, "did:web:localhost%3A8080", did.URL())
+}
+
+func TestParse(t *testing.T) {
+	bearerDID, err := didweb.Create("localhost:8080")
+	assert.NoError(t, err)
+	original := bearerDID.DID
+
+	// URI -> Parse
+	parseURIDID, err := did.Parse(original.URI)
+	assert.NoError(t, err)
+	assert.Equal(t, original, parseURIDID)
+
+	// String -> Parse
+	parseStringDID, err := did.Parse(original.String())
+	assert.NoError(t, err)
+	assert.Equal(t, original, parseStringDID)
+
+	// Value -> Scan
+	var scanDID did.DID
+	value, err := original.Value()
+	assert.NoError(t, err)
+	err = scanDID.Scan(value)
+	assert.NoError(t, err)
+	assert.Equal(t, original, scanDID)
 }
 
 func TestCreate_WithOptions(t *testing.T) {

@@ -15,10 +15,6 @@ type DID struct {
 	// Spec: https://www.w3.org/TR/did-core/#did-syntax
 	URI string
 
-	// URL represents the DID URI + A network location identifier for a specific resource
-	// Spec: https://www.w3.org/TR/did-core/#did-url-syntax
-	URL string
-
 	// Method specifies the DID method in the URI, which indicates the underlying
 	// method-specific identifier scheme (e.g., jwk, dht, key, etc.).
 	// Spec: https://www.w3.org/TR/did-core/#method-schemes
@@ -48,8 +44,31 @@ type DID struct {
 	Fragment string
 }
 
+// URL represents the DID URI + A network location identifier for a specific resource
+// Spec: https://www.w3.org/TR/did-core/#did-url-syntax
+func (d DID) URL() string {
+	url := d.URI
+	if len(d.Params) > 0 {
+		var pairs []string
+		for key, value := range d.Params {
+			pairs = append(pairs, fmt.Sprintf("%s=%s", key, value))
+		}
+		url += ";" + strings.Join(pairs, ";")
+	}
+	if len(d.Path) > 0 {
+		url += "/" + d.Path
+	}
+	if len(d.Query) > 0 {
+		url += "?" + d.Query
+	}
+	if len(d.Fragment) > 0 {
+		url += "#" + d.Fragment
+	}
+	return url
+}
+
 func (d DID) String() string {
-	return d.URL
+	return d.URL()
 }
 
 // MarshalText will convert the given DID's URL into a byte array
@@ -114,7 +133,6 @@ func Parse(input string) (DID, error) {
 
 	did := DID{
 		URI:    "did:" + match[1] + ":" + match[2],
-		URL:    input,
 		Method: match[1],
 		ID:     match[2],
 	}

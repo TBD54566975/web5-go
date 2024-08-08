@@ -249,12 +249,13 @@ func (jws Decoded) Verify() error {
 		return errors.New("malformed JWS header. kid must be a DID URL")
 	}
 
-	resolutionResult, err := dids.Resolve(did.URI)
+	didURL := did.URL()
+	resolutionResult, err := dids.Resolve(didURL)
 	if err != nil {
 		return fmt.Errorf("failed to resolve DID: %w", err)
 	}
 
-	vmSelector := didcore.ID(did.URL)
+	vmSelector := didcore.ID(didURL)
 	verificationMethod, err := resolutionResult.Document.SelectVerificationMethod(vmSelector)
 	if err != nil {
 		return fmt.Errorf("kid does not match any verification method %w", err)
